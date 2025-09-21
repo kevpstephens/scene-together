@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String  @id @default(uuid()) // can map to Supabase auth uid
+  email               String  @unique
+  role                String  // "member" | "staff"
+  googleId            String?
+  googleAccessToken   String?
+  googleRefreshToken  String?
+  rsvps               RSVP[]
+  payments            Payment[]
+}
+
+model Event {
+  id          String  @id @default(uuid())
+  title       String
+  description String?
+  date        DateTime
+  location    String?
+  onlineLink  String?
+  movieId     String?
+  rsvps       RSVP[]
+  payments    Payment[]
+  @@index([date])
+}
+
+model RSVP {
+  id      String @id @default(uuid())
+  userId  String
+  eventId String
+  status  String  // "going" | "interested"
+
+  user  User  @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+
+  @@unique([userId, eventId])
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  userId    String
+  eventId   String
+  amount    Int
+  status    String   // "pending" | "succeeded" | "failed"
+  stripeId  String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+}
