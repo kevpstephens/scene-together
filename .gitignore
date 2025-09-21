@@ -1,0 +1,42 @@
+node_modules
+dist
+build
+.next
+.expo
+ios
+android
+.env
+.env.*
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+*.tsbuildinfo
+
+# Build outputs
+dist/
+build/
+.out/
+
+# Frameworks
+.next/
+.cache/
+coverage/
+
+# Env files
+.env
+.env.* 
+!.env.example
+
+# Turborepo
+.turbo/
+
+# Editors/OS
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
