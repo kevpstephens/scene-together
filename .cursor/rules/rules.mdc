@@ -1,0 +1,27 @@
+---
+description: SceneTogether monorepo rules
+globs:
+  # Always ignore large/generated folders
+  - ignore: "**/node_modules/**"
+  - ignore: "**/.next/**"
+  - ignore: "**/dist/**"
+  - ignore: "**/build/**"
+  - ignore: "**/.expo/**"
+  - ignore: "**/ios/**"
+  - ignore: "**/android/**"
+  - ignore: "**/*.log"
+  - ignore: "**/*.lock"
+
+  # Prioritise source code
+  - include: "mobile/src/**"
+  - include: "web/src/**"
+  - include: "api/src/**"
+  - include: "shared/src/**"
+
+  # Always include key config & docs
+  - include: "gpt-helper.md"
+  - include: "turbo.json"
+  - include: "package.json"
+  - include: "tsconfig.json"
+alwaysApply: true
+---
