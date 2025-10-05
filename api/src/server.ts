@@ -5,6 +5,7 @@ import morgan from "morgan";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import eventsRouter from "./modules/events/events.routes.js";
 import rsvpsRouter from "./modules/rsvps/rsvps.routes.js";
+import moviesRouter from "./modules/movies/movies.routes.js";
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 
 // Feature modules
 app.use("/events", eventsRouter);
+app.use("/movies", moviesRouter);
 app.use("/", rsvpsRouter); // RSVPs routes include /events/:id/rsvp and /me/rsvps
 
 // Error handling (must be last)
