@@ -8,50 +8,67 @@ datasource db {
 }
 
 model User {
-  id                  String  @id @default(uuid()) // can map to Supabase auth uid
-  email               String  @unique
-  role                String  // "member" | "staff"
-  googleId            String?
-  googleAccessToken   String?
-  googleRefreshToken  String?
-  rsvps               RSVP[]
-  payments            Payment[]
+  id        String   @id // Supabase auth.users.id (UUID)
+  email     String   @unique
+  role      String   @default("member") // "member" | "staff"
+  name      String?
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  rsvps     RSVP[]
+  payments  Payment[]
 }
 
 model Event {
-  id          String  @id @default(uuid())
+  id          String   @id @default(uuid())
   title       String
   description String?
   date        DateTime
   location    String?
   onlineLink  String?
-  movieId     String?
+  movieId     String?  // OMDb/TMDb ID
+  movieData   Json?    // Store movie metadata (poster, trailer, etc)
+  maxCapacity Int?     // Optional capacity limit
+  createdById String?  // Staff member who created it
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   rsvps       RSVP[]
   payments    Payment[]
+  
   @@index([date])
+  @@index([createdById])
 }
 
 model RSVP {
-  id      String @id @default(uuid())
-  userId  String
-  eventId String
-  status  String  // "going" | "interested"
+  id        String   @id @default(uuid())
+  userId    String
+  eventId   String
+  status    String   // "going" | "interested" | "not_going"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user  User  @relation(fields: [userId], references: [id])
-  event Event @relation(fields: [eventId], references: [id])
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@unique([userId, eventId])
+  @@index([userId])
+  @@index([eventId])
 }
 
 model Payment {
   id        String   @id @default(uuid())
   userId    String
   eventId   String
-  amount    Int
-  status    String   // "pending" | "succeeded" | "failed"
-  stripeId  String
+  amount    Int      // in cents
+  status    String   // "pending" | "succeeded" | "failed" | "refunded"
+  stripeId  String?  // Optional until Stripe is implemented
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user  User  @relation(fields: [userId], references: [id])
-  event Event @relation(fields: [eventId], references: [id])
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([eventId])
+  @@index([stripeId])
 }
