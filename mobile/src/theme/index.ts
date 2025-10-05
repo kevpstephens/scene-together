@@ -6,7 +6,7 @@
 export const theme = {
   colors: {
     // Primary brand color
-    primary: "#6366f1", // Indigo
+    primary: "#23797E", // Teal
     primaryDark: "#4f46e5",
     primaryLight: "#818cf8",
 

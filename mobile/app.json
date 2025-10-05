@@ -1,12 +1,13 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "SceneTogether",
+    "slug": "scenetogether",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "scenetogether",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
