@@ -1,0 +1,42 @@
+// Local types for mobile app (copied from shared to avoid React conflicts)
+
+export type Role = "member" | "staff";
+
+export type Event = {
+  id: string;
+  title: string;
+  description?: string;
+  date: string; // ISO
+  location?: string;
+  onlineLink?: string;
+  movieId?: string;
+  movieData?: MovieData;
+  maxCapacity?: number;
+  createdById?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MovieData = {
+  title: string;
+  year?: string;
+  poster?: string;
+  plot?: string;
+  director?: string;
+  actors?: string;
+  runtime?: string;
+  genre?: string;
+  imdbRating?: string;
+  trailer?: string;
+};
+
+export type RSVPStatus = "going" | "interested" | "not_going";
+
+export type RSVP = {
+  id: string;
+  userId: string;
+  eventId: string;
+  status: RSVPStatus;
+  createdAt: string;
+  updatedAt: string;
+};
