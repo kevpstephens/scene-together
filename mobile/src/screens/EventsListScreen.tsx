@@ -17,7 +17,9 @@ import {
   MapPinIcon,
   UsersIcon,
   FilmIcon,
-} from "react-native-heroicons/outline";
+  StarIcon,
+  FireIcon,
+} from "react-native-heroicons/solid";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { EventsStackParamList } from "../navigation/types";
@@ -27,6 +29,7 @@ import type { Event } from "../types";
 import EventCardSkeleton from "../components/EventCardSkeleton";
 import AnimatedButton from "../components/AnimatedButton";
 import GradientBackground from "../components/GradientBackground";
+import * as Haptics from "expo-haptics";
 
 type NavigationProp = NativeStackNavigationProp<
   EventsStackParamList,
@@ -93,6 +96,8 @@ export default function EventsListScreen() {
     setRefreshing(true);
     await loadEvents();
     setRefreshing(false);
+    // Haptic feedback on successful refresh
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
   const formatDate = (dateString: string) => {
@@ -120,103 +125,153 @@ export default function EventsListScreen() {
     });
   };
 
-  const renderEventCard = ({ item }: { item: Event }) => (
-    <AnimatedButton
-      style={styles.card}
-      onPress={() => navigation.navigate("EventDetail", { eventId: item.id })}
-      springConfig={{ damping: 12, stiffness: 100 }}
-    >
-      {item.movieData?.poster && (
-        <View style={styles.posterContainer}>
-          <Image
-            source={{ uri: item.movieData.poster }}
-            style={styles.poster}
-            resizeMode="cover"
-          />
-          <LinearGradient
-            colors={["transparent", "rgba(0,0,0,0.7)"]}
-            style={styles.posterGradient}
-          />
-        </View>
-      )}
-      <View style={styles.cardContent}>
-        <View style={styles.dateTag}>
-          <Text style={styles.dateTagText}>{formatDate(item.date)}</Text>
-        </View>
+  // Calculate event status using real RSVP data
+  const getEventStatus = (event: Event) => {
+    if (!event.maxCapacity) return null;
 
-        <Text style={styles.title} numberOfLines={2}>
-          {item.title}
-        </Text>
+    // Use real attendee count from API (defaults to 0 if no RSVPs yet)
+    const currentAttendees = event.attendeeCount || 0;
+    const percentageFull = (currentAttendees / event.maxCapacity) * 100;
 
-        <View style={styles.detailsRow}>
-          <ClockIcon size={16} color={theme.colors.text.secondary} />
-          <Text style={styles.time}>{formatTime(item.date)}</Text>
-        </View>
+    if (currentAttendees >= event.maxCapacity) {
+      return { type: "soldOut" as const, label: "Sold Out" };
+    } else if (percentageFull >= 80) {
+      return { type: "almostFull" as const, label: "Almost Full" };
+    }
+    return null;
+  };
 
-        {item.location && (
-          <View style={styles.detailsRow}>
-            <MapPinIcon size={16} color={theme.colors.text.secondary} />
-            <Text style={styles.location} numberOfLines={1}>
-              {item.location}
-            </Text>
-          </View>
-        )}
+  // Check if event is featured (for demo, make first event featured)
+  const isFeatured = (event: Event, index: number) => {
+    return index === 0; // First event is featured
+  };
 
-        {item.movieData && (
-          <View style={styles.movieInfo}>
-            <Text style={styles.movieTitle} numberOfLines={1}>
-              {item.movieData.title}
-            </Text>
-            {item.movieData.genre && (
-              <View style={styles.genreContainer}>
-                {item.movieData.genre
-                  .split(",")
-                  .slice(0, 3)
-                  .map((genre, index) => {
-                    const trimmedGenre = genre.trim();
-                    return (
-                      <View
-                        key={index}
-                        style={[
-                          styles.genreChip,
-                          { backgroundColor: getGenreColor(trimmedGenre) },
-                        ]}
-                      >
-                        <Text style={styles.genreChipText} numberOfLines={1}>
-                          {trimmedGenre}
-                        </Text>
-                      </View>
-                    );
-                  })}
+  const renderEventCard = ({ item, index }: { item: Event; index: number }) => {
+    const status = getEventStatus(item);
+    const featured = isFeatured(item, index);
+
+    return (
+      <AnimatedButton
+        style={styles.card}
+        onPress={() => navigation.navigate("EventDetail", { eventId: item.id })}
+        springConfig={{ damping: 12, stiffness: 100 }}
+      >
+        {item.movieData?.poster && (
+          <View style={styles.posterContainer}>
+            <Image
+              source={{ uri: item.movieData.poster }}
+              style={styles.poster}
+              resizeMode="cover"
+            />
+            <LinearGradient
+              colors={["transparent", "rgba(0,0,0,0.7)"]}
+              style={styles.posterGradient}
+            />
+
+            {/* Featured Badge */}
+            {featured && (
+              <View style={styles.featuredBadge}>
+                <StarIcon size={14} color={theme.colors.text.inverse} />
+                <Text style={styles.featuredText}>Featured</Text>
+              </View>
+            )}
+
+            {/* Status Badge */}
+            {status && (
+              <View
+                style={[
+                  styles.statusBadge,
+                  status.type === "soldOut" && styles.soldOutBadge,
+                  status.type === "almostFull" && styles.almostFullBadge,
+                ]}
+              >
+                {status.type === "almostFull" && (
+                  <FireIcon size={12} color={theme.colors.text.inverse} />
+                )}
+                <Text style={styles.statusText}>{status.label}</Text>
               </View>
             )}
           </View>
         )}
+        <View style={styles.cardContent}>
+          <View style={styles.dateTag}>
+            <Text style={styles.dateTagText}>{formatDate(item.date)}</Text>
+          </View>
 
-        {item.maxCapacity && (
-          <View style={styles.capacityContainer}>
-            <View style={styles.capacityRow}>
-              <UsersIcon size={14} color={theme.colors.text.tertiary} />
-              <Text style={styles.capacityText}>
-                {Math.floor(item.maxCapacity * 0.6)} / {item.maxCapacity} spots
+          <Text style={styles.title} numberOfLines={2}>
+            {item.title}
+          </Text>
+
+          <View style={styles.detailsRow}>
+            <ClockIcon size={16} color={theme.colors.text.secondary} />
+            <Text style={styles.time}>{formatTime(item.date)}</Text>
+          </View>
+
+          {item.location && (
+            <View style={styles.detailsRow}>
+              <MapPinIcon size={16} color={theme.colors.text.secondary} />
+              <Text style={styles.location} numberOfLines={1}>
+                {item.location}
               </Text>
             </View>
-            {/* Animated Progress Bar */}
-            <View style={styles.progressBarContainer}>
-              <Animated.View
-                style={[
-                  styles.progressBar,
-                  {
-                    width: `${(Math.floor(item.maxCapacity * 0.6) / item.maxCapacity) * 100}%`,
-                  },
-                ]}
-              />
+          )}
+
+          {item.movieData && (
+            <View style={styles.movieInfo}>
+              <Text style={styles.movieTitle} numberOfLines={1}>
+                {item.movieData.title}
+              </Text>
+              {item.movieData.genre && (
+                <View style={styles.genreContainer}>
+                  {item.movieData.genre
+                    .split(",")
+                    .slice(0, 3)
+                    .map((genre, index) => {
+                      const trimmedGenre = genre.trim();
+                      return (
+                        <View
+                          key={index}
+                          style={[
+                            styles.genreChip,
+                            { backgroundColor: getGenreColor(trimmedGenre) },
+                          ]}
+                        >
+                          <Text style={styles.genreChipText} numberOfLines={1}>
+                            {trimmedGenre}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                </View>
+              )}
             </View>
-          </View>
-        )}
-      </View>
-    </AnimatedButton>
-  );
+          )}
+
+          {item.maxCapacity && (
+            <View style={styles.capacityContainer}>
+              <View style={styles.capacityRow}>
+                <UsersIcon size={14} color={theme.colors.text.tertiary} />
+                <Text style={styles.capacityText}>
+                  {item.attendeeCount || 0} / {item.maxCapacity} spots
+                </Text>
+              </View>
+              {/* Animated Progress Bar */}
+              <View style={styles.progressBarContainer}>
+                <Animated.View
+                  style={[
+                    styles.progressBar,
+                    {
+                      width: `${((item.attendeeCount || 0) / item.maxCapacity) * 100}%`,
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+          )}
+        </View>
+      </AnimatedButton>
+    );
+  };
 
   if (loading && !refreshing) {
     return (
@@ -254,13 +309,36 @@ export default function EventsListScreen() {
               />
             }
             ListEmptyComponent={
-              <View style={styles.emptyContent}>
-                <FilmIcon size={64} color={theme.colors.text.tertiary} />
-                <Text style={styles.emptySubtext}>No events yet</Text>
-                <Text style={styles.emptyHint}>
-                  Check back soon for film screenings!
+              <Animated.View
+                style={[styles.emptyContent, { opacity: fadeAnim }]}
+              >
+                <View style={styles.emptyIconContainer}>
+                  <FilmIcon size={80} color={theme.colors.primary} />
+                  <View style={styles.emptyIconAccent} />
+                </View>
+                <Text style={styles.emptyTitle}>🍿 Grab Your Popcorn!</Text>
+                <Text style={styles.emptySubtext}>
+                  No screenings scheduled yet
                 </Text>
-              </View>
+                <Text style={styles.emptyHint}>
+                  New movie events are added weekly.{"\n"}
+                  Pull down to refresh!
+                </Text>
+                <View style={styles.emptyFeatures}>
+                  <View style={styles.featureItem}>
+                    <StarIcon size={16} color={theme.colors.accent} />
+                    <Text style={styles.featureText}>Exclusive screenings</Text>
+                  </View>
+                  <View style={styles.featureItem}>
+                    <UsersIcon size={16} color={theme.colors.accent} />
+                    <Text style={styles.featureText}>Meet film lovers</Text>
+                  </View>
+                  <View style={styles.featureItem}>
+                    <FilmIcon size={16} color={theme.colors.accent} />
+                    <Text style={styles.featureText}>Classic & new films</Text>
+                  </View>
+                </View>
+              </Animated.View>
             }
           />
         </Animated.View>
@@ -302,17 +380,61 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: theme.spacing.xxxl,
+    paddingHorizontal: theme.spacing.xl,
   },
-  emptySubtext: {
-    fontSize: theme.typography.fontSize.xxl,
+  emptyIconContainer: {
+    position: "relative",
+    marginBottom: theme.spacing.xl,
+  },
+  emptyIconAccent: {
+    position: "absolute",
+    bottom: -8,
+    right: -8,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.accent,
+    opacity: 0.2,
+  },
+  emptyTitle: {
+    fontSize: theme.typography.fontSize.xxxl,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
-    marginTop: theme.spacing.base,
     marginBottom: theme.spacing.sm,
+    textAlign: "center",
+  },
+  emptySubtext: {
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.sm,
+    textAlign: "center",
   },
   emptyHint: {
     fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text.tertiary,
+    textAlign: "center",
+    lineHeight: theme.typography.fontSize.base * 1.6,
+    marginBottom: theme.spacing.xl,
+  },
+  emptyFeatures: {
+    flexDirection: "column",
+    gap: theme.spacing.md,
+    marginTop: theme.spacing.lg,
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.lg,
+    borderRadius: theme.borderRadius.xl,
+    ...theme.shadows.md,
+  },
+  featureItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.md,
+  },
+  featureText: {
+    fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.secondary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   card: {
     backgroundColor: theme.colors.surface,
@@ -339,6 +461,51 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: "60%",
+  },
+  featuredBadge: {
+    position: "absolute",
+    top: theme.spacing.md,
+    left: theme.spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.full,
+    ...theme.shadows.lg,
+  },
+  featuredText: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.inverse,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  statusBadge: {
+    position: "absolute",
+    top: theme.spacing.md,
+    right: theme.spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.full,
+    ...theme.shadows.md,
+  },
+  almostFullBadge: {
+    backgroundColor: theme.colors.warning,
+  },
+  soldOutBadge: {
+    backgroundColor: theme.colors.error,
+  },
+  statusText: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.inverse,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
   cardContent: {
     padding: theme.spacing.base,

@@ -12,6 +12,7 @@ export type Event = {
   movieId?: string;
   movieData?: MovieData;
   maxCapacity?: number;
+  attendeeCount?: number; // Real RSVP count from API
   createdById?: string;
   createdAt: string;
   updatedAt: string;

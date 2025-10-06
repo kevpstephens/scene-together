@@ -14,6 +14,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../navigation/types";
 import { theme } from "../../theme";
 import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
 import AnimatedButton from "../../components/AnimatedButton";
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, "Login">;
@@ -21,6 +22,7 @@ type NavigationProp = NativeStackNavigationProp<AuthStackParamList, "Login">;
 export default function LoginScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { signIn, signInWithGoogle } = useAuth();
+  const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,16 +30,17 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields");
+      showToast("Please fill in all fields", "error");
       return;
     }
 
     try {
       setLoading(true);
       await signIn(email, password);
+      showToast("Welcome back! 🎬", "success");
       // Navigation handled automatically by RootNavigator
     } catch (error: any) {
-      Alert.alert("Login Failed", error.message || "Please try again");
+      showToast(error.message || "Login failed. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -47,9 +50,13 @@ export default function LoginScreen() {
     try {
       setGoogleLoading(true);
       await signInWithGoogle();
+      showToast("Welcome back! 🎬", "success");
       // Navigation handled automatically by RootNavigator
     } catch (error: any) {
-      Alert.alert("Google Sign In Failed", error.message || "Please try again");
+      showToast(
+        error.message || "Google sign-in failed. Please try again.",
+        "error"
+      );
     } finally {
       setGoogleLoading(false);
     }

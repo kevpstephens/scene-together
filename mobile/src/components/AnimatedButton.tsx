@@ -6,6 +6,7 @@ import {
   TextStyle,
   Animated,
 } from "react-native";
+import * as Haptics from "expo-haptics";
 
 type AnimatedButtonProps = TouchableOpacityProps & {
   children: React.ReactNode;
@@ -28,6 +29,9 @@ export default function AnimatedButton({
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = (e: any) => {
+    // Haptic feedback on press
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
     Animated.spring(scaleAnim, {
       toValue: 0.96,
       friction: springConfig.damping,

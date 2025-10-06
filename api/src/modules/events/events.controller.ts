@@ -15,11 +15,22 @@ export async function getAllEvents(
       orderBy: { date: "asc" },
       include: {
         _count: {
-          select: { rsvps: true },
+          select: {
+            rsvps: {
+              where: { status: "going" }, // Only count confirmed attendees
+            },
+          },
         },
       },
     });
-    res.json(events);
+
+    // Add attendeeCount to each event for easier access
+    const eventsWithCount = events.map((event) => ({
+      ...event,
+      attendeeCount: event._count.rsvps,
+    }));
+
+    res.json(eventsWithCount);
   } catch (error) {
     next(error);
   }
@@ -39,7 +50,11 @@ export async function getEventById(
       where: { id: req.params.id },
       include: {
         _count: {
-          select: { rsvps: true },
+          select: {
+            rsvps: {
+              where: { status: "going" }, // Only count confirmed attendees
+            },
+          },
         },
       },
     });
@@ -48,7 +63,13 @@ export async function getEventById(
       return res.status(404).json({ error: "Event not found" });
     }
 
-    res.json(event);
+    // Add attendeeCount for easier access
+    const eventWithCount = {
+      ...event,
+      attendeeCount: event._count.rsvps,
+    };
+
+    res.json(eventWithCount);
   } catch (error) {
     next(error);
   }
