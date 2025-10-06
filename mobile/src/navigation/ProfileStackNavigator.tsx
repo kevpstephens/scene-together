@@ -17,6 +17,11 @@ export default function ProfileStackNavigator() {
         headerTitleStyle: {
           fontWeight: theme.typography.fontWeight.bold,
         },
+        contentStyle: {
+          maxWidth: theme.layout.maxWidth,
+          alignSelf: "center",
+          width: "100%",
+        },
       }}
     >
       <Stack.Screen

@@ -1,6 +1,6 @@
 import React from "react";
-import { Text } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { FilmIcon, UserIcon } from "react-native-heroicons/outline";
 import { MainTabParamList } from "./types";
 import EventsStackNavigator from "./EventsStackNavigator";
 import ProfileStackNavigator from "./ProfileStackNavigator";
@@ -16,9 +16,15 @@ export default function MainTabNavigator() {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.text.tertiary,
         tabBarStyle: {
-          paddingBottom: theme.spacing.sm,
-          paddingTop: theme.spacing.sm,
+          paddingBottom: theme.spacing.xs,
+          paddingTop: theme.spacing.xs,
           height: theme.layout.tabBarHeight,
+          alignSelf: "center",
+          width: "100%",
+          maxWidth: theme.layout.maxWidth,
+        },
+        tabBarLabelStyle: {
+          paddingBottom: theme.spacing.xs,
         },
       }}
     >
@@ -27,7 +33,7 @@ export default function MainTabNavigator() {
         component={EventsStackNavigator}
         options={{
           tabBarLabel: "Events",
-          tabBarIcon: ({ color }) => <TabIcon name="🎬" color={color} />,
+          tabBarIcon: ({ color }) => <FilmIcon size={24} color={color} />,
         }}
       />
       <Tab.Screen
@@ -35,14 +41,9 @@ export default function MainTabNavigator() {
         component={ProfileStackNavigator}
         options={{
           tabBarLabel: "Profile",
-          tabBarIcon: ({ color }) => <TabIcon name="👤" color={color} />,
+          tabBarIcon: ({ color }) => <UserIcon size={24} color={color} />,
         }}
       />
     </Tab.Navigator>
   );
-}
-
-// Simple emoji icon component (we'll improve this with react-native-vector-icons later)
-function TabIcon({ name, color }: { name: string; color: string }) {
-  return <Text style={{ fontSize: 24 }}>{name}</Text>;
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { RootStackParamList } from "./types";
@@ -22,14 +22,31 @@ export default function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {session ? (
-          <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-        ) : (
-          <Stack.Screen name="Auth" component={AuthNavigator} />
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View style={styles.container}>
+      <View style={styles.contentWrapper}>
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            {session ? (
+              <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+            ) : (
+              <Stack.Screen name="Auth" component={AuthNavigator} />
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    backgroundColor: theme.colors.background,
+  },
+  contentWrapper: {
+    flex: 1,
+    width: "100%",
+    maxWidth: theme.layout.maxWidth,
+  },
+});

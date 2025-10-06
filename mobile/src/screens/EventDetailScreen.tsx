@@ -13,6 +13,15 @@ import {
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { LinearGradient } from "expo-linear-gradient";
+import {
+  CalendarIcon,
+  ClockIcon,
+  MapPinIcon,
+  UsersIcon,
+  FilmIcon,
+  StarIcon,
+  TicketIcon,
+} from "react-native-heroicons/outline";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { EventsStackParamList } from "../navigation/types";
 import { api } from "../services/api";
@@ -150,7 +159,7 @@ export default function EventDetailScreen() {
           {/* Date & Time */}
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <Text style={styles.infoIcon}>📅</Text>
+              <CalendarIcon size={20} color={theme.colors.primary} />
               <View style={styles.infoTextContainer}>
                 <Text style={styles.infoLabel}>Date</Text>
                 <Text style={styles.infoValue}>{formatDate(event.date)}</Text>
@@ -158,7 +167,7 @@ export default function EventDetailScreen() {
             </View>
 
             <View style={styles.infoRow}>
-              <Text style={styles.infoIcon}>🕐</Text>
+              <ClockIcon size={20} color={theme.colors.primary} />
               <View style={styles.infoTextContainer}>
                 <Text style={styles.infoLabel}>Time</Text>
                 <Text style={styles.infoValue}>{formatTime(event.date)}</Text>
@@ -167,7 +176,7 @@ export default function EventDetailScreen() {
 
             {event.location && (
               <View style={styles.infoRow}>
-                <Text style={styles.infoIcon}>📍</Text>
+                <MapPinIcon size={20} color={theme.colors.primary} />
                 <View style={styles.infoTextContainer}>
                   <Text style={styles.infoLabel}>Location</Text>
                   <Text style={styles.infoValue}>{event.location}</Text>
@@ -177,7 +186,7 @@ export default function EventDetailScreen() {
 
             {event.maxCapacity && (
               <View style={styles.infoRow}>
-                <Text style={styles.infoIcon}>👥</Text>
+                <UsersIcon size={20} color={theme.colors.primary} />
                 <View style={styles.infoTextContainer}>
                   <Text style={styles.infoLabel}>Capacity</Text>
                   <Text style={styles.infoValue}>
@@ -210,22 +219,25 @@ export default function EventDetailScreen() {
               <View style={styles.movieMetaRow}>
                 {event.movieData.year && (
                   <View style={styles.metaChip}>
+                    <CalendarIcon size={12} color={theme.colors.text.inverse} />
                     <Text style={styles.metaChipText}>
-                      📅 {event.movieData.year}
+                      {event.movieData.year}
                     </Text>
                   </View>
                 )}
                 {event.movieData.runtime && (
                   <View style={styles.metaChip}>
+                    <ClockIcon size={12} color={theme.colors.text.inverse} />
                     <Text style={styles.metaChipText}>
-                      ⏱️ {event.movieData.runtime}
+                      {event.movieData.runtime}
                     </Text>
                   </View>
                 )}
                 {event.movieData.imdbRating && (
                   <View style={styles.metaChip}>
+                    <StarIcon size={12} color={theme.colors.text.inverse} />
                     <Text style={styles.metaChipText}>
-                      ⭐ {parseFloat(event.movieData.imdbRating).toFixed(1)}/10
+                      {parseFloat(event.movieData.imdbRating).toFixed(1)}/10
                     </Text>
                   </View>
                 )}
@@ -257,9 +269,13 @@ export default function EventDetailScreen() {
                   if (videoId) {
                     return (
                       <View style={styles.trailerContainer}>
-                        <Text style={styles.trailerTitle}>
-                          🎬 Watch Trailer
-                        </Text>
+                        <View style={styles.trailerTitleRow}>
+                          <FilmIcon
+                            size={18}
+                            color={theme.colors.text.primary}
+                          />
+                          <Text style={styles.trailerTitle}>Watch Trailer</Text>
+                        </View>
 
                         {Platform.OS === "web" ? (
                           // Web: Use iframe directly
@@ -328,8 +344,11 @@ export default function EventDetailScreen() {
               onPress={handleRSVP}
               disabled={rsvpLoading}
             >
+              {!rsvpLoading && (
+                <TicketIcon size={20} color={theme.colors.text.inverse} />
+              )}
               <Text style={styles.rsvpButtonText}>
-                {rsvpLoading ? "Processing..." : "🎟️ RSVP for this event"}
+                {rsvpLoading ? "Processing..." : "RSVP for this event"}
               </Text>
             </TouchableOpacity>
 
@@ -339,7 +358,8 @@ export default function EventDetailScreen() {
                 style={styles.imdbButton}
                 onPress={handleOpenIMDB}
               >
-                <Text style={styles.imdbButtonText}>🎬 View on IMDB</Text>
+                <FilmIcon size={20} color={theme.colors.primary} />
+                <Text style={styles.imdbButtonText}>View on IMDB</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -408,13 +428,10 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: theme.spacing.md,
     paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.borderLight,
-  },
-  infoIcon: {
-    fontSize: theme.typography.fontSize.xl,
-    marginRight: theme.spacing.md,
   },
   infoTextContainer: {
     flex: 1,
@@ -469,6 +486,9 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   metaChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
     backgroundColor: theme.colors.accent,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
@@ -497,11 +517,16 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: theme.colors.borderLight,
   },
+  trailerTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
   trailerTitle: {
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md,
   },
   videoWrapper: {
     borderRadius: theme.borderRadius.lg,
@@ -519,6 +544,10 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   rsvpButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.spacing.sm,
     backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.base,
     paddingHorizontal: theme.spacing.xl,
@@ -529,9 +558,12 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: theme.typography.fontSize.lg,
     fontWeight: theme.typography.fontWeight.bold,
-    textAlign: "center",
   },
   imdbButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.spacing.sm,
     backgroundColor: theme.colors.surface,
     borderWidth: 2,
     borderColor: theme.colors.primary,
@@ -544,6 +576,5 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontSize: theme.typography.fontSize.lg,
     fontWeight: theme.typography.fontWeight.bold,
-    textAlign: "center",
   },
 });

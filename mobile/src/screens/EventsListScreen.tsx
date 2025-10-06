@@ -10,6 +10,12 @@ import {
   RefreshControl,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import {
+  ClockIcon,
+  MapPinIcon,
+  UsersIcon,
+  FilmIcon,
+} from "react-native-heroicons/outline";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { EventsStackParamList } from "../navigation/types";
@@ -109,13 +115,15 @@ export default function EventsListScreen() {
         </Text>
 
         <View style={styles.detailsRow}>
-          <Text style={styles.time}>🕐 {formatTime(item.date)}</Text>
+          <ClockIcon size={16} color={theme.colors.text.secondary} />
+          <Text style={styles.time}>{formatTime(item.date)}</Text>
         </View>
 
         {item.location && (
           <View style={styles.detailsRow}>
+            <MapPinIcon size={16} color={theme.colors.text.secondary} />
             <Text style={styles.location} numberOfLines={1}>
-              📍 {item.location}
+              {item.location}
             </Text>
           </View>
         )}
@@ -135,7 +143,8 @@ export default function EventsListScreen() {
 
         {item.maxCapacity && (
           <View style={styles.capacityRow}>
-            <Text style={styles.capacityText}>👥 {item.maxCapacity} spots</Text>
+            <UsersIcon size={14} color={theme.colors.text.tertiary} />
+            <Text style={styles.capacityText}>{item.maxCapacity} spots</Text>
           </View>
         )}
       </View>
@@ -172,7 +181,7 @@ export default function EventsListScreen() {
           }
           ListEmptyComponent={
             <View style={styles.emptyContent}>
-              <Text style={styles.emptyText}>🎬</Text>
+              <FilmIcon size={64} color={theme.colors.text.tertiary} />
               <Text style={styles.emptySubtext}>No events yet</Text>
               <Text style={styles.emptyHint}>
                 Check back soon for film screenings!
@@ -219,14 +228,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: theme.spacing.xxxl,
   },
-  emptyText: {
-    fontSize: theme.typography.fontSize.emoji,
-    marginBottom: theme.spacing.base,
-  },
   emptySubtext: {
     fontSize: theme.typography.fontSize.xxl,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
+    marginTop: theme.spacing.base,
     marginBottom: theme.spacing.sm,
   },
   emptyHint: {
@@ -286,6 +292,7 @@ const styles = StyleSheet.create({
   detailsRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: theme.spacing.xs,
     marginBottom: theme.spacing.xs,
   },
   time: {
@@ -316,6 +323,9 @@ const styles = StyleSheet.create({
     color: theme.colors.text.tertiary,
   },
   capacityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
     marginTop: theme.spacing.sm,
   },
   capacityText: {
