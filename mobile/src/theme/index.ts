@@ -5,34 +5,34 @@
 
 export const theme = {
   colors: {
-    // Primary brand colors - vibrant teal
-    primary: "#14b8a6", // Teal 500
-    primaryDark: "#0d9488", // Teal 600
-    primaryLight: "#5eead4", // Teal 300
+    // Primary brand colors - custom palette
+    primary: "#46D4AF", // Turquoise (main brand color)
+    primaryDark: "#23797E", // Teal (darker variant)
+    primaryLight: "#6FE0C2", // Lighter turquoise
 
     // Accent colors for visual interest
-    accent: "#f59e0b", // Amber 500 (for highlights/CTAs)
-    accentLight: "#fbbf24", // Amber 400
+    accent: "#46D4AF", // Turquoise (for highlights/CTAs)
+    accentLight: "#6FE0C2", // Lighter turquoise
 
     // Backgrounds with more depth
-    background: "#fafafa", // Neutral 50
-    backgroundDark: "#f5f5f5", // Neutral 100
+    background: "#EFF0EF", // Anti-flash white (light gray)
+    backgroundDark: "#23797E", // Teal for dark sections
     surface: "#ffffff", // White cards/surfaces
     surfaceElevated: "#ffffff", // White with shadows
-    overlay: "rgba(0, 0, 0, 0.6)",
-    overlayLight: "rgba(0, 0, 0, 0.3)",
+    overlay: "rgba(0, 1, 2, 0.6)", // Black with opacity
+    overlayLight: "rgba(0, 1, 2, 0.3)", // Black with lighter opacity
 
     // Gradient overlays
-    gradientDark: "rgba(0, 0, 0, 0.7)",
-    gradientPrimary: "rgba(20, 184, 166, 0.9)", // primary with opacity
+    gradientDark: "rgba(0, 1, 2, 0.7)", // Black gradient
+    gradientPrimary: "rgba(70, 212, 175, 0.9)", // Turquoise with opacity
 
     // Text colors
     text: {
-      primary: "#171717", // Neutral 900
-      secondary: "#737373", // Neutral 500
-      tertiary: "#a3a3a3", // Neutral 400
+      primary: "#000102", // Black from palette
+      secondary: "#23797E", // Teal from palette
+      tertiary: "#a3a3a3", // Neutral 400 (keep for subtle text)
       inverse: "#ffffff", // White text
-      accent: "#f59e0b", // Amber for highlights
+      accent: "#46D4AF", // Turquoise for highlights
     },
 
     // Status colors - more vibrant

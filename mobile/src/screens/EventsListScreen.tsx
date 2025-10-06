@@ -9,6 +9,7 @@ import {
   Image,
   RefreshControl,
   Animated,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -25,11 +26,33 @@ import { theme } from "../theme";
 import type { Event } from "../types";
 import EventCardSkeleton from "../components/EventCardSkeleton";
 import AnimatedButton from "../components/AnimatedButton";
+import GradientBackground from "../components/GradientBackground";
 
 type NavigationProp = NativeStackNavigationProp<
   EventsStackParamList,
   "EventsList"
 >;
+
+// Genre color mapping
+const getGenreColor = (genre: string): string => {
+  const genreLower = genre.toLowerCase();
+
+  if (genreLower.includes("action")) return "#ef4444"; // Red
+  if (genreLower.includes("adventure")) return "#f59e0b"; // Amber
+  if (genreLower.includes("comedy")) return "#fbbf24"; // Yellow
+  if (genreLower.includes("drama")) return "#8b5cf6"; // Purple
+  if (genreLower.includes("sci-fi") || genreLower.includes("science fiction"))
+    return "#06b6d4"; // Cyan
+  if (genreLower.includes("horror")) return "#dc2626"; // Dark red
+  if (genreLower.includes("thriller")) return "#7c3aed"; // Violet
+  if (genreLower.includes("romance")) return "#ec4899"; // Pink
+  if (genreLower.includes("fantasy")) return "#a855f7"; // Purple
+  if (genreLower.includes("mystery")) return "#6366f1"; // Indigo
+  if (genreLower.includes("animation")) return "#10b981"; // Green
+  if (genreLower.includes("documentary")) return "#0ea5e9"; // Blue
+
+  return "#46D4AF"; // Default - Turquoise from palette
+};
 
 export default function EventsListScreen() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -145,17 +168,50 @@ export default function EventsListScreen() {
               {item.movieData.title}
             </Text>
             {item.movieData.genre && (
-              <Text style={styles.movieGenre} numberOfLines={1}>
-                {item.movieData.genre}
-              </Text>
+              <View style={styles.genreContainer}>
+                {item.movieData.genre
+                  .split(",")
+                  .slice(0, 3)
+                  .map((genre, index) => {
+                    const trimmedGenre = genre.trim();
+                    return (
+                      <View
+                        key={index}
+                        style={[
+                          styles.genreChip,
+                          { backgroundColor: getGenreColor(trimmedGenre) },
+                        ]}
+                      >
+                        <Text style={styles.genreChipText} numberOfLines={1}>
+                          {trimmedGenre}
+                        </Text>
+                      </View>
+                    );
+                  })}
+              </View>
             )}
           </View>
         )}
 
         {item.maxCapacity && (
-          <View style={styles.capacityRow}>
-            <UsersIcon size={14} color={theme.colors.text.tertiary} />
-            <Text style={styles.capacityText}>{item.maxCapacity} spots</Text>
+          <View style={styles.capacityContainer}>
+            <View style={styles.capacityRow}>
+              <UsersIcon size={14} color={theme.colors.text.tertiary} />
+              <Text style={styles.capacityText}>
+                {Math.floor(item.maxCapacity * 0.6)} / {item.maxCapacity} spots
+              </Text>
+            </View>
+            {/* Animated Progress Bar */}
+            <View style={styles.progressBarContainer}>
+              <Animated.View
+                style={[
+                  styles.progressBar,
+                  {
+                    width: `${(Math.floor(item.maxCapacity * 0.6) / item.maxCapacity) * 100}%`,
+                  },
+                ]}
+              />
+            </View>
           </View>
         )}
       </View>
@@ -178,6 +234,7 @@ export default function EventsListScreen() {
 
   return (
     <View style={styles.container}>
+      <GradientBackground />
       <View style={styles.contentWrapper}>
         <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
           <FlatList
@@ -262,7 +319,9 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.xl,
     marginBottom: theme.spacing.lg,
     overflow: "hidden",
-    ...theme.shadows.lg,
+    borderWidth: 1,
+    borderColor: "rgba(70, 212, 175, 0.1)", // Subtle turquoise border
+    ...theme.shadows.xl, // Stronger shadow for more depth
   },
   posterContainer: {
     position: "relative",
@@ -334,21 +393,48 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xxs,
+    marginBottom: theme.spacing.sm,
   },
-  movieGenre: {
+  genreContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: theme.spacing.xs,
+  },
+  genreChip: {
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xxs,
+    borderRadius: theme.borderRadius.full,
+    ...theme.shadows.sm,
+  },
+  genreChipText: {
     fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: "#ffffff",
+    letterSpacing: 0.3,
+  },
+  capacityContainer: {
+    marginTop: theme.spacing.sm,
   },
   capacityRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: theme.spacing.xs,
-    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
   },
   capacityText: {
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.text.tertiary,
     fontWeight: theme.typography.fontWeight.medium,
+  },
+  progressBarContainer: {
+    height: 4,
+    backgroundColor: theme.colors.borderLight,
+    borderRadius: theme.borderRadius.full,
+    overflow: "hidden",
+  },
+  progressBar: {
+    height: "100%",
+    backgroundColor: theme.colors.accent,
+    borderRadius: theme.borderRadius.full,
   },
 });

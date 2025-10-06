@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Alert,
   Linking,
   Platform,
+  Animated,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { LinearGradient } from "expo-linear-gradient";
@@ -28,8 +29,30 @@ import { api } from "../services/api";
 import { theme } from "../theme";
 import type { Event } from "../types";
 import AnimatedButton from "../components/AnimatedButton";
+import GradientBackground from "../components/GradientBackground";
 
 type RouteProps = RouteProp<EventsStackParamList, "EventDetail">;
+
+// Genre color mapping (same as EventsListScreen)
+const getGenreColor = (genre: string): string => {
+  const genreLower = genre.toLowerCase();
+
+  if (genreLower.includes("action")) return "#ef4444"; // Red
+  if (genreLower.includes("adventure")) return "#f59e0b"; // Amber
+  if (genreLower.includes("comedy")) return "#fbbf24"; // Yellow
+  if (genreLower.includes("drama")) return "#8b5cf6"; // Purple
+  if (genreLower.includes("sci-fi") || genreLower.includes("science fiction"))
+    return "#06b6d4"; // Cyan
+  if (genreLower.includes("horror")) return "#dc2626"; // Dark red
+  if (genreLower.includes("thriller")) return "#7c3aed"; // Violet
+  if (genreLower.includes("romance")) return "#ec4899"; // Pink
+  if (genreLower.includes("fantasy")) return "#a855f7"; // Purple
+  if (genreLower.includes("mystery")) return "#6366f1"; // Indigo
+  if (genreLower.includes("animation")) return "#10b981"; // Green
+  if (genreLower.includes("documentary")) return "#0ea5e9"; // Blue
+
+  return "#46D4AF"; // Default - Turquoise from palette
+};
 
 // Declare iframe for React Native Web
 declare global {
@@ -46,6 +69,7 @@ export default function EventDetailScreen() {
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [rsvpLoading, setRsvpLoading] = useState(false);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadEvent();
@@ -131,175 +155,227 @@ export default function EventDetailScreen() {
     );
   }
 
+  // Parallax effect for hero image
+  const heroTranslate = scrollY.interpolate({
+    inputRange: [0, 300],
+    outputRange: [0, -100],
+    extrapolate: "clamp",
+  });
+
+  const heroScale = scrollY.interpolate({
+    inputRange: [-100, 0, 300],
+    outputRange: [1.2, 1, 0.9],
+    extrapolate: "clamp",
+  });
+
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContent}
-    >
-      <View style={styles.contentWrapper}>
-        {/* Hero Image with Gradient Overlay */}
-        {event.movieData?.poster && (
-          <View style={styles.heroContainer}>
-            <Image
-              source={{ uri: event.movieData.poster }}
-              style={styles.heroImage}
-              resizeMode="contain"
-            />
-            <LinearGradient
-              colors={["transparent", "rgba(250, 250, 250, 0.95)"]}
-              style={styles.heroGradient}
-            />
-          </View>
+    <>
+      <GradientBackground />
+      <Animated.ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
         )}
-
-        {/* Content */}
-        <View style={styles.content}>
-          {/* Event Title */}
-          <Text style={styles.title}>{event.title}</Text>
-
-          {/* Date & Time */}
-          <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
-              <CalendarIcon size={20} color={theme.colors.primary} />
-              <View style={styles.infoTextContainer}>
-                <Text style={styles.infoLabel}>Date</Text>
-                <Text style={styles.infoValue}>{formatDate(event.date)}</Text>
-              </View>
-            </View>
-
-            <View style={styles.infoRow}>
-              <ClockIcon size={20} color={theme.colors.primary} />
-              <View style={styles.infoTextContainer}>
-                <Text style={styles.infoLabel}>Time</Text>
-                <Text style={styles.infoValue}>{formatTime(event.date)}</Text>
-              </View>
-            </View>
-
-            {event.location && (
-              <View style={styles.infoRow}>
-                <MapPinIcon size={20} color={theme.colors.primary} />
-                <View style={styles.infoTextContainer}>
-                  <Text style={styles.infoLabel}>Location</Text>
-                  <Text style={styles.infoValue}>{event.location}</Text>
-                </View>
-              </View>
-            )}
-
-            {event.maxCapacity && (
-              <View style={styles.infoRow}>
-                <UsersIcon size={20} color={theme.colors.primary} />
-                <View style={styles.infoTextContainer}>
-                  <Text style={styles.infoLabel}>Capacity</Text>
-                  <Text style={styles.infoValue}>
-                    {event.maxCapacity} spots
-                  </Text>
-                </View>
-              </View>
-            )}
-          </View>
-
-          {/* Description */}
-          {event.description && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>About this event</Text>
-              <Text style={styles.description}>{event.description}</Text>
+        scrollEventThrottle={16}
+      >
+        <View style={styles.contentWrapper}>
+          {/* Hero Image with Gradient Overlay and Parallax */}
+          {event.movieData?.poster && (
+            <View style={styles.heroContainer}>
+              <Animated.Image
+                source={{ uri: event.movieData.poster }}
+                style={[
+                  styles.heroImage,
+                  {
+                    transform: [
+                      { translateY: heroTranslate },
+                      { scale: heroScale },
+                    ],
+                  },
+                ]}
+                resizeMode="contain"
+              />
+              <LinearGradient
+                colors={["transparent", "rgba(239, 240, 239, 0.95)"]}
+                style={styles.heroGradient}
+              />
             </View>
           )}
 
-          {/* Movie Details */}
-          {event.movieData && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>About the film</Text>
-              <Text style={styles.movieTitle}>{event.movieData.title}</Text>
+          {/* Content */}
+          <View style={styles.content}>
+            {/* Event Title */}
+            <Text style={styles.title}>{event.title}</Text>
 
-              {event.movieData.plot && (
-                <Text style={styles.moviePlot}>{event.movieData.plot}</Text>
-              )}
-
-              {/* Movie Info Badges Row */}
-              <View style={styles.movieMetaRow}>
-                {event.movieData.year && (
-                  <View style={styles.metaChip}>
-                    <CalendarIcon size={12} color={theme.colors.text.inverse} />
-                    <Text style={styles.metaChipText}>
-                      {event.movieData.year}
-                    </Text>
-                  </View>
-                )}
-                {event.movieData.runtime && (
-                  <View style={styles.metaChip}>
-                    <ClockIcon size={12} color={theme.colors.text.inverse} />
-                    <Text style={styles.metaChipText}>
-                      {event.movieData.runtime}
-                    </Text>
-                  </View>
-                )}
-                {event.movieData.imdbRating && (
-                  <View style={styles.metaChip}>
-                    <StarIcon size={12} color={theme.colors.text.inverse} />
-                    <Text style={styles.metaChipText}>
-                      {parseFloat(event.movieData.imdbRating).toFixed(1)}/10
-                    </Text>
-                  </View>
-                )}
+            {/* Date & Time */}
+            <View style={styles.infoCard}>
+              <View style={styles.infoRow}>
+                <CalendarIcon size={20} color={theme.colors.primary} />
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoLabel}>Date</Text>
+                  <Text style={styles.infoValue}>{formatDate(event.date)}</Text>
+                </View>
               </View>
 
-              {event.movieData.genre && (
-                <Text style={styles.movieMeta}>
-                  <Text style={styles.movieMetaLabel}>Genre: </Text>
-                  {event.movieData.genre}
-                </Text>
-              )}
-              {event.movieData.director && (
-                <Text style={styles.movieMeta}>
-                  <Text style={styles.movieMetaLabel}>Director: </Text>
-                  {event.movieData.director}
-                </Text>
-              )}
-              {event.movieData.actors && (
-                <Text style={styles.movieMeta}>
-                  <Text style={styles.movieMetaLabel}>Cast: </Text>
-                  {event.movieData.actors}
-                </Text>
+              <View style={styles.infoRow}>
+                <ClockIcon size={20} color={theme.colors.primary} />
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoLabel}>Time</Text>
+                  <Text style={styles.infoValue}>{formatTime(event.date)}</Text>
+                </View>
+              </View>
+
+              {event.location && (
+                <View style={styles.infoRow}>
+                  <MapPinIcon size={20} color={theme.colors.primary} />
+                  <View style={styles.infoTextContainer}>
+                    <Text style={styles.infoLabel}>Location</Text>
+                    <Text style={styles.infoValue}>{event.location}</Text>
+                  </View>
+                </View>
               )}
 
-              {/* Embedded YouTube Trailer */}
-              {event.movieData.trailer &&
-                (() => {
-                  const videoId = getYouTubeVideoId(event.movieData.trailer);
-                  if (videoId) {
-                    return (
-                      <View style={styles.trailerContainer}>
-                        <View style={styles.trailerTitleRow}>
-                          <FilmIcon
-                            size={18}
-                            color={theme.colors.text.primary}
-                          />
-                          <Text style={styles.trailerTitle}>Watch Trailer</Text>
-                        </View>
+              {event.maxCapacity && (
+                <View style={styles.infoRow}>
+                  <UsersIcon size={20} color={theme.colors.primary} />
+                  <View style={styles.infoTextContainer}>
+                    <Text style={styles.infoLabel}>Capacity</Text>
+                    <Text style={styles.infoValue}>
+                      {event.maxCapacity} spots
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
 
-                        {Platform.OS === "web" ? (
-                          // Web: Use iframe directly
-                          <View style={styles.videoWrapper}>
-                            <iframe
-                              style={{
-                                width: "100%",
-                                height: 220,
-                                border: 0,
-                                borderRadius: 12,
-                              }}
-                              src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                            />
+            {/* Description */}
+            {event.description && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>About this event</Text>
+                <Text style={styles.description}>{event.description}</Text>
+              </View>
+            )}
+
+            {/* Movie Details */}
+            {event.movieData && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>About the film</Text>
+                <Text style={styles.movieTitle}>{event.movieData.title}</Text>
+
+                {/* Movie Info Badges Row - moved directly below title */}
+                <View style={styles.movieMetaRow}>
+                  {event.movieData.year && (
+                    <View style={styles.metaChip}>
+                      <CalendarIcon
+                        size={12}
+                        color={theme.colors.text.inverse}
+                      />
+                      <Text style={styles.metaChipText}>
+                        {event.movieData.year}
+                      </Text>
+                    </View>
+                  )}
+                  {event.movieData.runtime && (
+                    <View style={styles.metaChip}>
+                      <ClockIcon size={12} color={theme.colors.text.inverse} />
+                      <Text style={styles.metaChipText}>
+                        {event.movieData.runtime}
+                      </Text>
+                    </View>
+                  )}
+                  {event.movieData.imdbRating && (
+                    <View style={styles.metaChip}>
+                      <StarIcon size={12} color={theme.colors.text.inverse} />
+                      <Text style={styles.metaChipText}>
+                        {parseFloat(event.movieData.imdbRating).toFixed(1)}/10
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {event.movieData.plot && (
+                  <Text style={styles.moviePlot}>{event.movieData.plot}</Text>
+                )}
+
+                {/* Genre Chips */}
+                {event.movieData.genre && (
+                  <View style={styles.genreSection}>
+                    <Text style={styles.movieMetaLabel}>Genres:</Text>
+                    <View style={styles.genreChipsContainer}>
+                      {event.movieData.genre.split(",").map((genre, index) => {
+                        const trimmedGenre = genre.trim();
+                        return (
+                          <View
+                            key={index}
+                            style={[
+                              styles.genreChip,
+                              { backgroundColor: getGenreColor(trimmedGenre) },
+                            ]}
+                          >
+                            <Text style={styles.genreChipText}>
+                              {trimmedGenre}
+                            </Text>
                           </View>
-                        ) : (
-                          // Mobile: Use WebView
-                          <View style={styles.videoWrapper}>
-                            <WebView
-                              style={styles.video}
-                              source={{
-                                html: `
+                        );
+                      })}
+                    </View>
+                  </View>
+                )}
+
+                {event.movieData.director && (
+                  <Text style={styles.movieMeta}>
+                    <Text style={styles.movieMetaLabel}>Director: </Text>
+                    {event.movieData.director}
+                  </Text>
+                )}
+                {event.movieData.actors && (
+                  <Text style={styles.movieMeta}>
+                    <Text style={styles.movieMetaLabel}>Cast: </Text>
+                    {event.movieData.actors}
+                  </Text>
+                )}
+
+                {/* Embedded YouTube Trailer */}
+                {event.movieData.trailer &&
+                  (() => {
+                    const videoId = getYouTubeVideoId(event.movieData.trailer);
+                    if (videoId) {
+                      return (
+                        <View style={styles.trailerContainer}>
+                          <View style={styles.trailerTitleRow}>
+                            <FilmIcon
+                              size={18}
+                              color={theme.colors.text.primary}
+                            />
+                            <Text style={styles.trailerTitle}>
+                              Watch Trailer
+                            </Text>
+                          </View>
+
+                          {Platform.OS === "web" ? (
+                            // Web: Use iframe directly
+                            <View style={styles.videoWrapper}>
+                              <iframe
+                                style={{
+                                  width: "100%",
+                                  height: 220,
+                                  border: 0,
+                                  borderRadius: 12,
+                                }}
+                                src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            </View>
+                          ) : (
+                            // Mobile: Use WebView
+                            <View style={styles.videoWrapper}>
+                              <WebView
+                                style={styles.video}
+                                source={{
+                                  html: `
                               <!DOCTYPE html>
                               <html>
                                 <head>
@@ -322,51 +398,52 @@ export default function EventDetailScreen() {
                                 </body>
                               </html>
                             `,
-                              }}
-                              allowsFullscreenVideo
-                              javaScriptEnabled
-                              domStorageEnabled
-                              mediaPlaybackRequiresUserAction={false}
-                            />
-                          </View>
-                        )}
-                      </View>
-                    );
-                  }
-                  return null;
-                })()}
-            </View>
-          )}
-
-          {/* Action Buttons */}
-          <View style={styles.actionButtons}>
-            <AnimatedButton
-              style={styles.rsvpButton}
-              onPress={handleRSVP}
-              disabled={rsvpLoading}
-            >
-              {!rsvpLoading && (
-                <TicketIcon size={20} color={theme.colors.text.inverse} />
-              )}
-              <Text style={styles.rsvpButtonText}>
-                {rsvpLoading ? "Processing..." : "RSVP for this event"}
-              </Text>
-            </AnimatedButton>
-
-            {/* IMDB Button */}
-            {event.movieData?.imdbId && (
-              <AnimatedButton
-                style={styles.imdbButton}
-                onPress={handleOpenIMDB}
-              >
-                <FilmIcon size={20} color={theme.colors.primary} />
-                <Text style={styles.imdbButtonText}>View on IMDB</Text>
-              </AnimatedButton>
+                                }}
+                                allowsFullscreenVideo
+                                javaScriptEnabled
+                                domStorageEnabled
+                                mediaPlaybackRequiresUserAction={false}
+                              />
+                            </View>
+                          )}
+                        </View>
+                      );
+                    }
+                    return null;
+                  })()}
+              </View>
             )}
+
+            {/* Action Buttons */}
+            <View style={styles.actionButtons}>
+              <AnimatedButton
+                style={styles.rsvpButton}
+                onPress={handleRSVP}
+                disabled={rsvpLoading}
+              >
+                {!rsvpLoading && (
+                  <TicketIcon size={20} color={theme.colors.text.inverse} />
+                )}
+                <Text style={styles.rsvpButtonText}>
+                  {rsvpLoading ? "Processing..." : "RSVP for this event"}
+                </Text>
+              </AnimatedButton>
+
+              {/* IMDB Button */}
+              {event.movieData?.imdbId && (
+                <AnimatedButton
+                  style={styles.imdbButton}
+                  onPress={handleOpenIMDB}
+                >
+                  <FilmIcon size={20} color={theme.colors.primary} />
+                  <Text style={styles.imdbButtonText}>View on IMDB</Text>
+                </AnimatedButton>
+              )}
+            </View>
           </View>
         </View>
-      </View>
-    </ScrollView>
+      </Animated.ScrollView>
+    </>
   );
 }
 
@@ -424,7 +501,9 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.xl,
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
-    ...theme.shadows.md,
+    borderWidth: 1,
+    borderColor: "rgba(70, 212, 175, 0.1)", // Subtle turquoise border
+    ...theme.shadows.lg,
   },
   infoRow: {
     flexDirection: "row",
@@ -455,7 +534,9 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.xl,
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
-    ...theme.shadows.md,
+    borderWidth: 1,
+    borderColor: "rgba(70, 212, 175, 0.1)", // Subtle turquoise border
+    ...theme.shadows.lg,
   },
   sectionTitle: {
     fontSize: theme.typography.fontSize.lg,
@@ -511,6 +592,27 @@ const styles = StyleSheet.create({
   movieMetaLabel: {
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.primary,
+  },
+  genreSection: {
+    marginBottom: theme.spacing.md,
+  },
+  genreChipsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.sm,
+  },
+  genreChip: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.full,
+    ...theme.shadows.md,
+  },
+  genreChipText: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: "#ffffff",
+    letterSpacing: 0.5,
   },
   trailerContainer: {
     marginTop: theme.spacing.lg,
