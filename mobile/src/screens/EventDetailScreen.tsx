@@ -22,14 +22,19 @@ import {
   FilmIcon,
   StarIcon,
   TicketIcon,
+  CheckCircleIcon,
+  HeartIcon,
+  XCircleIcon,
 } from "react-native-heroicons/outline";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { EventsStackParamList } from "../navigation/types";
 import { api } from "../services/api";
 import { theme } from "../theme";
-import type { Event } from "../types";
+import type { Event, RSVPStatus } from "../types";
 import AnimatedButton from "../components/AnimatedButton";
 import GradientBackground from "../components/GradientBackground";
+import { useToast } from "../contexts/ToastContext";
+import * as Haptics from "expo-haptics";
 
 type RouteProps = RouteProp<EventsStackParamList, "EventDetail">;
 
@@ -66,13 +71,16 @@ declare global {
 export default function EventDetailScreen() {
   const route = useRoute<RouteProps>();
   const { eventId } = route.params;
+  const { showToast } = useToast();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [rsvpLoading, setRsvpLoading] = useState(false);
+  const [userRSVP, setUserRSVP] = useState<RSVPStatus | null>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadEvent();
+    loadUserRSVP();
   }, [eventId]);
 
   const loadEvent = async () => {
@@ -88,9 +96,54 @@ export default function EventDetailScreen() {
     }
   };
 
-  const handleRSVP = async () => {
-    // TODO: Implement RSVP functionality
-    Alert.alert("RSVP", "RSVP functionality coming soon!");
+  const loadUserRSVP = async () => {
+    try {
+      // Fetch user's RSVPs and find this event
+      const response = await api.get("/me/rsvps");
+      const eventRSVP = response.data.find(
+        (rsvp: any) => rsvp.eventId === eventId
+      );
+      setUserRSVP(eventRSVP?.status || null);
+    } catch (error) {
+      console.error("Failed to load RSVP status:", error);
+      // Don't show error - user might not have RSVP'd yet
+    }
+  };
+
+  const handleRSVP = async (status: RSVPStatus) => {
+    try {
+      setRsvpLoading(true);
+      await api.post(`/events/${eventId}/rsvp`, { status });
+
+      // Haptic feedback
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      // Update local state
+      setUserRSVP(status);
+
+      // Reload event to get updated attendee count
+      await loadEvent();
+
+      // Show success toast
+      const statusMessages = {
+        going: "You're going! 🎉",
+        interested: "Marked as interested ⭐",
+        not_going: "RSVP removed",
+      };
+      showToast(statusMessages[status], "success");
+    } catch (error: any) {
+      console.error("Failed to RSVP:", error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+
+      // Show error message from API or generic error
+      if (error.response?.data?.error === "Event is at full capacity") {
+        showToast("Event is full! 😔", "error");
+      } else {
+        showToast("Failed to RSVP. Please try again.", "error");
+      }
+    } finally {
+      setRsvpLoading(false);
+    }
   };
 
   const handleOpenIMDB = async () => {
@@ -414,23 +467,117 @@ export default function EventDetailScreen() {
               </View>
             )}
 
-            {/* Action Buttons */}
-            <View style={styles.actionButtons}>
-              <AnimatedButton
-                style={styles.rsvpButton}
-                onPress={handleRSVP}
-                disabled={rsvpLoading}
-              >
-                {!rsvpLoading && (
-                  <TicketIcon size={20} color={theme.colors.text.inverse} />
-                )}
-                <Text style={styles.rsvpButtonText}>
-                  {rsvpLoading ? "Processing..." : "RSVP for this event"}
-                </Text>
-              </AnimatedButton>
+            {/* RSVP Section */}
+            <View style={styles.rsvpSection}>
+              <Text style={styles.rsvpTitle}>Will you attend?</Text>
 
-              {/* IMDB Button */}
-              {event.movieData?.imdbId && (
+              <View style={styles.rsvpButtons}>
+                {/* Going Button */}
+                <AnimatedButton
+                  style={[
+                    styles.rsvpOption,
+                    userRSVP === "going" && styles.rsvpOptionActive,
+                  ]}
+                  onPress={() => handleRSVP("going")}
+                  disabled={rsvpLoading}
+                >
+                  <CheckCircleIcon
+                    size={24}
+                    color={
+                      userRSVP === "going"
+                        ? theme.colors.text.inverse
+                        : theme.colors.success
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.rsvpOptionText,
+                      userRSVP === "going" && styles.rsvpOptionTextActive,
+                    ]}
+                  >
+                    Going
+                  </Text>
+                </AnimatedButton>
+
+                {/* Interested Button */}
+                <AnimatedButton
+                  style={[
+                    styles.rsvpOption,
+                    userRSVP === "interested" && styles.rsvpOptionActive,
+                  ]}
+                  onPress={() => handleRSVP("interested")}
+                  disabled={rsvpLoading}
+                >
+                  <HeartIcon
+                    size={24}
+                    color={
+                      userRSVP === "interested"
+                        ? theme.colors.text.inverse
+                        : theme.colors.warning
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.rsvpOptionText,
+                      userRSVP === "interested" && styles.rsvpOptionTextActive,
+                    ]}
+                  >
+                    Interested
+                  </Text>
+                </AnimatedButton>
+
+                {/* Not Going Button */}
+                {userRSVP && (
+                  <AnimatedButton
+                    style={[
+                      styles.rsvpOption,
+                      userRSVP === "not_going" && styles.rsvpOptionActive,
+                    ]}
+                    onPress={() => handleRSVP("not_going")}
+                    disabled={rsvpLoading}
+                  >
+                    <XCircleIcon
+                      size={24}
+                      color={
+                        userRSVP === "not_going"
+                          ? theme.colors.text.inverse
+                          : theme.colors.error
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.rsvpOptionText,
+                        userRSVP === "not_going" && styles.rsvpOptionTextActive,
+                      ]}
+                    >
+                      Can't Go
+                    </Text>
+                  </AnimatedButton>
+                )}
+              </View>
+
+              {rsvpLoading && (
+                <ActivityIndicator
+                  size="small"
+                  color={theme.colors.primary}
+                  style={styles.rsvpLoader}
+                />
+              )}
+
+              {/* Show attendee count */}
+              {event.maxCapacity && (
+                <View style={styles.attendeeInfo}>
+                  <UsersIcon size={16} color={theme.colors.text.secondary} />
+                  <Text style={styles.attendeeInfoText}>
+                    {event.attendeeCount || 0} / {event.maxCapacity} spots taken
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* IMDB Button */}
+            {event.movieData?.imdbId && (
+              <View style={styles.actionButtons}>
                 <AnimatedButton
                   style={styles.imdbButton}
                   onPress={handleOpenIMDB}
@@ -438,8 +585,8 @@ export default function EventDetailScreen() {
                   <FilmIcon size={20} color={theme.colors.primary} />
                   <Text style={styles.imdbButtonText}>View on IMDB</Text>
                 </AnimatedButton>
-              )}
-            </View>
+              </View>
+            )}
           </View>
         </View>
       </Animated.ScrollView>
@@ -641,26 +788,73 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 220,
   },
+  rsvpSection: {
+    marginTop: theme.spacing.xl,
+    paddingTop: theme.spacing.xl,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.borderLight,
+  },
+  rsvpTitle: {
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.md,
+    textAlign: "center",
+  },
+  rsvpButtons: {
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
+  rsvpOption: {
+    flex: 1,
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.spacing.xs,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.borderRadius.lg,
+    ...theme.shadows.sm,
+  },
+  rsvpOptionActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  rsvpOptionText: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+  },
+  rsvpOptionTextActive: {
+    color: theme.colors.text.inverse,
+  },
+  rsvpLoader: {
+    marginVertical: theme.spacing.sm,
+  },
+  attendeeInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.md,
+  },
+  attendeeInfoText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
   actionButtons: {
     marginTop: theme.spacing.lg,
     marginBottom: theme.spacing.xxxl,
     gap: theme.spacing.md,
-  },
-  rsvpButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: theme.spacing.sm,
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.base,
-    paddingHorizontal: theme.spacing.xl,
-    borderRadius: theme.borderRadius.xl,
-    ...theme.shadows.lg,
-  },
-  rsvpButtonText: {
-    color: theme.colors.text.inverse,
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
   },
   imdbButton: {
     flexDirection: "row",

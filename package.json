@@ -12,11 +12,5 @@
   "devDependencies": {
     "prettier": "^3.3.3",
     "turbo": "^2.0.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "react": "19.1.0",
-      "react-dom": "19.1.0"
-    }
   }
 }
