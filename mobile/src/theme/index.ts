@@ -5,33 +5,46 @@
 
 export const theme = {
   colors: {
-    // Primary brand color
-    primary: "#23797E", // Teal
-    primaryDark: "#4f46e5",
-    primaryLight: "#818cf8",
+    // Primary brand colors - vibrant teal
+    primary: "#14b8a6", // Teal 500
+    primaryDark: "#0d9488", // Teal 600
+    primaryLight: "#5eead4", // Teal 300
 
-    // Backgrounds
-    background: "#f9fafb", // Light gray
+    // Accent colors for visual interest
+    accent: "#f59e0b", // Amber 500 (for highlights/CTAs)
+    accentLight: "#fbbf24", // Amber 400
+
+    // Backgrounds with more depth
+    background: "#fafafa", // Neutral 50
+    backgroundDark: "#f5f5f5", // Neutral 100
     surface: "#ffffff", // White cards/surfaces
-    overlay: "rgba(0, 0, 0, 0.5)",
+    surfaceElevated: "#ffffff", // White with shadows
+    overlay: "rgba(0, 0, 0, 0.6)",
+    overlayLight: "rgba(0, 0, 0, 0.3)",
+
+    // Gradient overlays
+    gradientDark: "rgba(0, 0, 0, 0.7)",
+    gradientPrimary: "rgba(20, 184, 166, 0.9)", // primary with opacity
 
     // Text colors
     text: {
-      primary: "#111827", // Almost black
-      secondary: "#6b7280", // Medium gray
-      tertiary: "#9ca3af", // Light gray
+      primary: "#171717", // Neutral 900
+      secondary: "#737373", // Neutral 500
+      tertiary: "#a3a3a3", // Neutral 400
       inverse: "#ffffff", // White text
+      accent: "#f59e0b", // Amber for highlights
     },
 
-    // Status colors
-    success: "#10b981",
-    warning: "#f59e0b",
-    error: "#ef4444",
-    info: "#3b82f6",
+    // Status colors - more vibrant
+    success: "#10b981", // Green 500
+    warning: "#f59e0b", // Amber 500
+    error: "#ef4444", // Red 500
+    info: "#3b82f6", // Blue 500
 
-    // Borders
-    border: "#e5e7eb",
-    borderLight: "#f3f4f6",
+    // Borders with subtle variations
+    border: "#e5e5e5", // Neutral 200
+    borderLight: "#f5f5f5", // Neutral 100
+    borderDark: "#d4d4d4", // Neutral 300
 
     // Transparent variations
     transparent: "transparent",
@@ -91,24 +104,31 @@ export const theme = {
   shadows: {
     sm: {
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 3,
       elevation: 2,
     },
     md: {
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.12,
+      shadowRadius: 6,
+      elevation: 4,
     },
     lg: {
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 8,
-      elevation: 5,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.16,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    xl: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.2,
+      shadowRadius: 16,
+      elevation: 12,
     },
   },
 

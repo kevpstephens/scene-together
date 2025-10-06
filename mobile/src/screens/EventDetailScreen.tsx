@@ -8,7 +8,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Linking,
+  Platform,
 } from "react-native";
+import { WebView } from "react-native-webview";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { EventsStackParamList } from "../navigation/types";
 import { api } from "../services/api";
@@ -16,6 +20,15 @@ import { theme } from "../theme";
 import type { Event } from "../types";
 
 type RouteProps = RouteProp<EventsStackParamList, "EventDetail">;
+
+// Declare iframe for React Native Web
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      iframe: any;
+    }
+  }
+}
 
 export default function EventDetailScreen() {
   const route = useRoute<RouteProps>();
@@ -46,6 +59,26 @@ export default function EventDetailScreen() {
     Alert.alert("RSVP", "RSVP functionality coming soon!");
   };
 
+  const handleOpenIMDB = async () => {
+    if (!event?.movieData?.imdbId) {
+      Alert.alert("No IMDB", "IMDB link not available for this film");
+      return;
+    }
+
+    const imdbUrl = `https://www.imdb.com/title/${event.movieData.imdbId}`;
+
+    try {
+      const supported = await Linking.canOpenURL(imdbUrl);
+      if (supported) {
+        await Linking.openURL(imdbUrl);
+      } else {
+        Alert.alert("Error", "Cannot open IMDB URL");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to open IMDB");
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -62,6 +95,14 @@ export default function EventDetailScreen() {
       minute: "2-digit",
       hour12: true,
     });
+  };
+
+  const getYouTubeVideoId = (url: string): string | null => {
+    // Extract video ID from various YouTube URL formats
+    const regExp =
+      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return match && match[2].length === 11 ? match[2] : null;
   };
 
   if (loading) {
@@ -86,13 +127,19 @@ export default function EventDetailScreen() {
       contentContainerStyle={styles.scrollContent}
     >
       <View style={styles.contentWrapper}>
-        {/* Hero Image */}
+        {/* Hero Image with Gradient Overlay */}
         {event.movieData?.poster && (
-          <Image
-            source={{ uri: event.movieData.poster }}
-            style={styles.heroImage}
-            resizeMode="cover"
-          />
+          <View style={styles.heroContainer}>
+            <Image
+              source={{ uri: event.movieData.poster }}
+              style={styles.heroImage}
+              resizeMode="contain"
+            />
+            <LinearGradient
+              colors={["transparent", "rgba(250, 250, 250, 0.95)"]}
+              style={styles.heroGradient}
+            />
+          </View>
         )}
 
         {/* Content */}
@@ -159,18 +206,26 @@ export default function EventDetailScreen() {
                 <Text style={styles.moviePlot}>{event.movieData.plot}</Text>
               )}
 
+              {/* Movie Info Badges Row */}
               <View style={styles.movieMetaRow}>
                 {event.movieData.year && (
                   <View style={styles.metaChip}>
                     <Text style={styles.metaChipText}>
-                      {event.movieData.year}
+                      📅 {event.movieData.year}
                     </Text>
                   </View>
                 )}
                 {event.movieData.runtime && (
                   <View style={styles.metaChip}>
                     <Text style={styles.metaChipText}>
-                      {event.movieData.runtime}
+                      ⏱️ {event.movieData.runtime}
+                    </Text>
+                  </View>
+                )}
+                {event.movieData.imdbRating && (
+                  <View style={styles.metaChip}>
+                    <Text style={styles.metaChipText}>
+                      ⭐ {parseFloat(event.movieData.imdbRating).toFixed(1)}/10
                     </Text>
                   </View>
                 )}
@@ -194,19 +249,100 @@ export default function EventDetailScreen() {
                   {event.movieData.actors}
                 </Text>
               )}
+
+              {/* Embedded YouTube Trailer */}
+              {event.movieData.trailer &&
+                (() => {
+                  const videoId = getYouTubeVideoId(event.movieData.trailer);
+                  if (videoId) {
+                    return (
+                      <View style={styles.trailerContainer}>
+                        <Text style={styles.trailerTitle}>
+                          🎬 Watch Trailer
+                        </Text>
+
+                        {Platform.OS === "web" ? (
+                          // Web: Use iframe directly
+                          <View style={styles.videoWrapper}>
+                            <iframe
+                              style={{
+                                width: "100%",
+                                height: 220,
+                                border: 0,
+                                borderRadius: 12,
+                              }}
+                              src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          </View>
+                        ) : (
+                          // Mobile: Use WebView
+                          <View style={styles.videoWrapper}>
+                            <WebView
+                              style={styles.video}
+                              source={{
+                                html: `
+                              <!DOCTYPE html>
+                              <html>
+                                <head>
+                                  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+                                  <style>
+                                    * { margin: 0; padding: 0; }
+                                    body { background: #000; }
+                                    .container { position: relative; width: 100%; padding-bottom: 56.25%; }
+                                    iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+                                  </style>
+                                </head>
+                                <body>
+                                  <div class="container">
+                                    <iframe 
+                                      src="https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1"
+                                      allowfullscreen
+                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    ></iframe>
+                                  </div>
+                                </body>
+                              </html>
+                            `,
+                              }}
+                              allowsFullscreenVideo
+                              javaScriptEnabled
+                              domStorageEnabled
+                              mediaPlaybackRequiresUserAction={false}
+                            />
+                          </View>
+                        )}
+                      </View>
+                    );
+                  }
+                  return null;
+                })()}
             </View>
           )}
 
-          {/* RSVP Button */}
-          <TouchableOpacity
-            style={styles.rsvpButton}
-            onPress={handleRSVP}
-            disabled={rsvpLoading}
-          >
-            <Text style={styles.rsvpButtonText}>
-              {rsvpLoading ? "Processing..." : "🎟️ RSVP for this event"}
-            </Text>
-          </TouchableOpacity>
+          {/* Action Buttons */}
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={styles.rsvpButton}
+              onPress={handleRSVP}
+              disabled={rsvpLoading}
+            >
+              <Text style={styles.rsvpButtonText}>
+                {rsvpLoading ? "Processing..." : "🎟️ RSVP for this event"}
+              </Text>
+            </TouchableOpacity>
+
+            {/* IMDB Button */}
+            {event.movieData?.imdbId && (
+              <TouchableOpacity
+                style={styles.imdbButton}
+                onPress={handleOpenIMDB}
+              >
+                <Text style={styles.imdbButtonText}>🎬 View on IMDB</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
     </ScrollView>
@@ -235,10 +371,22 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.lg,
     color: theme.colors.text.secondary,
   },
+  heroContainer: {
+    position: "relative",
+    width: "100%",
+    height: 550,
+    backgroundColor: theme.colors.backgroundDark,
+  },
   heroImage: {
     width: "100%",
-    height: 400,
-    backgroundColor: theme.colors.border,
+    height: "100%",
+  },
+  heroGradient: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 150,
   },
   content: {
     padding: theme.spacing.base,
@@ -252,10 +400,10 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.base,
-    marginBottom: theme.spacing.base,
-    ...theme.shadows.sm,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+    ...theme.shadows.md,
   },
   infoRow: {
     flexDirection: "row",
@@ -286,10 +434,10 @@ const styles = StyleSheet.create({
   },
   section: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.base,
-    marginBottom: theme.spacing.base,
-    ...theme.shadows.sm,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+    ...theme.shadows.md,
   },
   sectionTitle: {
     fontSize: theme.typography.fontSize.lg,
@@ -317,20 +465,21 @@ const styles = StyleSheet.create({
   movieMetaRow: {
     flexDirection: "row",
     flexWrap: "wrap",
+    gap: theme.spacing.sm,
     marginBottom: theme.spacing.md,
   },
   metaChip: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.accent,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
+    paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.full,
-    marginRight: theme.spacing.sm,
-    marginBottom: theme.spacing.xs,
+    ...theme.shadows.sm,
   },
   metaChipText: {
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.inverse,
+    letterSpacing: 0.5,
   },
   movieMeta: {
     fontSize: theme.typography.fontSize.sm,
@@ -342,17 +491,57 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.primary,
   },
+  trailerContainer: {
+    marginTop: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.borderLight,
+  },
+  trailerTitle: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.md,
+  },
+  videoWrapper: {
+    borderRadius: theme.borderRadius.lg,
+    overflow: "hidden",
+    backgroundColor: "#000",
+    ...theme.shadows.md,
+  },
+  video: {
+    width: "100%",
+    height: 220,
+  },
+  actionButtons: {
+    marginTop: theme.spacing.lg,
+    marginBottom: theme.spacing.xxxl,
+    gap: theme.spacing.md,
+  },
   rsvpButton: {
     backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.base,
     paddingHorizontal: theme.spacing.xl,
-    borderRadius: theme.borderRadius.md,
-    marginTop: theme.spacing.base,
-    marginBottom: theme.spacing.xxxl,
-    ...theme.shadows.md,
+    borderRadius: theme.borderRadius.xl,
+    ...theme.shadows.lg,
   },
   rsvpButtonText: {
     color: theme.colors.text.inverse,
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.bold,
+    textAlign: "center",
+  },
+  imdbButton: {
+    backgroundColor: theme.colors.surface,
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    paddingVertical: theme.spacing.base,
+    paddingHorizontal: theme.spacing.xl,
+    borderRadius: theme.borderRadius.xl,
+    ...theme.shadows.sm,
+  },
+  imdbButtonText: {
+    color: theme.colors.primary,
     fontSize: theme.typography.fontSize.lg,
     fontWeight: theme.typography.fontWeight.bold,
     textAlign: "center",

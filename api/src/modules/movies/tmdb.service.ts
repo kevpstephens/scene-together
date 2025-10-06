@@ -33,6 +33,9 @@ interface TMDbMovieDetails {
   videos?: {
     results: { key: string; site: string; type: string }[];
   };
+  external_ids?: {
+    imdb_id: string | null;
+  };
 }
 
 /**
@@ -75,13 +78,13 @@ export async function searchMovies(query: string, page = 1) {
  */
 export async function getMovieDetails(tmdbId: string): Promise<MovieData> {
   try {
-    // Fetch movie details with credits and videos
+    // Fetch movie details with credits, videos, and external IDs (IMDB)
     const response = await axios.get<TMDbMovieDetails>(
       `${TMDB_BASE_URL}/movie/${tmdbId}`,
       {
         params: {
           api_key: TMDB_API_KEY,
-          append_to_response: "credits,videos",
+          append_to_response: "credits,videos,external_ids",
           language: "en-US",
         },
       }
@@ -115,6 +118,7 @@ export async function getMovieDetails(tmdbId: string): Promise<MovieData> {
       runtime: movie.runtime ? `${movie.runtime} min` : undefined,
       genre: movie.genres.map((g) => g.name).join(", "),
       imdbRating: movie.vote_average.toString(),
+      imdbId: movie.external_ids?.imdb_id || undefined,
       trailer: trailer
         ? `https://www.youtube.com/watch?v=${trailer.key}`
         : undefined,

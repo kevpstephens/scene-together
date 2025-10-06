@@ -9,6 +9,7 @@ import {
   Image,
   RefreshControl,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { EventsStackParamList } from "../navigation/types";
@@ -86,11 +87,17 @@ export default function EventsListScreen() {
       activeOpacity={0.7}
     >
       {item.movieData?.poster && (
-        <Image
-          source={{ uri: item.movieData.poster }}
-          style={styles.poster}
-          resizeMode="cover"
-        />
+        <View style={styles.posterContainer}>
+          <Image
+            source={{ uri: item.movieData.poster }}
+            style={styles.poster}
+            resizeMode="cover"
+          />
+          <LinearGradient
+            colors={["transparent", "rgba(0,0,0,0.7)"]}
+            style={styles.posterGradient}
+          />
+        </View>
       )}
       <View style={styles.cardContent}>
         <View style={styles.dateTag}>
@@ -228,33 +235,46 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    marginBottom: theme.spacing.base,
+    borderRadius: theme.borderRadius.xl,
+    marginBottom: theme.spacing.lg,
     overflow: "hidden",
-    ...theme.shadows.md,
+    ...theme.shadows.lg,
+  },
+  posterContainer: {
+    position: "relative",
+    width: "100%",
+    height: 240,
   },
   poster: {
     width: "100%",
-    height: 200,
+    height: "100%",
     backgroundColor: theme.colors.border,
+  },
+  posterGradient: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: "60%",
   },
   cardContent: {
     padding: theme.spacing.base,
   },
   dateTag: {
     alignSelf: "flex-start",
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.accent,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
+    paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.full,
     marginBottom: theme.spacing.sm,
+    ...theme.shadows.sm,
   },
   dateTagText: {
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.inverse,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   title: {
     fontSize: theme.typography.fontSize.xl,

@@ -27,6 +27,7 @@ export type MovieData = {
   runtime?: string;
   genre?: string;
   imdbRating?: string;
+  imdbId?: string;
   trailer?: string;
 };
 

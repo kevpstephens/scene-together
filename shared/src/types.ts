@@ -44,6 +44,7 @@ export type MovieData = {
   runtime?: string;
   genre?: string;
   imdbRating?: string;
+  imdbId?: string; // IMDB ID for linking
   trailer?: string; // YouTube link
 };
 
