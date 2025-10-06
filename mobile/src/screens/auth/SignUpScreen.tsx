@@ -15,6 +15,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../navigation/types";
 import { theme } from "../../theme";
 import { useAuth } from "../../contexts/AuthContext";
+import AnimatedButton from "../../components/AnimatedButton";
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, "SignUp">;
 
@@ -120,7 +121,7 @@ export default function SignUpScreen() {
               autoComplete="password-new"
             />
 
-            <TouchableOpacity
+            <AnimatedButton
               style={[styles.button, loading && styles.buttonDisabled]}
               onPress={handleSignUp}
               disabled={loading}
@@ -128,7 +129,7 @@ export default function SignUpScreen() {
               <Text style={styles.buttonText}>
                 {loading ? "Creating Account..." : "Sign Up"}
               </Text>
-            </TouchableOpacity>
+            </AnimatedButton>
 
             {/* Divider */}
             <View style={styles.divider}>
@@ -138,7 +139,7 @@ export default function SignUpScreen() {
             </View>
 
             {/* Google Sign In Button */}
-            <TouchableOpacity
+            <AnimatedButton
               style={[
                 styles.googleButton,
                 googleLoading && styles.buttonDisabled,
@@ -150,7 +151,7 @@ export default function SignUpScreen() {
               <Text style={styles.googleButtonText}>
                 {googleLoading ? "Signing In..." : "Continue with Google"}
               </Text>
-            </TouchableOpacity>
+            </AnimatedButton>
           </View>
 
           <TouchableOpacity

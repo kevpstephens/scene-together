@@ -23,17 +23,26 @@ export default function EventsStackNavigator() {
           alignSelf: "center",
           width: "100%",
         },
+        animation: "slide_from_right",
+        animationDuration: 300,
       }}
     >
       <Stack.Screen
         name="EventsList"
         component={EventsListScreen}
-        options={{ title: "SceneTogether" }}
+        options={{
+          title: "SceneTogether",
+          animation: "fade",
+        }}
       />
       <Stack.Screen
         name="EventDetail"
         component={EventDetailScreen}
-        options={{ title: "Event Details" }}
+        options={{
+          title: "Event Details",
+          animation: "slide_from_right",
+          presentation: "card",
+        }}
       />
     </Stack.Navigator>
   );

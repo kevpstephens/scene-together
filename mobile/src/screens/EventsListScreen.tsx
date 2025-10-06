@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Image,
   RefreshControl,
+  Animated,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -22,6 +23,8 @@ import { EventsStackParamList } from "../navigation/types";
 import { api } from "../services/api";
 import { theme } from "../theme";
 import type { Event } from "../types";
+import EventCardSkeleton from "../components/EventCardSkeleton";
+import AnimatedButton from "../components/AnimatedButton";
 
 type NavigationProp = NativeStackNavigationProp<
   EventsStackParamList,
@@ -33,6 +36,7 @@ export default function EventsListScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation<NavigationProp>();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadEvents();
@@ -48,6 +52,13 @@ export default function EventsListScreen() {
           new Date(a.date).getTime() - new Date(b.date).getTime()
       );
       setEvents(sortedEvents);
+
+      // Fade in animation
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
     } catch (error) {
       console.error("Failed to load events:", error);
     } finally {
@@ -87,10 +98,10 @@ export default function EventsListScreen() {
   };
 
   const renderEventCard = ({ item }: { item: Event }) => (
-    <TouchableOpacity
+    <AnimatedButton
       style={styles.card}
       onPress={() => navigation.navigate("EventDetail", { eventId: item.id })}
-      activeOpacity={0.7}
+      springConfig={{ damping: 12, stiffness: 100 }}
     >
       {item.movieData?.poster && (
         <View style={styles.posterContainer}>
@@ -148,14 +159,19 @@ export default function EventsListScreen() {
           </View>
         )}
       </View>
-    </TouchableOpacity>
+    </AnimatedButton>
   );
 
   if (loading && !refreshing) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={styles.loadingText}>Loading events...</Text>
+      <View style={styles.container}>
+        <View style={styles.contentWrapper}>
+          <View style={styles.list}>
+            <EventCardSkeleton />
+            <EventCardSkeleton />
+            <EventCardSkeleton />
+          </View>
+        </View>
       </View>
     );
   }
@@ -163,32 +179,34 @@ export default function EventsListScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.contentWrapper}>
-        <FlatList
-          data={events}
-          keyExtractor={(item) => item.id}
-          renderItem={renderEventCard}
-          contentContainerStyle={
-            events.length === 0 ? styles.emptyContainer : styles.list
-          }
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={[theme.colors.primary]}
-              tintColor={theme.colors.primary}
-            />
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyContent}>
-              <FilmIcon size={64} color={theme.colors.text.tertiary} />
-              <Text style={styles.emptySubtext}>No events yet</Text>
-              <Text style={styles.emptyHint}>
-                Check back soon for film screenings!
-              </Text>
-            </View>
-          }
-        />
+        <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+          <FlatList
+            data={events}
+            keyExtractor={(item) => item.id}
+            renderItem={renderEventCard}
+            contentContainerStyle={
+              events.length === 0 ? styles.emptyContainer : styles.list
+            }
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[theme.colors.primary]}
+                tintColor={theme.colors.primary}
+              />
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContent}>
+                <FilmIcon size={64} color={theme.colors.text.tertiary} />
+                <Text style={styles.emptySubtext}>No events yet</Text>
+                <Text style={styles.emptyHint}>
+                  Check back soon for film screenings!
+                </Text>
+              </View>
+            }
+          />
+        </Animated.View>
       </View>
     </View>
   );

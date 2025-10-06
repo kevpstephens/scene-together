@@ -27,6 +27,7 @@ import { EventsStackParamList } from "../navigation/types";
 import { api } from "../services/api";
 import { theme } from "../theme";
 import type { Event } from "../types";
+import AnimatedButton from "../components/AnimatedButton";
 
 type RouteProps = RouteProp<EventsStackParamList, "EventDetail">;
 
@@ -339,7 +340,7 @@ export default function EventDetailScreen() {
 
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
-            <TouchableOpacity
+            <AnimatedButton
               style={styles.rsvpButton}
               onPress={handleRSVP}
               disabled={rsvpLoading}
@@ -350,17 +351,17 @@ export default function EventDetailScreen() {
               <Text style={styles.rsvpButtonText}>
                 {rsvpLoading ? "Processing..." : "RSVP for this event"}
               </Text>
-            </TouchableOpacity>
+            </AnimatedButton>
 
             {/* IMDB Button */}
             {event.movieData?.imdbId && (
-              <TouchableOpacity
+              <AnimatedButton
                 style={styles.imdbButton}
                 onPress={handleOpenIMDB}
               >
                 <FilmIcon size={20} color={theme.colors.primary} />
                 <Text style={styles.imdbButtonText}>View on IMDB</Text>
-              </TouchableOpacity>
+              </AnimatedButton>
             )}
           </View>
         </View>

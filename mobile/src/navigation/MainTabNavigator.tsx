@@ -26,6 +26,7 @@ export default function MainTabNavigator() {
         tabBarLabelStyle: {
           paddingBottom: theme.spacing.xs,
         },
+        animation: "shift",
       }}
     >
       <Tab.Screen
