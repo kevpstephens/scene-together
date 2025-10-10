@@ -154,7 +154,7 @@ export default function EventsListScreen() {
       <AnimatedButton
         style={styles.card}
         onPress={() => navigation.navigate("EventDetail", { eventId: item.id })}
-        springConfig={{ damping: 12, stiffness: 100 }}
+        springConfig={{ damping: 25, stiffness: 90 }}
       >
         {item.movieData?.poster && (
           <View style={styles.posterContainer}>
