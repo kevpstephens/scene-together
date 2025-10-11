@@ -7,6 +7,7 @@ import {
   Animated,
 } from "react-native";
 import * as Haptics from "expo-haptics";
+import { theme } from "../../../shared/src/theme";
 
 type AnimatedButtonProps = TouchableOpacityProps & {
   children: React.ReactNode;
@@ -43,7 +44,7 @@ export default function AnimatedButton({
       }),
       Animated.timing(opacityAnim, {
         toValue: 0.7, // Slightly greyed out
-        duration: 150, // Gradual fade (150ms)
+        duration: theme.animation.duration.fast, // Uses shared design system timing
         useNativeDriver: true,
       }),
     ]).start();
@@ -61,7 +62,7 @@ export default function AnimatedButton({
       }),
       Animated.timing(opacityAnim, {
         toValue: 1, // Back to full opacity
-        duration: 150,
+        duration: theme.animation.duration.fast, // Uses shared design system timing
         useNativeDriver: true,
       }),
     ]).start();

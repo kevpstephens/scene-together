@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as eventsController from "./events.controller";
-import { requireAuth, requireStaff } from "../../middleware/auth.js";
+import { requireAuth, requireAdmin } from "../../middleware/auth.js";
 import { validate } from "../../middleware/validate.js";
 import {
   createEventSchema,
@@ -14,25 +14,25 @@ const router = Router();
 router.get("/", eventsController.getAllEvents);
 router.get("/:id", validate(getEventByIdSchema), eventsController.getEventById);
 
-// Staff-only routes
+// Admin-only routes
 router.post(
   "/",
   requireAuth,
-  requireStaff,
+  requireAdmin,
   validate(createEventSchema),
   eventsController.createEvent
 );
 router.put(
   "/:id",
   requireAuth,
-  requireStaff,
+  requireAdmin,
   validate(updateEventSchema),
   eventsController.updateEvent
 );
 router.delete(
   "/:id",
   requireAuth,
-  requireStaff,
+  requireAdmin,
   validate(getEventByIdSchema),
   eventsController.deleteEvent
 );

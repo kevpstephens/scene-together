@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { createClient } from "@supabase/supabase-js";
 import type { AuthUser } from "../../../shared/src/types";
+import { prisma } from "../utils/prisma.js";
 
 const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!;
@@ -43,11 +44,21 @@ export async function requireAuth(
       return res.status(401).json({ error: "Invalid or expired token" });
     }
 
+    // Get user from database to get their role
+    const dbUser = await prisma.user.findUnique({
+      where: { id: data.user.id },
+      select: { id: true, email: true, role: true },
+    });
+
+    if (!dbUser) {
+      return res.status(401).json({ error: "User not found in database" });
+    }
+
     // Attach user info to request
     req.user = {
-      id: data.user.id,
-      email: data.user.email || "",
-      role: (data.user.user_metadata?.role as "member" | "staff") || "member",
+      id: dbUser.id,
+      email: dbUser.email,
+      role: dbUser.role,
     };
 
     next();
@@ -58,16 +69,36 @@ export async function requireAuth(
 }
 
 /**
- * Middleware to require staff role
+ * Middleware to require admin role (ADMIN or SUPER_ADMIN)
  * Must be used after requireAuth middleware
  */
-export function requireStaff(req: Request, res: Response, next: NextFunction) {
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (!req.user) {
     return res.status(401).json({ error: "Authentication required" });
   }
 
-  if (req.user.role !== "staff") {
-    return res.status(403).json({ error: "Staff access required" });
+  if (req.user.role !== "ADMIN" && req.user.role !== "SUPER_ADMIN") {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+
+  next();
+}
+
+/**
+ * Middleware to require super admin role
+ * Must be used after requireAuth middleware
+ */
+export function requireSuperAdmin(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  if (!req.user) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+
+  if (req.user.role !== "SUPER_ADMIN") {
+    return res.status(403).json({ error: "Super admin access required" });
   }
 
   next();
@@ -93,11 +124,19 @@ export async function optionalAuth(
     const { data, error } = await supabase.auth.getUser(token);
 
     if (!error && data.user) {
-      req.user = {
-        id: data.user.id,
-        email: data.user.email || "",
-        role: (data.user.user_metadata?.role as "member" | "staff") || "member",
-      };
+      // Get user from database to get their role
+      const dbUser = await prisma.user.findUnique({
+        where: { id: data.user.id },
+        select: { id: true, email: true, role: true },
+      });
+
+      if (dbUser) {
+        req.user = {
+          id: dbUser.id,
+          email: dbUser.email,
+          role: dbUser.role,
+        };
+      }
     }
 
     next();

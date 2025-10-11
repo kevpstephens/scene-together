@@ -1,5 +1,5 @@
 // User & Auth Types
-export type Role = "member" | "staff";
+export type Role = "USER" | "ADMIN" | "SUPER_ADMIN";
 
 export type User = {
   id: string;

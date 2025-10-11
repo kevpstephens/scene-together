@@ -10,13 +10,19 @@ datasource db {
 model User {
   id        String   @id // Supabase auth.users.id (UUID)
   email     String   @unique
-  role      String   @default("member") // "member" | "staff"
+  role      Role     @default(USER)
   name      String?
   avatarUrl String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   rsvps     RSVP[]
   payments  Payment[]
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
 }
 
 model Event {
