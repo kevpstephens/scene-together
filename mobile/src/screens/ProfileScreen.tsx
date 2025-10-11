@@ -6,12 +6,23 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
 import { theme } from "../theme";
 
 export default function ProfileScreen() {
-  const { user, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
+
+  // Show loading state while user data is being fetched
+  if (loading || !user) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={styles.loadingText}>Loading profile...</Text>
+      </View>
+    );
+  }
 
   const handleLogout = async () => {
     // On web, use native confirm dialog; on mobile, use Alert
@@ -132,5 +143,14 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
+  },
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: theme.spacing.base,
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text.secondary,
   },
 });

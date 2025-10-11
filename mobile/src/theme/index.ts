@@ -132,6 +132,21 @@ export const theme = {
     },
   },
 
+  // Animation timings
+  animation: {
+    duration: {
+      fast: 200,
+      normal: 300,
+      slow: 500,
+    },
+    easing: {
+      easeInOut: "ease-in-out",
+      easeIn: "ease-in",
+      easeOut: "ease-out",
+      linear: "linear",
+    },
+  },
+
   // Common measurements
   layout: {
     tabBarHeight: 80,
