@@ -134,7 +134,7 @@ export const theme = {
 
   // Common measurements
   layout: {
-    tabBarHeight: 60,
+    tabBarHeight: 80,
     headerHeight: 56,
     maxWidth: 600, // Max width for content on tablets
   },

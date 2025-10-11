@@ -35,6 +35,7 @@ import AnimatedButton from "../components/AnimatedButton";
 import GradientBackground from "../components/GradientBackground";
 import { useToast } from "../contexts/ToastContext";
 import * as Haptics from "expo-haptics";
+import { promptAddToCalendar } from "../services/calendarService";
 
 type RouteProps = RouteProp<EventsStackParamList, "EventDetail">;
 
@@ -131,6 +132,69 @@ export default function EventDetailScreen() {
         not_going: "RSVP removed",
       };
       showToast(statusMessages[status], "success");
+
+      // If user is going, prompt to add to calendar
+      if (status === "going" && event) {
+        // Add small delay for better UX flow
+        setTimeout(async () => {
+          try {
+            console.log("🗓️ Starting calendar add process...");
+            console.log("Event data:", {
+              date: event.date,
+              title: event.title,
+              location: event.location,
+            });
+
+            // Parse the date safely (use 'date' property from Event type)
+            const startDate = new Date(event.date);
+
+            // Validate the date is valid
+            if (isNaN(startDate.getTime())) {
+              console.error("❌ Invalid event date:", event.date);
+              showToast("Invalid event date", "error");
+              return;
+            }
+
+            console.log(
+              "✅ Date parsed successfully:",
+              startDate.toISOString()
+            );
+
+            // Assume 3 hour duration (typical movie + socializing)
+            const endDate = new Date(startDate.getTime() + 3 * 60 * 60 * 1000);
+
+            console.log("📅 Calling promptAddToCalendar...");
+            const added = await promptAddToCalendar({
+              title: event.title,
+              startDate,
+              endDate,
+              location: event.location,
+              notes: event.description
+                ? `${event.description}\n\n${
+                    event.movieData?.title
+                      ? `Movie: ${event.movieData.title}`
+                      : ""
+                  }`
+                : undefined,
+            });
+
+            console.log("📅 Calendar result:", added);
+
+            if (added) {
+              // Success! Alert is shown by the calendar service
+              Haptics.notificationAsync(
+                Haptics.NotificationFeedbackType.Success
+              );
+            } else {
+              console.log("⚠️ User canceled or calendar failed");
+            }
+          } catch (error) {
+            console.error("❌ Error adding to calendar:", error);
+            // Show the error to user so we can debug
+            showToast(`Calendar error: ${error}`, "error");
+          }
+        }, 500);
+      }
     } catch (error: any) {
       console.error("Failed to RSVP:", error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

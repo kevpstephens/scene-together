@@ -16,15 +16,15 @@ export default function MainTabNavigator() {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.text.tertiary,
         tabBarStyle: {
-          paddingBottom: theme.spacing.xs,
-          paddingTop: theme.spacing.xs,
+          paddingBottom: theme.spacing.md,
+          paddingTop: theme.spacing.md,
           height: theme.layout.tabBarHeight,
           alignSelf: "center",
           width: "100%",
           maxWidth: theme.layout.maxWidth,
         },
         tabBarLabelStyle: {
-          paddingBottom: theme.spacing.xs,
+          paddingBottom: theme.spacing.md,
         },
         animation: "shift",
       }}
