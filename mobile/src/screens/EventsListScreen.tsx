@@ -96,8 +96,10 @@ export default function EventsListScreen() {
     setRefreshing(true);
     await loadEvents();
     setRefreshing(false);
-    // Haptic feedback on successful refresh
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // Haptic feedback on successful refresh (native only)
+    if (Platform.OS !== "web") {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
   };
 
   const formatDate = (dateString: string) => {

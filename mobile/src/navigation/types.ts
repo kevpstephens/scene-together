@@ -16,6 +16,7 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   EventsTab: undefined;
   ProfileTab: undefined;
+  AdminTab?: undefined; // Optional, only shown to admins
 };
 
 // Events Stack Navigator
@@ -28,4 +29,13 @@ export type EventsStackParamList = {
 export type ProfileStackParamList = {
   Profile: undefined;
   Settings: undefined;
+};
+
+// Admin Stack Navigator
+export type AdminStackParamList = {
+  AdminDashboard: undefined;
+  AdminEvents: undefined;
+  AdminEventCreate: undefined;
+  AdminEventEdit: { eventId: string };
+  AdminEventAttendees: { eventId: string };
 };

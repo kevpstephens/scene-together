@@ -29,13 +29,22 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "permissions": [
-        "READ_CALENDAR",
-        "WRITE_CALENDAR"
-      ]
+      "permissions": ["READ_CALENDAR", "WRITE_CALENDAR"]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "backgroundColor": "#EFF0EF",
+      "themeColor": "#46D4AF",
+      "name": "SceneTogether - Community Movie Events",
+      "shortName": "SceneTogether",
+      "description": "A platform for community movie screening events. Browse events, RSVP, and manage your screenings.",
+      "lang": "en",
+      "splash": {
+        "image": "./assets/splash-icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#ffffff"
+      }
     },
     "extra": {
       "eas": {

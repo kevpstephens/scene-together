@@ -28,6 +28,12 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  const handleDemoFill = () => {
+    setEmail("demo@scenetogether.com");
+    setPassword("DemoPassword123!");
+    showToast("Demo credentials filled! 🎭", "success");
+  };
+
   const handleLogin = async () => {
     if (!email || !password) {
       showToast("Please fill in all fields", "error");
@@ -71,6 +77,25 @@ export default function LoginScreen() {
         <Text style={styles.logo}>🎬</Text>
         <Text style={styles.title}>SceneTogether</Text>
         <Text style={styles.subtitle}>Welcome back!</Text>
+
+        {/* Demo Credentials Banner */}
+        <View style={styles.demoBanner}>
+          <View style={styles.demoHeader}>
+            <Text style={styles.demoIcon}>🎭</Text>
+            <Text style={styles.demoTitle}>Demo Account</Text>
+          </View>
+          <Text style={styles.demoText}>
+            <Text style={styles.demoLabel}>Email: </Text>
+            demo@scenetogether.com
+          </Text>
+          <Text style={styles.demoText}>
+            <Text style={styles.demoLabel}>Password: </Text>
+            DemoPassword123!
+          </Text>
+          <TouchableOpacity style={styles.demoButton} onPress={handleDemoFill}>
+            <Text style={styles.demoButtonText}>← Click to Auto-Fill</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.form}>
           <TextInput
@@ -241,6 +266,53 @@ const styles = StyleSheet.create({
   googleButtonText: {
     color: theme.colors.text.primary,
     fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  demoBanner: {
+    backgroundColor: "#EFF6FF", // Light blue background
+    borderWidth: 1,
+    borderColor: "#93C5FD", // Blue border
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.base,
+    marginBottom: theme.spacing.lg,
+    width: "100%",
+    maxWidth: 400,
+    ...theme.shadows.sm,
+  },
+  demoHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: theme.spacing.sm,
+  },
+  demoIcon: {
+    fontSize: theme.typography.fontSize.xl,
+    marginRight: theme.spacing.xs,
+  },
+  demoTitle: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: "#1E40AF", // Blue text
+  },
+  demoText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: "#1E3A8A", // Dark blue
+    marginBottom: theme.spacing.xs,
+    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+  },
+  demoLabel: {
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  demoButton: {
+    backgroundColor: "#3B82F6", // Blue button
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.base,
+    borderRadius: theme.borderRadius.md,
+    marginTop: theme.spacing.sm,
+    alignItems: "center",
+  },
+  demoButtonText: {
+    color: theme.colors.text.inverse,
+    fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
   },
 });

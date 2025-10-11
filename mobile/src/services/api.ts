@@ -5,25 +5,28 @@ export const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL || "http://localhost:4000",
 });
 
-// Add auth token to every request
+// Cache the access token to avoid async calls in interceptor (which can hang on web)
+let cachedAccessToken: string | null = null;
+
+// Initialize token cache from Supabase
+supabase.auth.getSession().then(({ data: { session } }) => {
+  cachedAccessToken = session?.access_token || null;
+});
+
+// Listen for auth changes to keep token cache updated
+supabase.auth.onAuthStateChange((_event, session) => {
+  cachedAccessToken = session?.access_token || null;
+});
+
+// Add auth token to every request (now synchronous using cached token)
 api.interceptors.request.use(
-  async (config) => {
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session?.access_token) {
-        // Ensure headers object exists
-        if (!config.headers) {
-          config.headers = {};
-        }
-        config.headers.Authorization = `Bearer ${session.access_token}`;
+  (config) => {
+    if (cachedAccessToken) {
+      if (!config.headers) {
+        config.headers = {};
       }
-    } catch (error) {
-      console.error("Failed to get session:", error);
+      config.headers.Authorization = `Bearer ${cachedAccessToken}`;
     }
-
     return config;
   },
   (error) => {

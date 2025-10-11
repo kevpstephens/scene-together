@@ -1,14 +1,22 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { FilmIcon, UserIcon } from "react-native-heroicons/outline";
+import {
+  FilmIcon,
+  UserIcon,
+  Cog6ToothIcon,
+} from "react-native-heroicons/outline";
 import { MainTabParamList } from "./types";
 import EventsStackNavigator from "./EventsStackNavigator";
 import ProfileStackNavigator from "./ProfileStackNavigator";
+import AdminStackNavigator from "./AdminStackNavigator";
 import { theme } from "../theme";
+import { useAuth } from "../contexts/AuthContext";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export default function MainTabNavigator() {
+  const { isAdmin } = useAuth();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -45,6 +53,18 @@ export default function MainTabNavigator() {
           tabBarIcon: ({ color }) => <UserIcon size={24} color={color} />,
         }}
       />
+      {isAdmin && (
+        <Tab.Screen
+          name="AdminTab"
+          component={AdminStackNavigator}
+          options={{
+            tabBarLabel: "Admin",
+            tabBarIcon: ({ color }) => (
+              <Cog6ToothIcon size={24} color={color} />
+            ),
+          }}
+        />
+      )}
     </Tab.Navigator>
   );
 }

@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Platform,
+} from "react-native";
 import { useAuth } from "../contexts/AuthContext";
 import { theme } from "../theme";
 
@@ -7,20 +14,32 @@ export default function ProfileScreen() {
   const { user, signOut } = useAuth();
 
   const handleLogout = async () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign Out",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await signOut();
-          } catch (error: any) {
-            Alert.alert("Error", error.message || "Failed to sign out");
-          }
+    // On web, use native confirm dialog; on mobile, use Alert
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm("Are you sure you want to sign out?");
+      if (!confirmed) return;
+
+      try {
+        await signOut();
+      } catch (error: any) {
+        window.alert(error.message || "Failed to sign out");
+      }
+    } else {
+      Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Sign Out",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut();
+            } catch (error: any) {
+              Alert.alert("Error", error.message || "Failed to sign out");
+            }
+          },
         },
-      },
-    ]);
+      ]);
+    }
   };
 
   return (

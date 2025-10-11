@@ -5,9 +5,10 @@ import {
   ViewStyle,
   TextStyle,
   Animated,
+  Platform,
 } from "react-native";
 import * as Haptics from "expo-haptics";
-import { theme } from "../../../shared/src/theme";
+import { theme } from "../theme";
 
 type AnimatedButtonProps = TouchableOpacityProps & {
   children: React.ReactNode;
@@ -70,8 +71,8 @@ export default function AnimatedButton({
   };
 
   const handlePress = (e: any) => {
-    // Only trigger haptics on successful tap (not during scroll)
-    if (enableHaptics) {
+    // Only trigger haptics on successful tap (not during scroll) and on native platforms
+    if (enableHaptics && Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     onPress?.(e);

@@ -17,23 +17,7 @@ export type AuthUser = {
   role: Role;
 };
 
-// Event Types
-export type Event = {
-  id: string;
-  title: string;
-  description?: string;
-  date: string; // ISO
-  location?: string;
-  onlineLink?: string;
-  movieId?: string; // OMDb/TMDb ID
-  movieData?: MovieData;
-  maxCapacity?: number;
-  createdById?: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-// Movie Types (for OMDb/TMDb integration)
+// Movie Types (for TMDb integration)
 export type MovieData = {
   title: string;
   year?: string;
@@ -44,8 +28,24 @@ export type MovieData = {
   runtime?: string;
   genre?: string;
   imdbRating?: string;
-  imdbId?: string; // IMDB ID for linking
-  trailer?: string; // YouTube link
+  imdbId?: string;
+  trailer?: string;
+};
+
+// Event Types
+export type Event = {
+  id: string;
+  title: string;
+  description?: string;
+  date: string;
+  location?: string;
+  onlineLink?: string;
+  movieId?: string;
+  movieData?: MovieData;
+  maxCapacity?: number;
+  createdById?: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // RSVP Types
@@ -56,20 +56,6 @@ export type RSVP = {
   userId: string;
   eventId: string;
   status: RSVPStatus;
-  createdAt: string;
-  updatedAt: string;
-};
-
-// Payment Types
-export type PaymentStatus = "pending" | "succeeded" | "failed" | "refunded";
-
-export type Payment = {
-  id: string;
-  userId: string;
-  eventId: string;
-  amount: number; // in cents
-  status: PaymentStatus;
-  stripeId?: string;
   createdAt: string;
   updatedAt: string;
 };

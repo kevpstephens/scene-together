@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+import { api } from "../services/api";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import * as Crypto from "expo-crypto";
@@ -8,14 +9,19 @@ import * as Crypto from "expo-crypto";
 // Required for OAuth to work properly
 WebBrowser.maybeCompleteAuthSession();
 
+type UserRole = "USER" | "ADMIN" | "SUPER_ADMIN";
+
 type AuthContextType = {
   session: Session | null;
   user: User | null;
+  userRole: UserRole | null;
   loading: boolean;
+  isAdmin: boolean;
   signUp: (email: string, password: string, name?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  refreshUserRole: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,26 +29,78 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshUserRole = async () => {
+    try {
+      const response = await api.get("/auth/me");
+      setUserRole(response.data.role);
+    } catch (error) {
+      console.error("Failed to fetch user role:", error);
+      // Default to USER role if fetch fails but user is authenticated
+      setUserRole("USER");
+    }
+  };
+
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    console.log("🔐 AuthContext: Initializing...");
+
+    // Safety timeout - ensure loading doesn't hang forever
+    const timeoutId = setTimeout(() => {
+      console.log("⏰ AuthContext: Timeout reached, forcing loading to false");
       setLoading(false);
-    });
+    }, 5000);
+
+    // Get initial session
+    supabase.auth
+      .getSession()
+      .then(async ({ data: { session } }) => {
+        console.log(
+          "🔐 AuthContext: Session check complete",
+          session ? "✅ Authenticated" : "❌ Not authenticated"
+        );
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          await refreshUserRole();
+        }
+
+        clearTimeout(timeoutId);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("❌ AuthContext: Error getting session:", error);
+        clearTimeout(timeoutId);
+        setLoading(false);
+      });
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log(
+        "🔐 AuthContext: Auth state changed",
+        _event,
+        session ? "✅ Authenticated" : "❌ Not authenticated"
+      );
       setSession(session);
       setUser(session?.user ?? null);
+
+      if (session?.user) {
+        await refreshUserRole();
+      } else {
+        setUserRole(null);
+      }
+
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timeoutId);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, name?: string) => {
@@ -123,20 +181,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    console.log("🔐 [AuthContext] Signing out...");
     const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    if (error) {
+      console.error("❌ [AuthContext] Sign out error:", error);
+      throw error;
+    }
+    // Clear local state immediately
+    setSession(null);
+    setUser(null);
+    setUserRole(null);
+    console.log("✅ [AuthContext] Sign out successful");
   };
+
+  const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
 
   return (
     <AuthContext.Provider
       value={{
         session,
         user,
+        userRole,
         loading,
+        isAdmin,
         signUp,
         signIn,
         signInWithGoogle,
         signOut,
+        refreshUserRole,
       }}
     >
       {children}

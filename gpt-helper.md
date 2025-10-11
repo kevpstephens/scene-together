@@ -11,27 +11,28 @@ To enhance UX, the app integrates rich media from movie databases (OMDb/TMDb): p
 ⸻
 
 Platforms
-• Mobile App (React Native / Expo):
-• For members to browse events, RSVP, and add them to their calendar.
-• Web Dashboard (Next.js):
-• For staff/admins to create and manage events, attach movie data via APIs, and view attendance.
+• Expo App (React Native + Expo Web):
+• Cross-platform app for both mobile and web
+• Members can browse events, RSVP, and add them to their calendar
+• Admins have access to event management, TMDB integration, and attendance tracking
 • Backend API (Node.js/Express + PostgreSQL):
-• Shared backend powering both apps with role-based auth.
-• Monorepo Setup: Turborepo + pnpm managing mobile/, web/, api/, and shared/.
+• Shared backend with role-based auth (USER, ADMIN, SUPER_ADMIN)
+• Monorepo Setup: Turborepo + pnpm managing mobile/ and api/.
 
 ⸻
 
 Core MVP Features
 
-Members (mobile):
+Members (all platforms):
 • Browse upcoming events (with movie metadata).
 • RSVP/sign up.
 • Add events to calendar (device/Google).
 
-Admins (web):
-• Create/manage events with OMDb/TMDb integration. (Note: Only staff/admins can create events; members cannot create events.)
-• Upload posters or fetch via API.
+Admins (Admin tab - mobile/web):
+• Create/manage events with TMDB integration. (Note: Only staff/admins can create events; members cannot create events.)
+• Search and auto-populate movie data via TMDB API.
 • View RSVPs and attendance lists.
+• Delete events.
 
 ⸻
 
@@ -56,9 +57,9 @@ UX Design Enhancements
 ⸻
 
 Hosting
-• Web dashboard: Netlify (scenetogether.netlify.app/admin).
+• Expo Web: Netlify or Vercel (scenetogether.netlify.app).
 • API: Railway or Render.
-• Mobile app: Expo Go (dev) → TestFlight/Play Store (polish).
+• Mobile app: Expo Go (dev) → TestFlight/Play Store (production).
 
 ⸻
 
@@ -66,29 +67,29 @@ Hosting
 
 Week 1 — Foundations
 • Initialise monorepo (Turborepo + pnpm).
-• Scaffold mobile/, web/, api/, shared/.
+• Scaffold mobile/ and api/.
 • Define Postgres schema: Users, Events, RSVPs.
 • Build API boilerplate (Express + DB connection).
-• Placeholder mobile UI (event list) + web dashboard (login page).
+• Placeholder mobile UI (event list) + auth screens.
 
 Week 2 — Core Features
-• Web dashboard: event creation/editing with OMDb/TMDb integration.
-• Mobile app: fetch & display real events.
+• Admin features: event creation/editing with TMDB integration.
+• Mobile app: fetch & display real events with beautiful UI.
 • RSVP flow (link users ↔ events).
-• Implement JWT-based auth (roles: member vs. staff).
+• Implement role-based auth (USER, ADMIN, SUPER_ADMIN).
 
 Week 3 — Integration + Calendar
-• Calendar integration on mobile (add to Google/device).
-• Admin dashboard: attendance list view.
-• UX polish for both apps (use posters/trailers).
+• Calendar integration (add to Google/device).
+• Admin features: attendance list view.
+• UX polish across mobile and web (use posters/trailers).
 • Mid-project review & adjustments.
 
 Week 4 — Testing + Deployment
 • Testing:
 • API → Jest + Supertest.
-• Web/mobile → React Testing Library (basic flows).
-• Accessibility review (admin dashboard).
-• Deploy: API (Railway/Render), web (Netlify), mobile (Expo).
+• Mobile/web → React Testing Library (basic flows).
+• Accessibility review (all platforms).
+• Deploy: API (Railway/Render), Expo Web (Netlify/Vercel), mobile (Expo).
 • Finalise README (non-technical for TR + dev notes for portfolio).
 • Buffer: bug fixes + stretch features (Stripe payments, email confirmations).
 

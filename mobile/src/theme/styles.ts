@@ -1,12 +1,12 @@
 /**
  * Mobile App Shared Styles
- * Uses the shared design system theme from ../../../shared/src/theme
+ * Uses the local theme from ./index
  *
  * Usage: import { styles, colors } from '@/theme/styles'
  */
 
 import { StyleSheet } from "react-native";
-import { theme } from "../../../shared/src/theme";
+import { theme } from "./index";
 
 // Re-export theme colors and tokens for easy access
 export const colors = theme.colors;

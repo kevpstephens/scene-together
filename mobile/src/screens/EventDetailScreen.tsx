@@ -116,8 +116,10 @@ export default function EventDetailScreen() {
       setRsvpLoading(true);
       await api.post(`/events/${eventId}/rsvp`, { status });
 
-      // Haptic feedback
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Haptic feedback (native only)
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
 
       // Update local state
       setUserRSVP(status);
@@ -182,9 +184,11 @@ export default function EventDetailScreen() {
 
             if (added) {
               // Success! Alert is shown by the calendar service
-              Haptics.notificationAsync(
-                Haptics.NotificationFeedbackType.Success
-              );
+              if (Platform.OS !== "web") {
+                Haptics.notificationAsync(
+                  Haptics.NotificationFeedbackType.Success
+                );
+              }
             } else {
               console.log("⚠️ User canceled or calendar failed");
             }
@@ -197,7 +201,9 @@ export default function EventDetailScreen() {
       }
     } catch (error: any) {
       console.error("Failed to RSVP:", error);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
 
       // Show error message from API or generic error
       if (error.response?.data?.error === "Event is at full capacity") {

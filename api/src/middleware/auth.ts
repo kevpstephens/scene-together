@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { createClient } from "@supabase/supabase-js";
-import type { AuthUser } from "../../../shared/src/types";
+import type { AuthUser } from "../types";
 import { prisma } from "../utils/prisma.js";
 
 const supabaseUrl = process.env.SUPABASE_URL!;
