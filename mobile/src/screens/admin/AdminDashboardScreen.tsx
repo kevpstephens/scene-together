@@ -85,24 +85,49 @@ export default function AdminDashboardScreen() {
           <Text style={styles.subtitle}>Manage your events platform</Text>
         </View>
 
-        {/* Stats Cards */}
-        <View style={styles.statsGrid}>
-          <View style={[styles.statCard, { backgroundColor: "#46D4AF" }]}>
-            <FilmIcon size={32} color="#fff" />
-            <Text style={styles.statValue}>{stats.totalEvents}</Text>
-            <Text style={styles.statLabel}>Total Events</Text>
-          </View>
+        {/* Stats Cards - Overlapping Circles like Logo */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statsGrid}>
+            {/* Left Circle - Teal/Cyan */}
+            <View
+              style={[
+                styles.statCircle,
+                styles.leftCircle,
+                { backgroundColor: "#46D4AF" },
+              ]}
+            >
+              <FilmIcon size={28} color="#fff" />
+              <Text style={styles.statValue}>{stats.totalEvents}</Text>
+              <Text style={styles.statLabel}>Total</Text>
+              <Text style={styles.statLabel}>Events</Text>
+            </View>
 
-          <View style={[styles.statCard, { backgroundColor: "#23797E" }]}>
-            <ChartBarIcon size={32} color="#fff" />
-            <Text style={styles.statValue}>{stats.upcomingEvents}</Text>
-            <Text style={styles.statLabel}>Upcoming</Text>
-          </View>
+            {/* Center Circle - Dark Blue */}
+            <View
+              style={[
+                styles.statCircle,
+                styles.centerCircle,
+                { backgroundColor: "#1E3A5F" },
+              ]}
+            >
+              <ChartBarIcon size={28} color="#fff" />
+              <Text style={styles.statValue}>{stats.upcomingEvents}</Text>
+              <Text style={styles.statLabel}>Upcoming</Text>
+            </View>
 
-          <View style={[styles.statCard, { backgroundColor: "#FF6B9D" }]}>
-            <UsersIcon size={32} color="#fff" />
-            <Text style={styles.statValue}>{stats.totalAttendees}</Text>
-            <Text style={styles.statLabel}>Total RSVPs</Text>
+            {/* Right Circle - Accent Blue */}
+            <View
+              style={[
+                styles.statCircle,
+                styles.rightCircle,
+                { backgroundColor: "#2D5F7E" },
+              ]}
+            >
+              <UsersIcon size={28} color="#fff" />
+              <Text style={styles.statValue}>{stats.totalAttendees}</Text>
+              <Text style={styles.statLabel}>Total</Text>
+              <Text style={styles.statLabel}>RSVPs</Text>
+            </View>
           </View>
         </View>
 
@@ -139,14 +164,6 @@ export default function AdminDashboardScreen() {
               </Text>
             </View>
           </TouchableOpacity>
-        </View>
-
-        {/* Info Banner */}
-        <View style={styles.infoBanner}>
-          <Text style={styles.infoBannerText}>
-            🎬 <Text style={styles.infoBold}>Demo Mode:</Text> This is a
-            portfolio demonstration project.
-          </Text>
         </View>
       </ScrollView>
     </View>
@@ -185,33 +202,68 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.text.secondary,
   },
-  statsGrid: {
+  statsContainer: {
     width: "100%",
     maxWidth: theme.layout.maxWidth,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
   },
-  statCard: {
-    ...getCardStyle(),
-    marginBottom: theme.spacing.base,
-    flex: 1,
-    minWidth: 100,
+  statsGrid: {
+    width: "100%",
+    height: 180,
+    position: "relative",
     alignItems: "center",
     justifyContent: "center",
   },
+  statCircle: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "absolute",
+    borderWidth: 3,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+      web: {
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+      },
+    }),
+  },
+  leftCircle: {
+    left: Platform.OS === "web" ? 20 : 0,
+    zIndex: 1,
+  },
+  centerCircle: {
+    left: "50%",
+    marginLeft: -70, // Half of width to center
+    zIndex: 3, // Highest z-index for center circle (like logo)
+  },
+  rightCircle: {
+    right: Platform.OS === "web" ? 20 : 0,
+    zIndex: 2,
+  },
   statValue: {
-    fontSize: theme.typography.fontSize.xxxl,
+    fontSize: theme.typography.fontSize.xxl,
     fontWeight: theme.typography.fontWeight.bold,
     color: "#fff",
-    marginTop: theme.spacing.md,
+    marginTop: theme.spacing.xs,
   },
   statLabel: {
-    fontSize: theme.typography.fontSize.sm,
+    fontSize: theme.typography.fontSize.xs,
     color: "#fff",
-    opacity: 0.9,
-    marginTop: theme.spacing.xs,
+    opacity: 0.95,
+    lineHeight: 14,
+    textAlign: "center",
   },
   section: {
     width: "100%",
@@ -260,6 +312,8 @@ const styles = StyleSheet.create({
     padding: theme.spacing.base,
     borderWidth: 1,
     borderColor: "#FFD700",
+    flexDirection: "row",
+    alignItems: "center",
   },
   infoBannerText: {
     fontSize: theme.typography.fontSize.sm,

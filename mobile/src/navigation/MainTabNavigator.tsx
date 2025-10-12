@@ -60,14 +60,6 @@ export default function MainTabNavigator() {
           tabBarIcon: ({ color }) => <FilmIcon size={24} color={color} />,
         }}
       />
-      <Tab.Screen
-        name="ProfileTab"
-        component={ProfileStackNavigator}
-        options={{
-          tabBarLabel: "Profile",
-          tabBarIcon: ({ color }) => <UserIcon size={24} color={color} />,
-        }}
-      />
       {isAdmin && (
         <Tab.Screen
           name="AdminTab"
@@ -80,6 +72,14 @@ export default function MainTabNavigator() {
           }}
         />
       )}
+      <Tab.Screen
+        name="ProfileTab"
+        component={ProfileStackNavigator}
+        options={{
+          tabBarLabel: "Profile",
+          tabBarIcon: ({ color }) => <UserIcon size={24} color={color} />,
+        }}
+      />
     </Tab.Navigator>
   );
 }

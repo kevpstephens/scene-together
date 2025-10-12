@@ -4,7 +4,7 @@ import { EventsStackParamList } from "./types";
 import EventsListScreen from "../screens/EventsListScreen";
 import EventDetailScreen from "../screens/EventDetailScreen";
 import { theme } from "../theme";
-import { Platform, Image } from "react-native";
+import { Platform, Image, View } from "react-native";
 
 const Stack = createNativeStackNavigator<EventsStackParamList>();
 
@@ -39,13 +39,30 @@ export default function EventsStackNavigator() {
         component={EventsListScreen}
         options={{
           headerTitle: () => (
-            <Image
-              source={require("../../assets/logo/logo-transparent.png")}
-              style={{ width: 120, height: 32 }}
-              resizeMode="contain"
-            />
+            <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                ...(Platform.OS === "web" && {
+                  width: "100%",
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                }),
+              }}
+            >
+              <Image
+                source={require("../../assets/logo/logo-transparent.png")}
+                style={{ width: 200, height: 50 }}
+                resizeMode="contain"
+              />
+            </View>
           ),
           animation: "fade",
+          ...(Platform.OS === "web" && {
+            headerTitleAlign: "center",
+          }),
         }}
       />
       <Stack.Screen

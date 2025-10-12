@@ -15,7 +15,13 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { CompositeNavigationProp } from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { MainTabParamList, ProfileStackParamList } from "../navigation/types";
-import { PencilSquareIcon } from "react-native-heroicons/solid";
+import {
+  PencilSquareIcon,
+  UserIcon,
+  FilmIcon,
+  CalendarIcon,
+  MapPinIcon,
+} from "react-native-heroicons/solid";
 import { useAuth } from "../contexts/AuthContext";
 import { theme } from "../theme";
 import { getCardStyle } from "../theme/styles";
@@ -139,9 +145,13 @@ export default function ProfileScreen() {
               />
             ) : (
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {userProfile?.name?.charAt(0).toUpperCase() || "👤"}
-                </Text>
+                {userProfile?.name ? (
+                  <Text style={styles.avatarText}>
+                    {userProfile.name.charAt(0).toUpperCase()}
+                  </Text>
+                ) : (
+                  <UserIcon size={50} color={theme.colors.text.inverse} />
+                )}
               </View>
             )}
             <Text style={styles.name}>{userProfile?.name || "User"}</Text>
@@ -166,9 +176,12 @@ export default function ProfileScreen() {
                 <Text style={styles.loadingSmallText}>Loading events...</Text>
               </View>
             ) : rsvps.length === 0 ? (
-              <Text style={styles.placeholder}>
-                No RSVPs yet. Browse events to get started! 🎬
-              </Text>
+              <View style={styles.emptyContainer}>
+                <FilmIcon size={48} color={theme.colors.text.tertiary} />
+                <Text style={styles.placeholder}>
+                  No RSVPs yet. Browse events to get started!
+                </Text>
+              </View>
             ) : (
               <View>
                 {rsvps.map((rsvp) => (
@@ -197,13 +210,25 @@ export default function ProfileScreen() {
                       <Text style={styles.eventTitle} numberOfLines={2}>
                         {rsvp.event.title}
                       </Text>
-                      <Text style={styles.eventDate}>
-                        📅 {formatDate(rsvp.event.date)} at{" "}
-                        {formatTime(rsvp.event.date)}
-                      </Text>
-                      <Text style={styles.eventLocation} numberOfLines={1}>
-                        📍 {rsvp.event.location}
-                      </Text>
+                      <View style={styles.eventMetaRow}>
+                        <CalendarIcon
+                          size={14}
+                          color={theme.colors.text.secondary}
+                        />
+                        <Text style={styles.eventDate}>
+                          {formatDate(rsvp.event.date)} at{" "}
+                          {formatTime(rsvp.event.date)}
+                        </Text>
+                      </View>
+                      <View style={styles.eventMetaRow}>
+                        <MapPinIcon
+                          size={14}
+                          color={theme.colors.text.secondary}
+                        />
+                        <Text style={styles.eventLocation} numberOfLines={1}>
+                          {rsvp.event.location}
+                        </Text>
+                      </View>
                       <View
                         style={[
                           styles.statusBadge,
@@ -316,11 +341,20 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     marginBottom: theme.spacing.md,
   },
+  emptyContainer: {
+    alignItems: "center",
+    paddingVertical: theme.spacing.lg,
+  },
   placeholder: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.secondary,
     textAlign: "center",
-    paddingVertical: theme.spacing.lg,
+    marginTop: theme.spacing.sm,
+  },
+  eventMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: theme.spacing.xs,
   },
   logoutButton: {
     backgroundColor: theme.colors.error,
@@ -381,12 +415,13 @@ const styles = StyleSheet.create({
   eventDate: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.xs,
+    marginLeft: theme.spacing.xs,
   },
   eventLocation: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.sm,
+    marginLeft: theme.spacing.xs,
+    flex: 1,
   },
   statusBadge: {
     alignSelf: "flex-start",

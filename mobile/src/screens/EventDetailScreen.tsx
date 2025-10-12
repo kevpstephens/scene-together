@@ -307,17 +307,17 @@ export default function EventDetailScreen() {
       });
 
       // Build share message
-      let shareMessage = `🎬 ${event.title}\n\n`;
+      let shareMessage = `${event.title}\n\n`;
 
       if (event.movieData?.title) {
         shareMessage += `Movie: ${event.movieData.title}\n`;
       }
 
-      shareMessage += `📅 ${formattedDate}\n`;
-      shareMessage += `🕐 ${formattedTime}\n`;
+      shareMessage += `Date: ${formattedDate}\n`;
+      shareMessage += `Time: ${formattedTime}\n`;
 
       if (event.location) {
-        shareMessage += `📍 ${event.location}\n`;
+        shareMessage += `Location: ${event.location}\n`;
       }
 
       if (event.description) {

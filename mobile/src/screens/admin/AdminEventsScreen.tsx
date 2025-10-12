@@ -20,6 +20,8 @@ import {
   TrashIcon,
   UsersIcon,
   PlusIcon,
+  MapPinIcon,
+  FilmIcon,
 } from "react-native-heroicons/solid";
 import { theme } from "../../theme";
 import { getCardStyle } from "../../theme/styles";
@@ -151,9 +153,12 @@ export default function AdminEventsScreen() {
               </Text>
             )}
             <Text style={styles.cardDate}>{formatDate(item.date)}</Text>
-            <Text style={styles.cardLocation} numberOfLines={1}>
-              📍 {item.location}
-            </Text>
+            <View style={styles.cardLocationContainer}>
+              <MapPinIcon size={14} color={theme.colors.text.secondary} />
+              <Text style={styles.cardLocation} numberOfLines={1}>
+                {item.location}
+              </Text>
+            </View>
 
             {/* Capacity */}
             {item.maxCapacity && (
@@ -275,7 +280,7 @@ export default function AdminEventsScreen() {
           }
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>🎬</Text>
+              <FilmIcon size={64} color={theme.colors.text.tertiary} />
               <Text style={styles.emptyTitle}>No events yet</Text>
               <Text style={styles.emptyText}>
                 Create your first event to get started
@@ -354,15 +359,12 @@ const styles = StyleSheet.create({
     padding: theme.spacing.xxxl,
     alignItems: "center",
   },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: theme.spacing.base,
-  },
   emptyTitle: {
     fontSize: theme.typography.fontSize.xl,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
     marginBottom: theme.spacing.sm,
+    marginTop: theme.spacing.base,
   },
   emptyText: {
     fontSize: theme.typography.fontSize.base,
@@ -407,10 +409,16 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     marginBottom: theme.spacing.xs,
   },
+  cardLocationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: theme.spacing.sm,
+  },
   cardLocation: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.sm,
+    marginLeft: theme.spacing.xs,
+    flex: 1,
   },
   capacityContainer: {
     marginTop: theme.spacing.xs,
