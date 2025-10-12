@@ -948,89 +948,80 @@ export default function EventDetailScreen() {
         {/* Sticky Bottom RSVP/Payment Bar */}
         {!eventHasStarted && event && (
           <View style={styles.stickyBottomBar}>
-            <LinearGradient
-              colors={[
-                `${theme.colors.background}00`,
-                theme.colors.background,
-                theme.colors.background,
-              ]}
-              style={styles.bottomBarGradient}
-            >
-              <View style={styles.bottomBarContent}>
-                {/* Price Info */}
-                <View style={styles.priceInfo}>
-                  {event.payWhatYouCan ? (
-                    <>
-                      <Text style={styles.priceLabel}>Pay What You Can</Text>
-                      <Text style={styles.priceSubtext}>
-                        Min £{((event.minPrice || 0) / 100).toFixed(2)}
-                      </Text>
-                    </>
-                  ) : event.price && event.price > 0 ? (
-                    <>
-                      <Text style={styles.priceLabel}>
-                        £{(event.price / 100).toFixed(2)}
-                      </Text>
-                      <Text style={styles.priceSubtext}>per person</Text>
-                    </>
-                  ) : (
-                    <>
-                      <Text style={styles.priceLabel}>Free</Text>
-                      <Text style={styles.priceSubtext}>
-                        {event.attendeeCount || 0}/{event.maxCapacity} attending
-                      </Text>
-                    </>
-                  )}
-                </View>
-
-                {/* Primary Action Button */}
-                <AnimatedButton
-                  style={[
-                    styles.stickyRsvpButton,
-                    userRSVP === "going" && styles.stickyRsvpButtonActive,
-                  ]}
-                  onPress={() =>
-                    handleRSVP(userRSVP === "going" ? "not_going" : "going")
-                  }
-                  disabled={rsvpLoading}
-                >
-                  {rsvpLoading ? (
-                    <ActivityIndicator
-                      size="small"
-                      color={theme.colors.text.inverse}
-                    />
-                  ) : (
-                    <>
-                      {userRSVP === "going" ? (
-                        <>
-                          <CheckCircleIcon
-                            size={20}
-                            color={theme.colors.text.inverse}
-                          />
-                          <Text style={styles.stickyButtonText}>
-                            You're Going!
-                          </Text>
-                        </>
-                      ) : (
-                        <>
-                          <TicketIcon
-                            size={20}
-                            color={theme.colors.text.inverse}
-                          />
-                          <Text style={styles.stickyButtonText}>
-                            {event.price && event.price > 0
-                              ? event.payWhatYouCan
-                                ? "Choose Amount & RSVP"
-                                : `Pay £${(event.price / 100).toFixed(2)} & RSVP`
-                              : "RSVP Free"}
-                          </Text>
-                        </>
-                      )}
-                    </>
-                  )}
-                </AnimatedButton>
+            <View style={styles.bottomBarContent}>
+              {/* Price Info */}
+              <View style={styles.priceInfo}>
+                {event.payWhatYouCan ? (
+                  <>
+                    <Text style={styles.priceLabel}>PWYC</Text>
+                    <Text style={styles.priceSubtext}>
+                      Min £{((event.minPrice || 0) / 100).toFixed(2)}
+                    </Text>
+                  </>
+                ) : event.price && event.price > 0 ? (
+                  <>
+                    <Text style={styles.priceLabel}>
+                      £{(event.price / 100).toFixed(2)}
+                    </Text>
+                    <Text style={styles.priceSubtext}>per person</Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.priceLabel}>Free</Text>
+                    <Text style={styles.priceSubtext}>
+                      {event.attendeeCount || 0}/{event.maxCapacity} attending
+                    </Text>
+                  </>
+                )}
               </View>
-            </LinearGradient>
+
+              {/* Primary Action Button */}
+              <AnimatedButton
+                style={[
+                  styles.stickyRsvpButton,
+                  userRSVP === "going" && styles.stickyRsvpButtonActive,
+                ]}
+                onPress={() =>
+                  handleRSVP(userRSVP === "going" ? "not_going" : "going")
+                }
+                disabled={rsvpLoading}
+              >
+                {rsvpLoading ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.text.inverse}
+                  />
+                ) : (
+                  <>
+                    {userRSVP === "going" ? (
+                      <>
+                        <CheckCircleIcon
+                          size={20}
+                          color={theme.colors.text.inverse}
+                        />
+                        <Text style={styles.stickyButtonText}>
+                          You're Going!
+                        </Text>
+                      </>
+                    ) : (
+                      <>
+                        <TicketIcon
+                          size={20}
+                          color={theme.colors.text.inverse}
+                        />
+                        <Text style={styles.stickyButtonText}>
+                          {event.price && event.price > 0
+                            ? event.payWhatYouCan
+                              ? "Choose Amount & RSVP"
+                              : `Pay £${(event.price / 100).toFixed(2)} & RSVP`
+                            : "RSVP Free"}
+                        </Text>
+                      </>
+                    )}
+                  </>
+                )}
+              </AnimatedButton>
+            </View>
           </View>
         )}
       </Animated.View>
@@ -1069,7 +1060,8 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.xxs,
   },
   shadowWrapper: {
     width: Platform.OS === "web" ? "70%" : "85%", // Smaller on web, perfect on mobile
@@ -1416,9 +1408,6 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 100,
   },
-  bottomBarGradient: {
-    paddingTop: theme.spacing.md,
-  },
   bottomBarContent: {
     flexDirection: "row",
     alignItems: "center",
@@ -1431,6 +1420,7 @@ const styles = StyleSheet.create({
   },
   priceInfo: {
     flex: 1,
+    marginRight: theme.spacing.md,
   },
   priceLabel: {
     fontSize: theme.typography.fontSize.xl,
@@ -1447,7 +1437,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.full,
     minWidth: 180,
