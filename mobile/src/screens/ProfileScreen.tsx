@@ -12,10 +12,9 @@ import {
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import {
-  EventsStackParamList,
-  ProfileStackParamList,
-} from "../navigation/types";
+import { CompositeNavigationProp } from "@react-navigation/native";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import { MainTabParamList, ProfileStackParamList } from "../navigation/types";
 import { PencilSquareIcon } from "react-native-heroicons/solid";
 import { useAuth } from "../contexts/AuthContext";
 import { theme } from "../theme";
@@ -30,12 +29,13 @@ type RSVP = {
   event: Event;
 };
 
-type EventsNavigationProp = NativeStackNavigationProp<EventsStackParamList>;
-type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
+type ProfileScreenNavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<ProfileStackParamList, "Profile">,
+  BottomTabNavigationProp<MainTabParamList>
+>;
 
 export default function ProfileScreen() {
-  const eventsNavigation = useNavigation<EventsNavigationProp>();
-  const navigation = useNavigation<ProfileNavigationProp>();
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user, userProfile, loading, signOut } = useAuth();
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [rsvpsLoading, setRsvpsLoading] = useState(true);
@@ -174,8 +174,9 @@ export default function ProfileScreen() {
                     key={rsvp.id}
                     style={styles.eventCard}
                     onPress={() =>
-                      eventsNavigation.navigate("EventDetail", {
-                        eventId: rsvp.event.id,
+                      navigation.navigate("EventsTab", {
+                        screen: "EventDetail",
+                        params: { eventId: rsvp.event.id },
                       })
                     }
                   >
