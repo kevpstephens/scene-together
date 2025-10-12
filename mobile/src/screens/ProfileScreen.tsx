@@ -266,7 +266,6 @@ const styles = StyleSheet.create({
   editButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
     backgroundColor: theme.colors.surface,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.base,
@@ -280,6 +279,7 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.primary,
+    marginLeft: theme.spacing.sm,
   },
   section: {
     width: "100%",

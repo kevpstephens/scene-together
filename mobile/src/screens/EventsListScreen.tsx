@@ -352,7 +352,6 @@ export default function EventsListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
     alignItems: "center",
   },
   contentWrapper: {
@@ -421,7 +420,6 @@ const styles = StyleSheet.create({
   },
   emptyFeatures: {
     flexDirection: "column",
-    gap: theme.spacing.md,
     marginTop: theme.spacing.lg,
     backgroundColor: theme.colors.surface,
     padding: theme.spacing.lg,
@@ -436,12 +434,14 @@ const styles = StyleSheet.create({
   featureItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
   },
   featureText: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.secondary,
     fontWeight: theme.typography.fontWeight.medium,
+    marginLeft: theme.spacing.md,
+    flex: 1,
   },
   card: {
     backgroundColor: theme.colors.surface,
@@ -480,7 +480,6 @@ const styles = StyleSheet.create({
     left: theme.spacing.md,
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
     backgroundColor: theme.colors.primary,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
@@ -498,6 +497,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     letterSpacing: 0.5,
     textTransform: "uppercase",
+    marginLeft: theme.spacing.xs,
   },
   statusBadge: {
     position: "absolute",
@@ -505,7 +505,6 @@ const styles = StyleSheet.create({
     right: theme.spacing.md,
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.full,
@@ -528,6 +527,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     letterSpacing: 0.5,
     textTransform: "uppercase",
+    marginLeft: theme.spacing.xs,
   },
   cardContent: {
     padding: theme.spacing.base,
@@ -563,19 +563,20 @@ const styles = StyleSheet.create({
   detailsRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
     marginBottom: theme.spacing.xs,
   },
   time: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.secondary,
     fontWeight: theme.typography.fontWeight.medium,
+    marginLeft: theme.spacing.xs,
   },
   location: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.secondary,
     fontWeight: theme.typography.fontWeight.medium,
     flex: 1,
+    marginLeft: theme.spacing.xs,
   },
   movieInfo: {
     marginTop: theme.spacing.sm,
@@ -592,12 +593,14 @@ const styles = StyleSheet.create({
   genreContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.xs,
+    marginHorizontal: -theme.spacing.xxs,
   },
   genreChip: {
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xxs,
     borderRadius: theme.borderRadius.full,
+    marginHorizontal: theme.spacing.xxs,
+    marginBottom: theme.spacing.xs,
     // Web-compatible shadow
     ...(Platform.OS === "web"
       ? {
@@ -617,13 +620,13 @@ const styles = StyleSheet.create({
   capacityRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
     marginBottom: theme.spacing.xs,
   },
   capacityText: {
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.text.tertiary,
     fontWeight: theme.typography.fontWeight.medium,
+    marginLeft: theme.spacing.xs,
   },
   progressBarContainer: {
     height: 4,

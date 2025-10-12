@@ -307,10 +307,10 @@ export default function EventDetailScreen() {
           {/* Hero Image with Gradient Overlay and Parallax */}
           {event.movieData?.poster && (
             <View style={styles.heroContainer}>
-              <Animated.Image
-                source={{ uri: event.movieData.poster }}
+              {/* Poster wrapper with glow effect */}
+              <Animated.View
                 style={[
-                  styles.heroImage,
+                  styles.posterWrapper,
                   {
                     transform: [
                       { translateY: heroTranslate },
@@ -318,12 +318,21 @@ export default function EventDetailScreen() {
                     ],
                   },
                 ]}
-                resizeMode="contain"
-              />
-              <LinearGradient
-                colors={["transparent", "rgba(239, 240, 239, 0.95)"]}
-                style={styles.heroGradient}
-              />
+              >
+                <Image
+                  source={{ uri: event.movieData.poster }}
+                  style={styles.heroImage}
+                  resizeMode="contain"
+                />
+                <LinearGradient
+                  colors={[
+                    "transparent",
+                    "rgba(10, 15, 20, 0.3)",
+                    "rgba(10, 15, 20, 0.6)",
+                  ]}
+                  style={styles.posterGradient}
+                />
+              </Animated.View>
             </View>
           )}
 
@@ -667,7 +676,6 @@ export default function EventDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   scrollContent: {
     alignItems: "center",
@@ -687,16 +695,42 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
   },
   heroContainer: {
-    position: "relative",
     width: "100%",
-    height: 550,
-    backgroundColor: theme.colors.backgroundDark,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: theme.spacing.lg,
+  },
+  posterWrapper: {
+    width: Platform.OS === "web" ? "70%" : "85%", // Smaller on web, perfect on mobile
+    aspectRatio: 2 / 3, // Standard movie poster ratio
+    alignSelf: "center",
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "rgba(70, 212, 175, 0.4)", // Subtle teal border
+    overflow: "hidden",
+    position: "relative",
+    // Beautiful multi-layered teal glow effect tightly hugging the poster
+    ...(Platform.OS === "web"
+      ? {
+          boxShadow: `
+            0 0 40px rgba(70, 212, 175, 0.5),
+            0 0 80px rgba(70, 212, 175, 0.4),
+            0 0 120px rgba(70, 212, 175, 0.3),
+            0 20px 60px rgba(0, 0, 0, 0.6)
+          `,
+        }
+      : {
+          shadowColor: "#46D4AF",
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.7,
+          shadowRadius: 40,
+        }),
   },
   heroImage: {
     width: "100%",
     height: "100%",
   },
-  heroGradient: {
+  posterGradient: {
     position: "absolute",
     left: 0,
     right: 0,
@@ -714,26 +748,26 @@ const styles = StyleSheet.create({
     lineHeight: theme.typography.fontSize.xxxl * 1.2,
   },
   infoCard: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: "rgba(21, 28, 35, 0.5)",
     borderRadius: theme.borderRadius.xl,
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
     borderWidth: 1,
-    borderColor: "rgba(70, 212, 175, 0.1)", // Subtle turquoise border
+    borderColor: "rgba(70, 212, 175, 0.2)", // Subtle turquoise border
     ...(Platform.OS === "web"
-      ? { boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)" }
+      ? { boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.2)" }
       : theme.shadows.lg),
   },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
     paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.borderLight,
   },
   infoTextContainer: {
     flex: 1,
+    marginLeft: theme.spacing.md,
   },
   infoLabel: {
     fontSize: theme.typography.fontSize.xs,
@@ -749,14 +783,14 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.medium,
   },
   section: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: "rgba(21, 28, 35, 0.5)",
     borderRadius: theme.borderRadius.xl,
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
     borderWidth: 1,
-    borderColor: "rgba(70, 212, 175, 0.1)", // Subtle turquoise border
+    borderColor: "rgba(70, 212, 175, 0.2)", // Subtle turquoise border
     ...(Platform.OS === "web"
-      ? { boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)" }
+      ? { boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.2)" }
       : theme.shadows.lg),
   },
   sectionTitle: {
@@ -785,17 +819,18 @@ const styles = StyleSheet.create({
   movieMetaRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.sm,
     marginBottom: theme.spacing.md,
+    marginHorizontal: -theme.spacing.xs,
   },
   metaChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
     backgroundColor: theme.colors.accent,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.full,
+    marginHorizontal: theme.spacing.xs,
+    marginBottom: theme.spacing.sm,
     ...(Platform.OS === "web"
       ? { boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)" }
       : theme.shadows.sm),
@@ -805,6 +840,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.inverse,
     letterSpacing: 0.5,
+    marginLeft: theme.spacing.xs,
   },
   movieMeta: {
     fontSize: theme.typography.fontSize.sm,
@@ -822,13 +858,15 @@ const styles = StyleSheet.create({
   genreChipsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.sm,
     marginTop: theme.spacing.sm,
+    marginHorizontal: -theme.spacing.xs,
   },
   genreChip: {
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.full,
+    marginHorizontal: theme.spacing.xs,
+    marginBottom: theme.spacing.sm,
     ...(Platform.OS === "web"
       ? { boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }
       : theme.shadows.md),
@@ -848,13 +886,13 @@ const styles = StyleSheet.create({
   trailerTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
     marginBottom: theme.spacing.md,
   },
   trailerTitle: {
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
+    marginLeft: theme.spacing.sm,
   },
   videoWrapper: {
     borderRadius: theme.borderRadius.lg,
@@ -883,20 +921,20 @@ const styles = StyleSheet.create({
   },
   rsvpButtons: {
     flexDirection: "row",
-    gap: theme.spacing.sm,
     marginBottom: theme.spacing.md,
+    marginHorizontal: -theme.spacing.xs,
   },
   rsvpOption: {
     flex: 1,
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    gap: theme.spacing.xs,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: "rgba(21, 28, 35, 0.4)",
     borderWidth: 2,
     borderColor: theme.colors.border,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.sm,
+    marginHorizontal: theme.spacing.xs,
     borderRadius: theme.borderRadius.lg,
     ...(Platform.OS === "web"
       ? { boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)" }
@@ -910,6 +948,7 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.primary,
+    marginTop: theme.spacing.xs,
   },
   rsvpOptionTextActive: {
     color: theme.colors.text.inverse,
@@ -921,29 +960,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: theme.spacing.xs,
     marginTop: theme.spacing.sm,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
-    backgroundColor: theme.colors.background,
+    backgroundColor: "rgba(15, 20, 25, 0.3)",
     borderRadius: theme.borderRadius.md,
   },
   attendeeInfoText: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.secondary,
     fontWeight: theme.typography.fontWeight.medium,
+    marginLeft: theme.spacing.xs,
   },
   actionButtons: {
     marginTop: theme.spacing.lg,
     marginBottom: theme.spacing.xxxl,
-    gap: theme.spacing.md,
   },
   imdbButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: theme.spacing.sm,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: "rgba(21, 28, 35, 0.4)",
     borderWidth: 2,
     borderColor: theme.colors.primary,
     paddingVertical: theme.spacing.base,
@@ -957,5 +994,6 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontSize: theme.typography.fontSize.lg,
     fontWeight: theme.typography.fontWeight.bold,
+    marginLeft: theme.spacing.sm,
   },
 });
