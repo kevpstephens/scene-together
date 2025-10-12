@@ -52,7 +52,10 @@ export default function AdminEventEditScreen() {
   const [location, setLocation] = useState("");
   const [maxCapacity, setMaxCapacity] = useState("");
   const [price, setPrice] = useState("");
+  const [payWhatYouCan, setPayWhatYouCan] = useState(false);
+  const [minPrice, setMinPrice] = useState("");
   const [tmdbId, setTmdbId] = useState<number | undefined>();
+  const [existingMovieData, setExistingMovieData] = useState<any>(null); // Preserve existing movie data
 
   // Movie search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -89,11 +92,13 @@ export default function AdminEventEditScreen() {
     setSearchResults([]);
     setSearchQuery("");
     setTmdbId(movie.id);
+    setExistingMovieData(null); // Clear existing data when selecting a new movie
   };
 
   const handleRemoveMovie = () => {
     setSelectedMovie(null);
     setTmdbId(undefined);
+    setExistingMovieData(null); // Clear existing movie data when removing
   };
 
   const loadEvent = async () => {
@@ -107,10 +112,22 @@ export default function AdminEventEditScreen() {
 
       setLocation(data.location || "");
       setMaxCapacity(String(data.maxCapacity || ""));
-      setPrice(String(data.price || "0"));
+
+      // Convert price from cents to pounds for display
+      const priceInPounds = data.price ? (data.price / 100).toFixed(2) : "0.00";
+      setPrice(priceInPounds);
+
+      setPayWhatYouCan(data.payWhatYouCan || false);
+
+      // Convert minPrice from cents to pounds for display
+      const minPriceInPounds = data.minPrice
+        ? (data.minPrice / 100).toFixed(2)
+        : "0.00";
+      setMinPrice(minPriceInPounds);
 
       // Load existing movie data if available
       if (data.movieData) {
+        setExistingMovieData(data.movieData); // Store the full movie data
         setTmdbId(data.movieData.tmdbId);
         setSelectedMovie({
           id: data.movieData.tmdbId,
@@ -159,13 +176,33 @@ export default function AdminEventEditScreen() {
       return;
     }
 
+    // Validate minPrice if pay-what-you-can is enabled
+    if (payWhatYouCan) {
+      const minPriceNum = parseFloat(minPrice);
+      if (isNaN(minPriceNum) || minPriceNum < 0) {
+        Alert.alert("Validation Error", "Minimum price cannot be negative");
+        return;
+      }
+      if (minPriceNum > priceNum && priceNum > 0) {
+        Alert.alert(
+          "Validation Error",
+          "Minimum price cannot be greater than suggested price"
+        );
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const dateISO = eventDate.toISOString();
 
-      // Fetch movie data from TMDB if a movie is selected
+      // Handle movie data - use existing if unchanged, fetch if new selection
       let movieData = null;
-      if (tmdbId) {
+      if (existingMovieData && tmdbId === existingMovieData.tmdbId) {
+        // Movie hasn't changed, use existing data to preserve it
+        movieData = existingMovieData;
+      } else if (tmdbId) {
+        // New movie selected, fetch fresh data
         try {
           const { data } = await api.get(`/movies/${tmdbId}`);
           movieData = data;
@@ -174,14 +211,31 @@ export default function AdminEventEditScreen() {
         }
       }
 
-      await api.put(`/events/${eventId}`, {
+      // Convert prices from pounds to cents
+      const priceInCents = priceNum > 0 ? Math.round(priceNum * 100) : null;
+      const minPriceInCents =
+        payWhatYouCan && parseFloat(minPrice) > 0
+          ? Math.round(parseFloat(minPrice) * 100)
+          : null;
+
+      // Build update payload, omitting null/undefined fields
+      const updatePayload: any = {
         title,
         description,
         date: dateISO,
         location,
         maxCapacity: capacityNum,
-        movieData,
-      });
+        price: priceInCents,
+        payWhatYouCan,
+        minPrice: minPriceInCents,
+      };
+
+      // Only include movieData if it exists
+      if (movieData) {
+        updatePayload.movieData = movieData;
+      }
+
+      await api.put(`/events/${eventId}`, updatePayload);
 
       Alert.alert("Success", "Event updated successfully", [
         {
@@ -191,8 +245,12 @@ export default function AdminEventEditScreen() {
       ]);
     } catch (error: any) {
       console.error("Failed to update event:", error);
+      console.error("Error response:", error.response?.data);
       const errorMessage =
-        error.response?.data?.message || "Failed to update event";
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        JSON.stringify(error.response?.data) ||
+        "Failed to update event";
       Alert.alert("Error", errorMessage);
     } finally {
       setSubmitting(false);
@@ -369,7 +427,9 @@ export default function AdminEventEditScreen() {
                 </View>
 
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
-                  <Text style={styles.label}>Price (£)</Text>
+                  <Text style={styles.label}>
+                    {payWhatYouCan ? "Suggested Price (£)" : "Price (£)"}
+                  </Text>
                   <TextInput
                     style={styles.input}
                     value={price}
@@ -380,6 +440,52 @@ export default function AdminEventEditScreen() {
                   />
                 </View>
               </View>
+
+              {/* Pay What You Can Option */}
+              <View style={styles.formGroup}>
+                <TouchableOpacity
+                  style={styles.checkboxContainer}
+                  onPress={() => setPayWhatYouCan(!payWhatYouCan)}
+                  activeOpacity={0.7}
+                >
+                  <View
+                    style={[
+                      styles.checkbox,
+                      payWhatYouCan && styles.checkboxChecked,
+                    ]}
+                  >
+                    {payWhatYouCan && (
+                      <Text style={styles.checkboxCheckmark}>✓</Text>
+                    )}
+                  </View>
+                  <View style={styles.checkboxLabelContainer}>
+                    <Text style={styles.checkboxLabel}>
+                      Enable "Pay What You Can"
+                    </Text>
+                    <Text style={styles.checkboxSubtext}>
+                      Allow attendees to choose their own price
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* Minimum Price (shown only when pay-what-you-can is enabled) */}
+              {payWhatYouCan && (
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Minimum Price (£)</Text>
+                  <Text style={styles.helperText}>
+                    Optional minimum amount attendees must pay
+                  </Text>
+                  <TextInput
+                    style={styles.input}
+                    value={minPrice}
+                    onChangeText={setMinPrice}
+                    placeholder="0.00"
+                    placeholderTextColor={theme.colors.text.tertiary}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+              )}
             </View>
 
             {/* Action Buttons */}
@@ -612,5 +718,48 @@ const styles = StyleSheet.create({
   },
   removeButton: {
     padding: theme.spacing.sm,
+  },
+  checkboxContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: theme.spacing.sm,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: theme.borderRadius.sm,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: theme.spacing.base,
+    backgroundColor: theme.components.surfaces.section,
+  },
+  checkboxChecked: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  checkboxCheckmark: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: theme.typography.fontWeight.bold,
+  },
+  checkboxLabelContainer: {
+    flex: 1,
+  },
+  checkboxLabel: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xxs,
+  },
+  checkboxSubtext: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+  },
+  helperText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.sm,
   },
 });

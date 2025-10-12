@@ -46,6 +46,8 @@ export default function AdminEventCreateScreen() {
   const [location, setLocation] = useState("");
   const [maxCapacity, setMaxCapacity] = useState("50");
   const [price, setPrice] = useState("0");
+  const [payWhatYouCan, setPayWhatYouCan] = useState(false);
+  const [minPrice, setMinPrice] = useState("0");
   const [tmdbId, setTmdbId] = useState<number | undefined>();
 
   // Movie search state
@@ -123,6 +125,22 @@ export default function AdminEventCreateScreen() {
       return;
     }
 
+    // Validate minPrice if pay-what-you-can is enabled
+    if (payWhatYouCan) {
+      const minPriceNum = parseFloat(minPrice);
+      if (isNaN(minPriceNum) || minPriceNum < 0) {
+        Alert.alert("Validation Error", "Minimum price cannot be negative");
+        return;
+      }
+      if (minPriceNum > priceNum && priceNum > 0) {
+        Alert.alert(
+          "Validation Error",
+          "Minimum price cannot be greater than suggested price"
+        );
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const dateISO = eventDate.toISOString();
@@ -138,14 +156,31 @@ export default function AdminEventCreateScreen() {
         }
       }
 
-      const response = await api.post("/events", {
+      // Convert prices from pounds to cents
+      const priceInCents = priceNum > 0 ? Math.round(priceNum * 100) : null;
+      const minPriceInCents =
+        payWhatYouCan && parseFloat(minPrice) > 0
+          ? Math.round(parseFloat(minPrice) * 100)
+          : null;
+
+      // Build create payload, omitting null/undefined fields
+      const createPayload: any = {
         title,
         description,
         date: dateISO,
         location,
         maxCapacity: capacityNum,
-        movieData,
-      });
+        price: priceInCents,
+        payWhatYouCan,
+        minPrice: minPriceInCents,
+      };
+
+      // Only include movieData if it exists
+      if (movieData) {
+        createPayload.movieData = movieData;
+      }
+
+      const response = await api.post("/events", createPayload);
 
       // Navigate back immediately for instant feedback
       navigation.goBack();
@@ -338,7 +373,9 @@ export default function AdminEventCreateScreen() {
                 </View>
 
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
-                  <Text style={styles.label}>Price (£)</Text>
+                  <Text style={styles.label}>
+                    {payWhatYouCan ? "Suggested Price (£)" : "Price (£)"}
+                  </Text>
                   <TextInput
                     style={styles.input}
                     value={price}
@@ -349,6 +386,52 @@ export default function AdminEventCreateScreen() {
                   />
                 </View>
               </View>
+
+              {/* Pay What You Can Option */}
+              <View style={styles.formGroup}>
+                <TouchableOpacity
+                  style={styles.checkboxContainer}
+                  onPress={() => setPayWhatYouCan(!payWhatYouCan)}
+                  activeOpacity={0.7}
+                >
+                  <View
+                    style={[
+                      styles.checkbox,
+                      payWhatYouCan && styles.checkboxChecked,
+                    ]}
+                  >
+                    {payWhatYouCan && (
+                      <Text style={styles.checkboxCheckmark}>✓</Text>
+                    )}
+                  </View>
+                  <View style={styles.checkboxLabelContainer}>
+                    <Text style={styles.checkboxLabel}>
+                      Enable "Pay What You Can"
+                    </Text>
+                    <Text style={styles.checkboxSubtext}>
+                      Allow attendees to choose their own price
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* Minimum Price (shown only when pay-what-you-can is enabled) */}
+              {payWhatYouCan && (
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Minimum Price (£)</Text>
+                  <Text style={styles.helperText}>
+                    Optional minimum amount attendees must pay
+                  </Text>
+                  <TextInput
+                    style={styles.input}
+                    value={minPrice}
+                    onChangeText={setMinPrice}
+                    placeholder="0.00"
+                    placeholderTextColor={theme.colors.text.tertiary}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+              )}
             </View>
 
             {/* Action Buttons */}
@@ -591,5 +674,48 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
     color: "#fff",
+  },
+  checkboxContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: theme.spacing.sm,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: theme.borderRadius.sm,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: theme.spacing.base,
+    backgroundColor: theme.components.surfaces.section,
+  },
+  checkboxChecked: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  checkboxCheckmark: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: theme.typography.fontWeight.bold,
+  },
+  checkboxLabelContainer: {
+    flex: 1,
+  },
+  checkboxLabel: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xxs,
+  },
+  checkboxSubtext: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+  },
+  helperText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.sm,
   },
 });

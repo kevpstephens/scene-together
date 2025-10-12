@@ -94,6 +94,9 @@ export async function createEvent(
       movieId,
       movieData,
       maxCapacity,
+      price,
+      payWhatYouCan,
+      minPrice,
     } = req.body;
 
     const event = await prisma.event.create({
@@ -106,6 +109,9 @@ export async function createEvent(
         movieId,
         movieData: movieData || null,
         maxCapacity,
+        price: price || null,
+        payWhatYouCan: payWhatYouCan || false,
+        minPrice: minPrice || null,
         createdById: req.user!.id,
       },
     });
@@ -135,6 +141,9 @@ export async function updateEvent(
       movieId,
       movieData,
       maxCapacity,
+      price,
+      payWhatYouCan,
+      minPrice,
     } = req.body;
 
     const event = await prisma.event.update({
@@ -148,6 +157,9 @@ export async function updateEvent(
         movieId,
         movieData: movieData || null,
         maxCapacity,
+        price: price !== undefined ? price : undefined,
+        payWhatYouCan: payWhatYouCan !== undefined ? payWhatYouCan : undefined,
+        minPrice: minPrice !== undefined ? minPrice : undefined,
       },
     });
 

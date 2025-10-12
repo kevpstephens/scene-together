@@ -22,6 +22,9 @@ import {
   FireIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  ChartBarIcon,
 } from "react-native-heroicons/solid";
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -192,14 +195,21 @@ export default function EventsListScreen() {
     const currentAttendees = event.attendeeCount || 0;
     const percentageFull = (currentAttendees / event.maxCapacity) * 100;
 
+    // Granular capacity-based statuses
     if (currentAttendees >= event.maxCapacity) {
       return { type: "soldOut" as const, label: "Sold Out" };
-    } else if (percentageFull >= 80) {
+    } else if (percentageFull >= 90) {
       return { type: "almostFull" as const, label: "Almost Full" };
-    } else if (percentageFull < 50 && currentAttendees > 0) {
+    } else if (percentageFull >= 70) {
+      return { type: "nearlyFull" as const, label: "Nearly Full" };
+    } else if (percentageFull >= 50) {
+      return { type: "fillingUp" as const, label: "Filling Up" };
+    } else if (percentageFull >= 30) {
       return { type: "available" as const, label: "Available" };
+    } else {
+      // 0-30% (including 0 attendees)
+      return { type: "plentySpace" as const, label: "Plenty of Space" };
     }
-    return null;
   };
 
   // Get event time status
@@ -253,9 +263,37 @@ export default function EventsListScreen() {
     return index === 0; // First event is featured
   };
 
+  // Format price for display
+  const formatPrice = (
+    event: Event
+  ): { label: string; color: string } | null => {
+    if (!event.price || event.price === 0) {
+      return { label: "FREE", color: theme.colors.success };
+    }
+
+    const priceInPounds = (event.price / 100).toFixed(2);
+
+    if (event.payWhatYouCan) {
+      if (event.minPrice && event.minPrice > 0) {
+        const minInPounds = (event.minPrice / 100).toFixed(2);
+        return {
+          label: `£${minInPounds}+ PWYC`,
+          color: theme.colors.accent,
+        };
+      }
+      return {
+        label: `£${priceInPounds}+ PWYC`,
+        color: theme.colors.accent,
+      };
+    }
+
+    return { label: `£${priceInPounds}`, color: theme.colors.primary };
+  };
+
   const renderEventCard = ({ item, index }: { item: Event; index: number }) => {
     const status = getEventStatus(item);
     const featured = isFeatured(item, index);
+    const priceInfo = formatPrice(item);
 
     return (
       <AnimatedButton
@@ -288,29 +326,26 @@ export default function EventsListScreen() {
               </View>
             )}
 
-            {/* Status Badge */}
-            {status && (
+            {/* Price Badge on Poster */}
+            {priceInfo && (
               <View
                 style={[
-                  styles.statusBadge,
-                  status.type === "soldOut" && styles.soldOutBadge,
-                  status.type === "almostFull" && styles.almostFullBadge,
-                  status.type === "available" && styles.availableBadge,
-                  status.type === "past" && styles.pastBadge,
+                  styles.priceBadgeOnPoster,
+                  {
+                    backgroundColor: `${priceInfo.color}E6`, // 90% opacity for better visibility
+                    borderColor: `${priceInfo.color}`,
+                  },
                 ]}
               >
-                {status.type === "almostFull" && (
-                  <FireIcon size={12} color={theme.colors.text.inverse} />
-                )}
-                {status.type === "available" && (
-                  <UsersIcon size={12} color={theme.colors.text.inverse} />
-                )}
-                <Text style={styles.statusText}>{status.label}</Text>
+                <Text style={[styles.priceTextOnPoster, { color: "#FFFFFF" }]}>
+                  {priceInfo.label}
+                </Text>
               </View>
             )}
           </View>
         )}
         <View style={styles.cardContent}>
+          {/* Date Badge */}
           <View style={styles.dateTag}>
             <Text style={styles.dateTagText}>{formatDate(item.date)}</Text>
           </View>
@@ -371,14 +406,72 @@ export default function EventsListScreen() {
                 <Text style={styles.capacityText}>
                   {item.attendeeCount || 0} / {item.maxCapacity} spots
                 </Text>
+
+                {/* Status Badge in Capacity Row */}
+                {status && (
+                  <View
+                    style={[
+                      styles.statusBadgeInline,
+                      status.type === "soldOut" && styles.soldOutBadge,
+                      status.type === "almostFull" && styles.almostFullBadge,
+                      status.type === "nearlyFull" && styles.nearlyFullBadge,
+                      status.type === "fillingUp" && styles.fillingUpBadge,
+                      status.type === "available" && styles.availableBadge,
+                      status.type === "plentySpace" && styles.plentySpaceBadge,
+                      status.type === "past" && styles.pastBadge,
+                    ]}
+                  >
+                    {status.type === "soldOut" && (
+                      <XMarkIcon size={10} color={theme.colors.text.inverse} />
+                    )}
+                    {status.type === "almostFull" && (
+                      <FireIcon size={10} color={theme.colors.text.inverse} />
+                    )}
+                    {status.type === "nearlyFull" && (
+                      <ExclamationTriangleIcon
+                        size={10}
+                        color={theme.colors.text.inverse}
+                      />
+                    )}
+                    {status.type === "fillingUp" && (
+                      <ChartBarIcon
+                        size={10}
+                        color={theme.colors.text.inverse}
+                      />
+                    )}
+                    {status.type === "available" && (
+                      <CheckCircleIcon
+                        size={10}
+                        color={theme.colors.text.inverse}
+                      />
+                    )}
+                    {status.type === "plentySpace" && (
+                      <CheckCircleIcon
+                        size={10}
+                        color={theme.colors.text.inverse}
+                      />
+                    )}
+                    <Text style={styles.statusTextInline}>{status.label}</Text>
+                  </View>
+                )}
               </View>
-              {/* Animated Progress Bar */}
+              {/* Dynamic Color-Coded Progress Bar */}
               <View style={styles.progressBarContainer}>
                 <Animated.View
                   style={[
                     styles.progressBar,
                     {
                       width: `${((item.attendeeCount || 0) / item.maxCapacity) * 100}%`,
+                      backgroundColor: (() => {
+                        const percentage =
+                          ((item.attendeeCount || 0) / item.maxCapacity) * 100;
+                        if (percentage >= 100) return theme.colors.error;
+                        if (percentage >= 90) return "#FF6B35"; // Orange-red
+                        if (percentage >= 70) return theme.colors.warning;
+                        if (percentage >= 50) return "#FFC857"; // Yellow
+                        if (percentage >= 30) return theme.colors.accent;
+                        return theme.colors.success; // Green for plenty of space
+                      })(),
                     },
                   ]}
                 />
@@ -760,16 +853,16 @@ const styles = StyleSheet.create({
     left: theme.spacing.md,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: theme.colors.primary,
+    backgroundColor: `${theme.colors.primary}CC`, // More subtle with 80% opacity
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.full,
-    // Web-compatible shadow
+    // Web-compatible shadow (more subtle)
     ...(Platform.OS === "web"
       ? {
-          boxShadow: "0px 8px 12px rgba(0, 0, 0, 0.16)",
+          boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.12)",
         }
-      : theme.shadows.lg),
+      : theme.shadows.md),
   },
   featuredText: {
     fontSize: theme.typography.fontSize.xs,
@@ -778,6 +871,27 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     textTransform: "uppercase",
     marginLeft: theme.spacing.xs,
+  },
+  priceBadgeOnPoster: {
+    position: "absolute",
+    top: theme.spacing.md,
+    right: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.full,
+    borderWidth: 1.5,
+    // Web-compatible shadow (subtle)
+    ...(Platform.OS === "web"
+      ? {
+          boxShadow: "0px 2px 6px rgba(0, 0, 0, 0.1)",
+        }
+      : theme.shadows.sm),
+  },
+  priceTextOnPoster: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.bold,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
   statusBadge: {
     position: "absolute",
@@ -796,13 +910,22 @@ const styles = StyleSheet.create({
       : theme.shadows.md),
   },
   almostFullBadge: {
-    backgroundColor: theme.colors.warning,
+    backgroundColor: "#FF6B35", // Orange-red (90%+)
+  },
+  nearlyFullBadge: {
+    backgroundColor: theme.colors.warning, // Orange (70-90%)
+  },
+  fillingUpBadge: {
+    backgroundColor: "#FFC857", // Yellow (50-70%)
   },
   soldOutBadge: {
-    backgroundColor: theme.colors.error,
+    backgroundColor: theme.colors.error, // Red (100%)
   },
   availableBadge: {
-    backgroundColor: theme.colors.success,
+    backgroundColor: theme.colors.accent, // Teal (30-50%)
+  },
+  plentySpaceBadge: {
+    backgroundColor: theme.colors.success, // Green (0-30%)
   },
   pastBadge: {
     backgroundColor: theme.colors.text.tertiary,
@@ -818,6 +941,13 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     padding: theme.spacing.base,
+  },
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
   },
   dateTag: {
     alignSelf: "flex-start",
@@ -902,18 +1032,35 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   capacityContainer: {
-    marginTop: theme.spacing.sm,
+    marginTop: theme.spacing.md, // Increased spacing from genre chips
   },
   capacityRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: theme.spacing.xs,
+    gap: theme.spacing.sm,
   },
   capacityText: {
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.text.tertiary,
     fontWeight: theme.typography.fontWeight.medium,
     marginLeft: theme.spacing.xs,
+    flex: 1,
+  },
+  statusBadgeInline: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: theme.borderRadius.full,
+    gap: 4,
+  },
+  statusTextInline: {
+    fontSize: 10,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.inverse,
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
   },
   progressBarContainer: {
     height: 4,
@@ -925,5 +1072,30 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: theme.colors.accent,
     borderRadius: theme.borderRadius.full,
+  },
+  priceBadge: {
+    paddingHorizontal: theme.spacing.base,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.full,
+    borderWidth: 1.5,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 1,
+      },
+      web: {
+        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+      },
+    }),
+  },
+  priceText: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.bold,
+    letterSpacing: 0.5,
   },
 });

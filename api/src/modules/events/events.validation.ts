@@ -26,6 +26,10 @@ export const createEventSchema = z.object({
       })
       .optional(),
     maxCapacity: z.number().int().positive().optional(),
+    // Payment fields
+    price: z.number().int().nonnegative().nullable().optional(),
+    payWhatYouCan: z.boolean().optional(),
+    minPrice: z.number().int().nonnegative().nullable().optional(),
   }),
 });
 
@@ -58,6 +62,10 @@ export const updateEventSchema = z.object({
       })
       .optional(),
     maxCapacity: z.number().int().positive().optional(),
+    // Payment fields
+    price: z.number().int().nonnegative().nullable().optional(),
+    payWhatYouCan: z.boolean().optional(),
+    minPrice: z.number().int().nonnegative().nullable().optional(),
   }),
 });
 

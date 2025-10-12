@@ -14,6 +14,10 @@ export type Event = {
   maxCapacity?: number;
   attendeeCount?: number; // Real RSVP count from API
   createdById?: string;
+  // Payment fields
+  price?: number | null; // Price in cents
+  payWhatYouCan?: boolean; // Allow flexible pricing
+  minPrice?: number | null; // Minimum price for pay-what-you-can (in cents)
   createdAt: string;
   updatedAt: string;
 };
