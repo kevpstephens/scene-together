@@ -12,6 +12,7 @@ import { useRoute, RouteProp } from "@react-navigation/native";
 import { AdminStackParamList } from "../../navigation/types";
 import { UserIcon } from "react-native-heroicons/solid";
 import { theme } from "../../theme";
+import { getCardStyle } from "../../theme/styles";
 import { api } from "../../services/api";
 import GradientBackground from "../../components/GradientBackground";
 
@@ -311,13 +312,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   attendeeCard: {
+    ...getCardStyle(),
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.base,
     marginBottom: theme.spacing.base,
-    ...theme.shadows.sm,
   },
   attendeeIcon: {
     width: 48,

@@ -22,6 +22,7 @@ import {
   PlusIcon,
 } from "react-native-heroicons/solid";
 import { theme } from "../../theme";
+import { getCardStyle } from "../../theme/styles";
 import { api } from "../../services/api";
 import type { Event } from "../../types";
 import GradientBackground from "../../components/GradientBackground";
@@ -370,13 +371,8 @@ const styles = StyleSheet.create({
   },
   card: {
     width: "100%",
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.base,
+    ...getCardStyle(),
     marginBottom: theme.spacing.base,
-    ...(Platform.OS === "web"
-      ? { boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.4)" }
-      : theme.shadows.md),
   },
   cardPast: {
     opacity: 0.6,

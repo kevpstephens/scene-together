@@ -153,6 +153,68 @@ export const theme = {
     headerHeight: 56,
     maxWidth: 600, // Max width for content on tablets
   },
+
+  // Design System - Reusable component tokens
+  components: {
+    // Semi-transparent surfaces (shows gradient background)
+    surfaces: {
+      card: "rgba(21, 28, 35, 0.5)", // Main card background
+      cardElevated: "rgba(21, 28, 35, 0.7)", // More opaque for emphasis
+      section: "rgba(15, 20, 25, 0.3)", // Light sections within cards
+      overlay: "rgba(10, 15, 20, 0.8)", // Modal/overlay backgrounds
+    },
+
+    // Teal accent borders
+    borders: {
+      subtle: "rgba(70, 212, 175, 0.1)", // Very subtle teal
+      default: "rgba(70, 212, 175, 0.2)", // Standard teal border
+      strong: "rgba(70, 212, 175, 0.4)", // Emphasized teal border
+      glow: "rgba(70, 212, 175, 0.6)", // For glowing borders
+    },
+
+    // Border radius presets
+    radii: {
+      card: 16, // For cards
+      poster: 12, // For movie posters/images
+      button: 8, // For buttons
+      badge: 20, // For badges/tags
+    },
+
+    // Glow effects (multi-layered shadows)
+    glows: {
+      // Subtle glow for list items
+      subtle: {
+        web: `
+          0 0 20px rgba(70, 212, 175, 0.3),
+          0 0 40px rgba(70, 212, 175, 0.2),
+          0 10px 30px rgba(0, 0, 0, 0.4)
+        `,
+        native: {
+          shadowColor: "#46D4AF",
+          shadowOffset: { width: 0, height: 5 },
+          shadowOpacity: 0.4,
+          shadowRadius: 20,
+          elevation: 10,
+        },
+      },
+      // Strong glow for featured items/posters
+      strong: {
+        web: `
+          0 0 40px rgba(70, 212, 175, 0.5),
+          0 0 80px rgba(70, 212, 175, 0.4),
+          0 0 120px rgba(70, 212, 175, 0.3),
+          0 20px 60px rgba(0, 0, 0, 0.6)
+        `,
+        native: {
+          shadowColor: "#46D4AF",
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.8,
+          shadowRadius: 40,
+          elevation: 20,
+        },
+      },
+    },
+  },
 } as const;
 
 // Type for theme colors (useful for TypeScript autocomplete)

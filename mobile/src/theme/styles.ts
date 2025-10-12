@@ -53,44 +53,44 @@ export const styles = StyleSheet.create({
 
   // Text Styles
   heading1: {
-    fontSize: typography.fontSize["3xl"],
+    fontSize: typography.fontSize.xxxl,
     fontWeight: typography.fontWeight.bold as any,
-    color: colors.text,
-    lineHeight: typography.fontSize["3xl"] * typography.lineHeight.tight,
+    color: colors.text.primary,
+    lineHeight: typography.fontSize.xxxl * typography.lineHeight.tight,
   },
 
   heading2: {
-    fontSize: typography.fontSize["2xl"],
+    fontSize: typography.fontSize.xxl,
     fontWeight: typography.fontWeight.bold as any,
-    color: colors.text,
-    lineHeight: typography.fontSize["2xl"] * typography.lineHeight.tight,
+    color: colors.text.primary,
+    lineHeight: typography.fontSize.xxl * typography.lineHeight.tight,
   },
 
   heading3: {
     fontSize: typography.fontSize.xl,
     fontWeight: typography.fontWeight.semibold as any,
-    color: colors.text,
+    color: colors.text.primary,
     lineHeight: typography.fontSize.xl * typography.lineHeight.normal,
   },
 
   bodyText: {
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.normal as any,
-    color: colors.text,
+    color: colors.text.primary,
     lineHeight: typography.fontSize.base * typography.lineHeight.normal,
   },
 
   bodyTextSecondary: {
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.normal as any,
-    color: colors.textSecondary,
+    color: colors.text.secondary,
     lineHeight: typography.fontSize.base * typography.lineHeight.normal,
   },
 
   caption: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.normal as any,
-    color: colors.textSecondary,
+    color: colors.text.secondary,
     lineHeight: typography.fontSize.sm * typography.lineHeight.normal,
   },
 
@@ -122,21 +122,21 @@ export const styles = StyleSheet.create({
   },
 
   buttonSecondaryText: {
-    color: colors.text,
+    color: colors.text.primary,
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.semibold as any,
   },
 
   // Input Styles
   input: {
-    backgroundColor: colors.inputBackground,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     fontSize: typography.fontSize.base,
-    color: colors.text,
+    color: colors.text.primary,
   },
 
   inputFocused: {
@@ -157,29 +157,29 @@ export const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.semibold as any,
   },
 
-  // Status Badge Colors
-  badgeUpcoming: {
-    backgroundColor: `${colors.upcoming}20`, // 20% opacity
+  // Status Badge Colors (using info, success, warning)
+  badgeSuccess: {
+    backgroundColor: "rgba(52, 211, 153, 0.2)", // success with 20% opacity
   },
 
-  badgeUpcomingText: {
-    color: colors.upcoming,
+  badgeSuccessText: {
+    color: colors.success,
   },
 
-  badgeOngoing: {
-    backgroundColor: `${colors.ongoing}20`,
+  badgeInfo: {
+    backgroundColor: "rgba(96, 165, 250, 0.2)", // info with 20% opacity
   },
 
-  badgeOngoingText: {
-    color: colors.ongoing,
+  badgeInfoText: {
+    color: colors.info,
   },
 
-  badgePast: {
-    backgroundColor: `${colors.past}20`,
+  badgeWarning: {
+    backgroundColor: "rgba(251, 191, 36, 0.2)", // warning with 20% opacity
   },
 
-  badgePastText: {
-    color: colors.past,
+  badgeWarningText: {
+    color: colors.warning,
   },
 
   // Divider
@@ -199,7 +199,7 @@ export const styles = StyleSheet.create({
 
   emptyStateText: {
     fontSize: typography.fontSize.lg,
-    color: colors.textSecondary,
+    color: colors.text.secondary,
     textAlign: "center",
     marginTop: spacing.md,
   },
@@ -208,7 +208,7 @@ export const styles = StyleSheet.create({
 /**
  * Helper function to create consistent shadows
  */
-export const getShadow = (size: "sm" | "md" | "lg" = "md") => {
+export const getShadow = (size: "sm" | "md" | "lg" | "xl" = "md") => {
   return shadows[size];
 };
 
@@ -217,4 +217,70 @@ export const getShadow = (size: "sm" | "md" | "lg" = "md") => {
  */
 export const getSpacing = (size: keyof typeof spacing) => {
   return spacing[size];
+};
+
+/**
+ * Platform-specific helper for applying glow effects
+ * Usage: ...getPlatformGlow('subtle')
+ */
+export const getPlatformGlow = (
+  intensity: "subtle" | "strong" = "subtle"
+): any => {
+  const { Platform } = require("react-native");
+  const glow = theme.components.glows[intensity];
+
+  if (Platform.OS === "web") {
+    return { boxShadow: glow.web };
+  }
+  return glow.native;
+};
+
+/**
+ * Helper to create card styles with semi-transparent background
+ * Usage: ...getCardStyle() or ...getCardStyle('elevated')
+ */
+export const getCardStyle = (variant: "card" | "cardElevated" = "card") => {
+  return {
+    backgroundColor: theme.components.surfaces[variant],
+    borderRadius: theme.components.radii.card,
+    borderWidth: 1,
+    borderColor: theme.components.borders.default,
+    padding: spacing.md,
+  };
+};
+
+/**
+ * Helper to create poster/image wrapper with glow
+ * Usage: ...getPosterWrapperStyle({ width: '85%', intensity: 'strong' })
+ */
+export const getPosterWrapperStyle = (
+  options: {
+    width?: string | number;
+    intensity?: "subtle" | "strong";
+  } = {}
+) => {
+  const { Platform } = require("react-native");
+  const { width = "100%", intensity = "strong" } = options;
+
+  return {
+    width,
+    aspectRatio: 2 / 3,
+    alignSelf: "center" as const,
+    borderRadius: theme.components.radii.poster,
+    ...getPlatformGlow(intensity),
+  };
+};
+
+/**
+ * Helper to create section styles (lighter transparent backgrounds within cards)
+ * Usage: ...getSectionStyle()
+ */
+export const getSectionStyle = () => {
+  return {
+    backgroundColor: theme.components.surfaces.section,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.components.borders.subtle,
+    padding: spacing.md,
+  };
 };

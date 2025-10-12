@@ -25,6 +25,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { EventsStackParamList } from "../navigation/types";
 import { api } from "../services/api";
 import { theme } from "../theme";
+import { getPlatformGlow, getCardStyle } from "../theme/styles";
 import type { Event } from "../types";
 import EventCardSkeleton from "../components/EventCardSkeleton";
 import AnimatedButton from "../components/AnimatedButton";
@@ -444,23 +445,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   card: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.xl,
+    ...getCardStyle(),
     marginBottom: theme.spacing.lg,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(70, 212, 175, 0.1)", // Subtle turquoise border
-    // Web-compatible shadow - stronger shadow for more depth
-    ...(Platform.OS === "web"
-      ? {
-          boxShadow: "0px 12px 16px rgba(0, 0, 0, 0.2)",
-        }
-      : theme.shadows.xl),
   },
   posterContainer: {
     position: "relative",
     width: "100%",
     height: 240,
+    borderRadius: theme.components.radii.poster,
+    overflow: "hidden",
+    ...getPlatformGlow("subtle"),
   },
   poster: {
     width: "100%",

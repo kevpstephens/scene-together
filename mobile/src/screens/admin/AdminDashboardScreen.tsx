@@ -18,6 +18,7 @@ import {
   ChartBarIcon,
 } from "react-native-heroicons/solid";
 import { theme } from "../../theme";
+import { getCardStyle } from "../../theme/styles";
 import { api } from "../../services/api";
 import GradientBackground from "../../components/GradientBackground";
 
@@ -193,16 +194,12 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
   },
   statCard: {
+    ...getCardStyle(),
     marginBottom: theme.spacing.base,
     flex: 1,
     minWidth: 100,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.xl,
     alignItems: "center",
     justifyContent: "center",
-    ...(Platform.OS === "web"
-      ? { boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)" }
-      : theme.shadows.lg),
   },
   statValue: {
     fontSize: theme.typography.fontSize.xxxl,
@@ -228,15 +225,10 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.base,
   },
   actionCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.base,
+    ...getCardStyle(),
     flexDirection: "row",
     alignItems: "center",
     marginBottom: theme.spacing.base,
-    ...(Platform.OS === "web"
-      ? { boxShadow: "0px 6px 10px rgba(0, 0, 0, 0.1)" }
-      : theme.shadows.md),
   },
   actionIconContainer: {
     width: 48,

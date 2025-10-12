@@ -19,6 +19,7 @@ import {
 import { PencilSquareIcon } from "react-native-heroicons/solid";
 import { useAuth } from "../contexts/AuthContext";
 import { theme } from "../theme";
+import { getCardStyle } from "../theme/styles";
 import { api } from "../services/api";
 import type { Event } from "../types";
 import GradientBackground from "../components/GradientBackground";
@@ -121,35 +122,40 @@ export default function ProfileScreen() {
   };
 
   return (
-    <View style={styles.wrapper}>
-      <GradientBackground />
+    <GradientBackground>
       <ScrollView style={styles.container}>
         <View style={styles.content}>
-          {userProfile?.avatarUrl ? (
-            <Image
-              source={{ uri: userProfile.avatarUrl }}
-              style={styles.avatarImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {userProfile?.name?.charAt(0).toUpperCase() || "👤"}
-              </Text>
-            </View>
-          )}
-          <Text style={styles.name}>{userProfile?.name || "User"}</Text>
-          <Text style={styles.email}>{user?.email}</Text>
+          <Text style={styles.pageTitle}>My Profile</Text>
 
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => navigation.navigate("ProfileEdit")}
-          >
-            <PencilSquareIcon size={20} color={theme.colors.primary} />
-            <Text style={styles.editButtonText}>Edit Profile</Text>
-          </TouchableOpacity>
+          {/* User Info Card */}
+          <View style={styles.profileCard}>
+            {userProfile?.avatarUrl ? (
+              <Image
+                source={{ uri: userProfile.avatarUrl }}
+                style={styles.avatarImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {userProfile?.name?.charAt(0).toUpperCase() || "👤"}
+                </Text>
+              </View>
+            )}
+            <Text style={styles.name}>{userProfile?.name || "User"}</Text>
+            <Text style={styles.email}>{user?.email}</Text>
 
-          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => navigation.navigate("ProfileEdit")}
+            >
+              <PencilSquareIcon size={20} color={theme.colors.primary} />
+              <Text style={styles.editButtonText}>Edit Profile</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Events Section Card */}
+          <View style={styles.eventsCard}>
             <Text style={styles.sectionTitle}>My Events ({rsvps.length})</Text>
 
             {rsvpsLoading ? (
@@ -215,7 +221,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </View>
+    </GradientBackground>
   );
 }
 
@@ -227,8 +233,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: theme.spacing.base,
+    padding: theme.spacing.lg,
+    maxWidth: theme.layout.maxWidth,
+    width: "100%",
+    alignSelf: "center",
+  },
+  pageTitle: {
+    fontSize: theme.typography.fontSize.xxl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xl,
+  },
+  profileCard: {
+    ...getCardStyle(),
     alignItems: "center",
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
   },
   avatar: {
     width: 100,
@@ -238,14 +258,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: theme.spacing.base,
-    marginTop: theme.spacing.xl,
   },
   avatarImage: {
     width: 100,
     height: 100,
     borderRadius: theme.borderRadius.full,
     marginBottom: theme.spacing.base,
-    marginTop: theme.spacing.xl,
   },
   avatarText: {
     fontSize: theme.typography.fontSize.display,
@@ -266,14 +284,13 @@ const styles = StyleSheet.create({
   editButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.components.surfaces.section,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.base,
     borderRadius: theme.borderRadius.lg,
     borderWidth: 1,
     borderColor: theme.colors.primary,
-    alignSelf: "center",
-    marginBottom: theme.spacing.xl,
+    marginTop: theme.spacing.base,
   },
   editButtonText: {
     fontSize: theme.typography.fontSize.base,
@@ -281,15 +298,10 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     marginLeft: theme.spacing.sm,
   },
-  section: {
-    width: "100%",
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.base,
-    marginBottom: theme.spacing.base,
-    ...(Platform.OS === "web"
-      ? { boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)" }
-      : theme.shadows.sm),
+  eventsCard: {
+    ...getCardStyle(),
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
   },
   sectionTitle: {
     fontSize: theme.typography.fontSize.lg,
@@ -307,8 +319,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.error,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.xl,
-    borderRadius: theme.borderRadius.md,
-    marginTop: theme.spacing.lg,
+    borderRadius: theme.borderRadius.lg,
+    alignSelf: "center",
+    marginTop: theme.spacing.base,
   },
   logoutButtonText: {
     color: theme.colors.text.inverse,
@@ -335,17 +348,17 @@ const styles = StyleSheet.create({
   },
   eventCard: {
     flexDirection: "row",
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.components.surfaces.section,
     borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.components.borders.subtle,
     marginBottom: theme.spacing.md,
     overflow: "hidden",
-    ...(Platform.OS === "web"
-      ? { boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)" }
-      : theme.shadows.sm),
+    minHeight: 120,
   },
   eventPoster: {
     width: 80,
-    height: 120,
+    height: "100%",
   },
   eventInfo: {
     flex: 1,

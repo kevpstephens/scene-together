@@ -30,6 +30,7 @@ import { useRoute, RouteProp } from "@react-navigation/native";
 import { EventsStackParamList } from "../navigation/types";
 import { api } from "../services/api";
 import { theme } from "../theme";
+import { getPlatformGlow, getCardStyle } from "../theme/styles";
 import type { Event, RSVPStatus } from "../types";
 import AnimatedButton from "../components/AnimatedButton";
 import GradientBackground from "../components/GradientBackground";
@@ -310,7 +311,7 @@ export default function EventDetailScreen() {
               {/* Poster wrapper with glow effect */}
               <Animated.View
                 style={[
-                  styles.posterWrapper,
+                  styles.shadowWrapper,
                   {
                     transform: [
                       { translateY: heroTranslate },
@@ -319,19 +320,21 @@ export default function EventDetailScreen() {
                   },
                 ]}
               >
-                <Image
-                  source={{ uri: event.movieData.poster }}
-                  style={styles.heroImage}
-                  resizeMode="contain"
-                />
-                <LinearGradient
-                  colors={[
-                    "transparent",
-                    "rgba(10, 15, 20, 0.3)",
-                    "rgba(10, 15, 20, 0.6)",
-                  ]}
-                  style={styles.posterGradient}
-                />
+                <View style={styles.posterWrapper}>
+                  <Image
+                    source={{ uri: event.movieData.poster }}
+                    style={styles.heroImage}
+                    resizeMode="contain"
+                  />
+                  <LinearGradient
+                    colors={[
+                      "transparent",
+                      "rgba(10, 15, 20, 0.3)",
+                      "rgba(10, 15, 20, 0.6)",
+                    ]}
+                    style={styles.posterGradient}
+                  />
+                </View>
               </Animated.View>
             </View>
           )}
@@ -700,31 +703,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: theme.spacing.lg,
   },
-  posterWrapper: {
+  shadowWrapper: {
     width: Platform.OS === "web" ? "70%" : "85%", // Smaller on web, perfect on mobile
-    aspectRatio: 2 / 3, // Standard movie poster ratio
+    aspectRatio: 2 / 3,
     alignSelf: "center",
-    borderRadius: 12,
+    borderRadius: theme.components.radii.poster,
+    ...getPlatformGlow("strong"),
+  },
+  posterWrapper: {
+    width: "100%",
+    height: "100%",
+    borderRadius: theme.components.radii.poster,
     borderWidth: 2,
-    borderColor: "rgba(70, 212, 175, 0.4)", // Subtle teal border
+    borderColor: theme.components.borders.strong,
     overflow: "hidden",
     position: "relative",
-    // Beautiful multi-layered teal glow effect tightly hugging the poster
-    ...(Platform.OS === "web"
-      ? {
-          boxShadow: `
-            0 0 40px rgba(70, 212, 175, 0.5),
-            0 0 80px rgba(70, 212, 175, 0.4),
-            0 0 120px rgba(70, 212, 175, 0.3),
-            0 20px 60px rgba(0, 0, 0, 0.6)
-          `,
-        }
-      : {
-          shadowColor: "#46D4AF",
-          shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: 0.7,
-          shadowRadius: 40,
-        }),
   },
   heroImage: {
     width: "100%",
@@ -748,15 +741,9 @@ const styles = StyleSheet.create({
     lineHeight: theme.typography.fontSize.xxxl * 1.2,
   },
   infoCard: {
-    backgroundColor: "rgba(21, 28, 35, 0.5)",
-    borderRadius: theme.borderRadius.xl,
+    ...getCardStyle(),
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: "rgba(70, 212, 175, 0.2)", // Subtle turquoise border
-    ...(Platform.OS === "web"
-      ? { boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.2)" }
-      : theme.shadows.lg),
   },
   infoRow: {
     flexDirection: "row",
@@ -783,15 +770,9 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.medium,
   },
   section: {
-    backgroundColor: "rgba(21, 28, 35, 0.5)",
-    borderRadius: theme.borderRadius.xl,
+    ...getCardStyle(),
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: "rgba(70, 212, 175, 0.2)", // Subtle turquoise border
-    ...(Platform.OS === "web"
-      ? { boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.2)" }
-      : theme.shadows.lg),
   },
   sectionTitle: {
     fontSize: theme.typography.fontSize.lg,
@@ -929,7 +910,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(21, 28, 35, 0.4)",
+    backgroundColor: theme.components.surfaces.section,
     borderWidth: 2,
     borderColor: theme.colors.border,
     paddingVertical: theme.spacing.md,
@@ -963,7 +944,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.sm,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
-    backgroundColor: "rgba(15, 20, 25, 0.3)",
+    backgroundColor: theme.components.surfaces.section,
     borderRadius: theme.borderRadius.md,
   },
   attendeeInfoText: {
@@ -980,7 +961,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(21, 28, 35, 0.4)",
+    backgroundColor: theme.components.surfaces.section,
     borderWidth: 2,
     borderColor: theme.colors.primary,
     paddingVertical: theme.spacing.base,

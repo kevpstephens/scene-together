@@ -16,7 +16,9 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ProfileStackParamList } from "../navigation/types";
 import { useAuth } from "../contexts/AuthContext";
 import { theme } from "../theme";
+import { getCardStyle } from "../theme/styles";
 import { api } from "../services/api";
+import GradientBackground from "../components/GradientBackground";
 
 type NavigationProp = NativeStackNavigationProp<
   ProfileStackParamList,
@@ -78,73 +80,74 @@ export default function ProfileEditScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>
-          <Text style={styles.title}>Edit Profile</Text>
+    <GradientBackground>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.content}>
+            <Text style={styles.title}>Edit Profile</Text>
 
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Name</Text>
-              <TextInput
-                style={styles.input}
-                value={name}
-                onChangeText={setName}
-                placeholder="Enter your name"
-                placeholderTextColor={theme.colors.text.tertiary}
-                autoCapitalize="words"
-              />
+            <View style={styles.form}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Enter your name"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  autoCapitalize="words"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Avatar URL</Text>
+                <TextInput
+                  style={styles.input}
+                  value={avatarUrl}
+                  onChangeText={setAvatarUrl}
+                  placeholder="https://example.com/avatar.jpg"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  autoCapitalize="none"
+                  keyboardType="url"
+                />
+                <Text style={styles.hint}>
+                  Enter a URL to an image for your profile picture
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.button, submitting && styles.buttonDisabled]}
+                onPress={handleSave}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <ActivityIndicator color={theme.colors.text.inverse} />
+                ) : (
+                  <Text style={styles.buttonText}>Save Changes</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => navigation.goBack()}
+                disabled={submitting}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
             </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Avatar URL</Text>
-              <TextInput
-                style={styles.input}
-                value={avatarUrl}
-                onChangeText={setAvatarUrl}
-                placeholder="https://example.com/avatar.jpg"
-                placeholderTextColor={theme.colors.text.tertiary}
-                autoCapitalize="none"
-                keyboardType="url"
-              />
-              <Text style={styles.hint}>
-                Enter a URL to an image for your profile picture
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.button, submitting && styles.buttonDisabled]}
-              onPress={handleSave}
-              disabled={submitting}
-            >
-              {submitting ? (
-                <ActivityIndicator color={theme.colors.text.inverse} />
-              ) : (
-                <Text style={styles.buttonText}>Save Changes</Text>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => navigation.goBack()}
-              disabled={submitting}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -163,20 +166,22 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
   },
   form: {
-    gap: theme.spacing.lg,
+    ...getCardStyle(),
+    padding: theme.spacing.lg,
   },
   inputGroup: {
-    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.lg,
   },
   label: {
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.primary,
+    marginBottom: theme.spacing.sm,
   },
   input: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.components.surfaces.section,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.components.borders.default,
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.base,
     fontSize: theme.typography.fontSize.base,
@@ -185,6 +190,7 @@ const styles = StyleSheet.create({
   hint: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.tertiary,
+    marginTop: theme.spacing.sm,
   },
   button: {
     backgroundColor: theme.colors.primary,
@@ -204,9 +210,12 @@ const styles = StyleSheet.create({
   cancelButton: {
     padding: theme.spacing.base,
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: theme.components.borders.default,
+    borderRadius: theme.borderRadius.lg,
   },
   cancelButtonText: {
-    color: theme.colors.text.tertiary,
+    color: theme.colors.text.secondary,
     fontSize: theme.typography.fontSize.base,
   },
 });

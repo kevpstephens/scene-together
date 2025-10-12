@@ -17,6 +17,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AdminStackParamList } from "../../navigation/types";
 import { XMarkIcon } from "react-native-heroicons/solid";
 import { theme } from "../../theme";
+import { getCardStyle } from "../../theme/styles";
 import { api } from "../../services/api";
 import GradientBackground from "../../components/GradientBackground";
 import DateTimePickerComponent from "../../components/DateTimePicker";
@@ -207,203 +208,208 @@ export default function AdminEventEditScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <GradientBackground />
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
+    <GradientBackground>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Edit Event Details</Text>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.pageTitle}>Edit Event</Text>
 
-          {/* Movie Search */}
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Search Movie (Optional)</Text>
-            <TextInput
-              style={styles.input}
-              value={searchQuery}
-              onChangeText={(text) => {
-                setSearchQuery(text);
-                searchMovies(text);
-              }}
-              placeholder="Search for a movie..."
-              placeholderTextColor={theme.colors.text.tertiary}
-            />
-            {searching && (
-              <ActivityIndicator
-                size="small"
-                color={theme.colors.primary}
-                style={styles.searchLoader}
-              />
-            )}
-          </View>
+          <View style={styles.formCard}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Event Details</Text>
 
-          {/* Search Results */}
-          {searchResults.length > 0 && (
-            <View style={styles.searchResults}>
-              {searchResults.map((movie) => (
-                <TouchableOpacity
-                  key={movie.id}
-                  style={styles.movieResult}
-                  onPress={() => handleMovieSelect(movie)}
-                >
-                  {movie.poster ? (
-                    <Image
-                      source={{
-                        uri: movie.poster,
-                      }}
-                      style={styles.moviePoster}
-                    />
-                  ) : (
-                    <View style={styles.moviePosterPlaceholder}>
-                      <Text style={styles.moviePosterPlaceholderText}>
-                        No Image
-                      </Text>
-                    </View>
-                  )}
-                  <View style={styles.movieInfo}>
-                    <Text style={styles.movieTitle}>{movie.title}</Text>
-                    <Text style={styles.movieYear}>
-                      {movie.year || "Unknown"}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-
-          {/* Selected Movie */}
-          {selectedMovie && (
-            <View style={styles.selectedMovie}>
-              <Text style={styles.selectedMovieLabel}>Selected Movie:</Text>
-              <View style={styles.selectedMovieCard}>
-                {selectedMovie.poster && (
-                  <Image
-                    source={{
-                      uri: selectedMovie.poster,
-                    }}
-                    style={styles.selectedMoviePoster}
+              {/* Movie Search */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Search Movie (Optional)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={searchQuery}
+                  onChangeText={(text) => {
+                    setSearchQuery(text);
+                    searchMovies(text);
+                  }}
+                  placeholder="Search for a movie..."
+                  placeholderTextColor={theme.colors.text.tertiary}
+                />
+                {searching && (
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.primary}
+                    style={styles.searchLoader}
                   />
                 )}
-                <View style={styles.selectedMovieInfo}>
-                  <Text style={styles.selectedMovieTitle}>
-                    {selectedMovie.title}
-                  </Text>
-                  {selectedMovie.year && (
-                    <Text style={styles.selectedMovieYear}>
-                      {selectedMovie.year}
-                    </Text>
-                  )}
+              </View>
+
+              {/* Search Results */}
+              {searchResults.length > 0 && (
+                <View style={styles.searchResults}>
+                  {searchResults.map((movie) => (
+                    <TouchableOpacity
+                      key={movie.id}
+                      style={styles.movieResult}
+                      onPress={() => handleMovieSelect(movie)}
+                    >
+                      {movie.poster ? (
+                        <Image
+                          source={{
+                            uri: movie.poster,
+                          }}
+                          style={styles.moviePoster}
+                        />
+                      ) : (
+                        <View style={styles.moviePosterPlaceholder}>
+                          <Text style={styles.moviePosterPlaceholderText}>
+                            No Image
+                          </Text>
+                        </View>
+                      )}
+                      <View style={styles.movieInfo}>
+                        <Text style={styles.movieTitle}>{movie.title}</Text>
+                        <Text style={styles.movieYear}>
+                          {movie.year || "Unknown"}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
                 </View>
-                <TouchableOpacity
-                  onPress={handleRemoveMovie}
-                  style={styles.removeButton}
-                >
-                  <XMarkIcon size={20} color={theme.colors.error} />
-                </TouchableOpacity>
+              )}
+
+              {/* Selected Movie */}
+              {selectedMovie && (
+                <View style={styles.selectedMovie}>
+                  <Text style={styles.selectedMovieLabel}>Selected Movie:</Text>
+                  <View style={styles.selectedMovieCard}>
+                    {selectedMovie.poster && (
+                      <Image
+                        source={{
+                          uri: selectedMovie.poster,
+                        }}
+                        style={styles.selectedMoviePoster}
+                      />
+                    )}
+                    <View style={styles.selectedMovieInfo}>
+                      <Text style={styles.selectedMovieTitle}>
+                        {selectedMovie.title}
+                      </Text>
+                      {selectedMovie.year && (
+                        <Text style={styles.selectedMovieYear}>
+                          {selectedMovie.year}
+                        </Text>
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      onPress={handleRemoveMovie}
+                      style={styles.removeButton}
+                    >
+                      <XMarkIcon size={20} color={theme.colors.error} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Event Title *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={title}
+                  onChangeText={setTitle}
+                  placeholder="Grand Budapest Hotel Screening"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Description *</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={description}
+                  onChangeText={setDescription}
+                  placeholder="Join us for an unforgettable screening..."
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                />
+              </View>
+
+              <DateTimePickerComponent
+                label="Date & Time *"
+                value={eventDate}
+                onChange={setEventDate}
+              />
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Location *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={location}
+                  onChangeText={setLocation}
+                  placeholder="The Grand Cinema, London"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                />
+              </View>
+
+              <View style={styles.formRow}>
+                <View style={[styles.formGroup, styles.formGroupHalf]}>
+                  <Text style={styles.label}>Max Capacity *</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={maxCapacity}
+                    onChangeText={setMaxCapacity}
+                    placeholder="50"
+                    placeholderTextColor={theme.colors.text.tertiary}
+                    keyboardType="number-pad"
+                  />
+                </View>
+
+                <View style={[styles.formGroup, styles.formGroupHalf]}>
+                  <Text style={styles.label}>Price (£)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={price}
+                    onChangeText={setPrice}
+                    placeholder="0.00"
+                    placeholderTextColor={theme.colors.text.tertiary}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
               </View>
             </View>
-          )}
 
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Event Title *</Text>
-            <TextInput
-              style={styles.input}
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Grand Budapest Hotel Screening"
-              placeholderTextColor={theme.colors.text.tertiary}
-            />
-          </View>
+            {/* Action Buttons */}
+            <View style={styles.actions}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => navigation.goBack()}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
 
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Description *</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Join us for an unforgettable screening..."
-              placeholderTextColor={theme.colors.text.tertiary}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-          </View>
-
-          <DateTimePickerComponent
-            label="Date & Time *"
-            value={eventDate}
-            onChange={setEventDate}
-          />
-
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Location *</Text>
-            <TextInput
-              style={styles.input}
-              value={location}
-              onChangeText={setLocation}
-              placeholder="The Grand Cinema, London"
-              placeholderTextColor={theme.colors.text.tertiary}
-            />
-          </View>
-
-          <View style={styles.formRow}>
-            <View style={[styles.formGroup, styles.formGroupHalf]}>
-              <Text style={styles.label}>Max Capacity *</Text>
-              <TextInput
-                style={styles.input}
-                value={maxCapacity}
-                onChangeText={setMaxCapacity}
-                placeholder="50"
-                placeholderTextColor={theme.colors.text.tertiary}
-                keyboardType="number-pad"
-              />
-            </View>
-
-            <View style={[styles.formGroup, styles.formGroupHalf]}>
-              <Text style={styles.label}>Price (£)</Text>
-              <TextInput
-                style={styles.input}
-                value={price}
-                onChangeText={setPrice}
-                placeholder="0.00"
-                placeholderTextColor={theme.colors.text.tertiary}
-                keyboardType="decimal-pad"
-              />
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  submitting && styles.submitButtonDisabled,
+                ]}
+                onPress={handleSubmit}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Save Changes</Text>
+                )}
+              </TouchableOpacity>
             </View>
           </View>
-        </View>
-
-        {/* Action Buttons */}
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.submitButton,
-              submitting && styles.submitButtonDisabled,
-            ]}
-            onPress={handleSubmit}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.submitButtonText}>Save Changes</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </GradientBackground>
   );
 }
 
@@ -420,13 +426,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: theme.spacing.base,
+    padding: theme.spacing.lg,
     maxWidth: theme.layout.maxWidth,
     width: "100%",
     alignSelf: "center",
   },
-  section: {
+  pageTitle: {
+    fontSize: theme.typography.fontSize.xxl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
     marginBottom: theme.spacing.xl,
+  },
+  formCard: {
+    ...getCardStyle(),
+    padding: theme.spacing.lg,
+  },
+  section: {
+    marginBottom: theme.spacing.lg,
   },
   sectionTitle: {
     fontSize: theme.typography.fontSize.xl,
@@ -451,14 +467,14 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   input: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.components.surfaces.section,
     borderRadius: theme.borderRadius.lg,
     paddingHorizontal: theme.spacing.base,
     paddingVertical: theme.spacing.base,
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.text.primary,
     borderWidth: 1,
-    borderColor: theme.colors.borderLight,
+    borderColor: theme.components.borders.default,
   },
   textArea: {
     minHeight: 100,
