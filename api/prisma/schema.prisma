@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_DATABASE_URL") // Commented out - direct connection not accessible
 }
 
 model User {
@@ -26,20 +27,24 @@ enum Role {
 }
 
 model Event {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  date        DateTime
-  location    String?
-  onlineLink  String?
-  movieId     String?  // OMDb/TMDb ID
-  movieData   Json?    // Store movie metadata (poster, trailer, etc)
-  maxCapacity Int?     // Optional capacity limit
-  createdById String?  // Staff member who created it
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  rsvps       RSVP[]
-  payments    Payment[]
+  id             String   @id @default(uuid())
+  title          String
+  description    String?
+  date           DateTime
+  location       String?
+  onlineLink     String?
+  movieId        String?  // OMDb/TMDb ID
+  movieData      Json?    // Store movie metadata (poster, trailer, etc)
+  maxCapacity    Int?     // Optional capacity limit
+  createdById    String?  // Staff member who created it
+  // Payment fields
+  price          Int?     // Price in cents (null = free event)
+  payWhatYouCan  Boolean  @default(false) // Allow flexible pricing
+  minPrice       Int?     // Minimum price for pay-what-you-can (in cents)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  rsvps          RSVP[]
+  payments       Payment[]
   
   @@index([date])
   @@index([createdById])
