@@ -4,7 +4,7 @@ import { EventsStackParamList } from "./types";
 import EventsListScreen from "../screens/EventsListScreen";
 import EventDetailScreen from "../screens/EventDetailScreen";
 import { theme } from "../theme";
-import { Platform } from "react-native";
+import { Platform, Image } from "react-native";
 
 const Stack = createNativeStackNavigator<EventsStackParamList>();
 
@@ -23,6 +23,7 @@ export default function EventsStackNavigator() {
           maxWidth: theme.layout.maxWidth,
           alignSelf: "center",
           width: "100%",
+          backgroundColor: theme.colors.background,
         },
         // Premium spring-based animations
         animation: Platform.OS === "ios" ? "default" : "slide_from_right",
@@ -37,7 +38,13 @@ export default function EventsStackNavigator() {
         name="EventsList"
         component={EventsListScreen}
         options={{
-          title: "SceneTogether",
+          headerTitle: () => (
+            <Image
+              source={require("../../assets/logo/logo-transparent.png")}
+              style={{ width: 120, height: 32 }}
+              resizeMode="contain"
+            />
+          ),
           animation: "fade",
         }}
       />

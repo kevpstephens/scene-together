@@ -23,6 +23,9 @@ export default function AdminStackNavigator() {
         headerTitleStyle: {
           fontWeight: "600",
         },
+        contentStyle: {
+          backgroundColor: theme.colors.background,
+        },
       }}
     >
       <Stack.Screen

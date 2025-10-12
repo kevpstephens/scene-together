@@ -32,11 +32,16 @@ export default function MainTabNavigator() {
           alignSelf: "center",
           width: "100%",
           maxWidth: theme.layout.maxWidth,
+          backgroundColor: theme.colors.background,
+          borderTopColor: theme.colors.borderLight,
         },
         tabBarLabelStyle: {
           paddingBottom: theme.spacing.md,
         },
         animation: "shift",
+        sceneStyle: {
+          backgroundColor: theme.colors.background,
+        },
       }}
       screenListeners={{
         tabPress: () => {

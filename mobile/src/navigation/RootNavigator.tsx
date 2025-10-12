@@ -15,7 +15,14 @@ export default function RootNavigator() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: theme.colors.background,
+        }}
+      >
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
@@ -25,7 +32,14 @@ export default function RootNavigator() {
     <View style={styles.container}>
       <View style={styles.contentWrapper}>
         <NavigationContainer>
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Navigator
+            screenOptions={{
+              headerShown: false,
+              contentStyle: {
+                backgroundColor: theme.colors.background,
+              },
+            }}
+          >
             {session ? (
               <Stack.Screen name="MainTabs" component={MainTabNavigator} />
             ) : (

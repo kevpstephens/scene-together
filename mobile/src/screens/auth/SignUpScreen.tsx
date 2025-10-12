@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
+  Animated,
 } from "react-native";
 import GradientBackground from "../../components/GradientBackground";
 import { useNavigation } from "@react-navigation/native";
@@ -17,6 +19,13 @@ import { AuthStackParamList } from "../../navigation/types";
 import { theme } from "../../theme";
 import { useAuth } from "../../contexts/AuthContext";
 import AnimatedButton from "../../components/AnimatedButton";
+import {
+  UserIcon,
+  EnvelopeIcon,
+  LockClosedIcon,
+  EyeIcon,
+  EyeSlashIcon,
+} from "react-native-heroicons/outline";
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, "SignUp">;
 
@@ -29,6 +38,49 @@ export default function SignUpScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
+
+  // Animation values
+  const logoScale = useRef(new Animated.Value(0.8)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const formTranslateY = useRef(new Animated.Value(30)).current;
+  const formOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Logo entrance animation
+    Animated.parallel([
+      Animated.spring(logoScale, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Form entrance animation (delayed)
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.spring(formTranslateY, {
+          toValue: 0,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+        Animated.timing(formOpacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, 200);
+  }, []);
 
   const handleSignUp = async () => {
     if (!name || !email || !password || !confirmPassword) {
@@ -84,48 +136,184 @@ export default function SignUpScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.content}>
-            <Text style={styles.logo}>🎬</Text>
-            <Text style={styles.title}>Join SceneTogether</Text>
-            <Text style={styles.subtitle}>Create your account</Text>
+            <Animated.View
+              style={[
+                styles.logoContainer,
+                {
+                  transform: [{ scale: logoScale }],
+                  opacity: logoOpacity,
+                },
+              ]}
+            >
+              <Image
+                source={require("../../../assets/logo/logo-transparent.png")}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </Animated.View>
+            <Animated.Text
+              style={[
+                styles.subtitle,
+                {
+                  opacity: logoOpacity,
+                },
+              ]}
+            >
+              Create your account
+            </Animated.Text>
 
-            <View style={styles.form}>
-              <TextInput
-                style={styles.input}
-                placeholder="Name"
-                placeholderTextColor={theme.colors.text.tertiary}
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-                autoComplete="name"
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor={theme.colors.text.tertiary}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                autoComplete="email"
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor={theme.colors.text.tertiary}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoComplete="password-new"
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Confirm Password"
-                placeholderTextColor={theme.colors.text.tertiary}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-                autoComplete="password-new"
-              />
+            <Animated.View
+              style={[
+                styles.form,
+                {
+                  transform: [{ translateY: formTranslateY }],
+                  opacity: formOpacity,
+                },
+              ]}
+            >
+              {/* Name Input */}
+              <View
+                style={[
+                  styles.inputContainer,
+                  focusedInput === "name" && styles.inputContainerFocused,
+                ]}
+              >
+                <UserIcon
+                  size={20}
+                  color={
+                    focusedInput === "name"
+                      ? theme.colors.primary
+                      : theme.colors.text.tertiary
+                  }
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Name"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  value={name}
+                  onChangeText={setName}
+                  onFocus={() => setFocusedInput("name")}
+                  onBlur={() => setFocusedInput(null)}
+                  autoCapitalize="words"
+                  autoComplete="name"
+                />
+              </View>
+
+              {/* Email Input */}
+              <View
+                style={[
+                  styles.inputContainer,
+                  focusedInput === "email" && styles.inputContainerFocused,
+                ]}
+              >
+                <EnvelopeIcon
+                  size={20}
+                  color={
+                    focusedInput === "email"
+                      ? theme.colors.primary
+                      : theme.colors.text.tertiary
+                  }
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  value={email}
+                  onChangeText={setEmail}
+                  onFocus={() => setFocusedInput("email")}
+                  onBlur={() => setFocusedInput(null)}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  autoComplete="email"
+                />
+              </View>
+
+              {/* Password Input */}
+              <View
+                style={[
+                  styles.inputContainer,
+                  focusedInput === "password" && styles.inputContainerFocused,
+                ]}
+              >
+                <LockClosedIcon
+                  size={20}
+                  color={
+                    focusedInput === "password"
+                      ? theme.colors.primary
+                      : theme.colors.text.tertiary
+                  }
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Password"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  value={password}
+                  onChangeText={setPassword}
+                  onFocus={() => setFocusedInput("password")}
+                  onBlur={() => setFocusedInput(null)}
+                  secureTextEntry={!showPassword}
+                  autoComplete="password-new"
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.passwordToggle}
+                >
+                  {showPassword ? (
+                    <EyeIcon size={20} color={theme.colors.text.secondary} />
+                  ) : (
+                    <EyeSlashIcon
+                      size={20}
+                      color={theme.colors.text.secondary}
+                    />
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              {/* Confirm Password Input */}
+              <View
+                style={[
+                  styles.inputContainer,
+                  focusedInput === "confirmPassword" &&
+                    styles.inputContainerFocused,
+                ]}
+              >
+                <LockClosedIcon
+                  size={20}
+                  color={
+                    focusedInput === "confirmPassword"
+                      ? theme.colors.primary
+                      : theme.colors.text.tertiary
+                  }
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm Password"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  onFocus={() => setFocusedInput("confirmPassword")}
+                  onBlur={() => setFocusedInput(null)}
+                  secureTextEntry={!showConfirmPassword}
+                  autoComplete="password-new"
+                />
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={styles.passwordToggle}
+                >
+                  {showConfirmPassword ? (
+                    <EyeIcon size={20} color={theme.colors.text.secondary} />
+                  ) : (
+                    <EyeSlashIcon
+                      size={20}
+                      color={theme.colors.text.secondary}
+                    />
+                  )}
+                </TouchableOpacity>
+              </View>
 
               <AnimatedButton
                 style={[styles.button, loading && styles.buttonDisabled]}
@@ -158,17 +346,23 @@ export default function SignUpScreen() {
                   {googleLoading ? "Signing In..." : "Continue with Google"}
                 </Text>
               </AnimatedButton>
-            </View>
+            </Animated.View>
 
-            <TouchableOpacity
-              style={styles.linkButton}
-              onPress={() => navigation.navigate("Login")}
+            <Animated.View
+              style={{
+                opacity: formOpacity,
+              }}
             >
-              <Text style={styles.linkText}>
-                Already have an account?{" "}
-                <Text style={styles.linkTextBold}>Log In</Text>
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.linkButton}
+                onPress={() => navigation.navigate("Login")}
+              >
+                <Text style={styles.linkText}>
+                  Already have an account?{" "}
+                  <Text style={styles.linkTextBold}>Log In</Text>
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -189,9 +383,34 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: theme.spacing.lg,
   },
+  logoContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.25)", // Bright frosted glass - makes logo pop
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md, // More padding around logo
+    marginBottom: theme.spacing.lg, // More breathing room after logo
+    // Subtle border for definition
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.35)", // Light border for clean separation
+    // Shadow with teal glow
+    ...Platform.select({
+      ios: {
+        shadowColor: theme.colors.primary, // Teal glow
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 8,
+      },
+      web: {
+        boxShadow:
+          "0 4px 16px rgba(70, 212, 175, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)",
+      },
+    }),
+  },
   logo: {
-    fontSize: theme.typography.fontSize.emoji,
-    marginBottom: theme.spacing.base,
+    width: 230, // Larger, more prominent
+    height: 125,
   },
   title: {
     fontSize: theme.typography.fontSize.xxxl,
@@ -200,30 +419,74 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   subtitle: {
-    fontSize: theme.typography.fontSize.lg,
+    fontSize: theme.typography.fontSize.base,
     color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.xxxl,
+    marginBottom: theme.spacing.lg, // More breathing room
   },
   form: {
     width: "100%",
     maxWidth: 400,
   },
-  input: {
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.base,
-    fontSize: theme.typography.fontSize.base,
+    paddingHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.md,
     backgroundColor: theme.colors.surface,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+      },
+    }),
+  },
+  inputContainerFocused: {
+    borderColor: theme.colors.primary,
+    borderWidth: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: theme.colors.primary,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: "0 0 12px rgba(70, 212, 175, 0.4)",
+      },
+    }),
+  },
+  inputIcon: {
+    marginRight: theme.spacing.sm,
+  },
+  input: {
+    flex: 1,
+    padding: theme.spacing.md,
+    fontSize: theme.typography.fontSize.base,
     color: theme.colors.text.primary,
+  },
+  passwordToggle: {
+    padding: theme.spacing.xs,
   },
   button: {
     backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.md,
+    paddingVertical: theme.spacing.md, // Comfortable size
     paddingHorizontal: theme.spacing.xl,
     borderRadius: theme.borderRadius.md,
-    marginTop: theme.spacing.base,
+    marginTop: theme.spacing.md, // Better spacing
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -235,7 +498,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   linkButton: {
-    marginTop: theme.spacing.lg,
+    marginTop: theme.spacing.base, // Good spacing
   },
   linkText: {
     fontSize: theme.typography.fontSize.sm,

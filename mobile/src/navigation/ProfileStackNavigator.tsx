@@ -23,6 +23,7 @@ export default function ProfileStackNavigator() {
           maxWidth: theme.layout.maxWidth,
           alignSelf: "center",
           width: "100%",
+          backgroundColor: theme.colors.background,
         },
         // Premium spring-based animations
         animation: "default",
