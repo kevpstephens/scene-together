@@ -944,6 +944,95 @@ export default function EventDetailScreen() {
             </View>
           </View>
         </Animated.ScrollView>
+
+        {/* Sticky Bottom RSVP/Payment Bar */}
+        {!eventHasStarted && event && (
+          <View style={styles.stickyBottomBar}>
+            <LinearGradient
+              colors={[
+                `${theme.colors.background}00`,
+                theme.colors.background,
+                theme.colors.background,
+              ]}
+              style={styles.bottomBarGradient}
+            >
+              <View style={styles.bottomBarContent}>
+                {/* Price Info */}
+                <View style={styles.priceInfo}>
+                  {event.payWhatYouCan ? (
+                    <>
+                      <Text style={styles.priceLabel}>Pay What You Can</Text>
+                      <Text style={styles.priceSubtext}>
+                        Min £{((event.minPrice || 0) / 100).toFixed(2)}
+                      </Text>
+                    </>
+                  ) : event.price && event.price > 0 ? (
+                    <>
+                      <Text style={styles.priceLabel}>
+                        £{(event.price / 100).toFixed(2)}
+                      </Text>
+                      <Text style={styles.priceSubtext}>per person</Text>
+                    </>
+                  ) : (
+                    <>
+                      <Text style={styles.priceLabel}>Free</Text>
+                      <Text style={styles.priceSubtext}>
+                        {event.attendeeCount || 0}/{event.maxCapacity} attending
+                      </Text>
+                    </>
+                  )}
+                </View>
+
+                {/* Primary Action Button */}
+                <AnimatedButton
+                  style={[
+                    styles.stickyRsvpButton,
+                    userRSVP === "going" && styles.stickyRsvpButtonActive,
+                  ]}
+                  onPress={() =>
+                    handleRSVP(userRSVP === "going" ? "not_going" : "going")
+                  }
+                  disabled={rsvpLoading}
+                >
+                  {rsvpLoading ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={theme.colors.text.inverse}
+                    />
+                  ) : (
+                    <>
+                      {userRSVP === "going" ? (
+                        <>
+                          <CheckCircleIcon
+                            size={20}
+                            color={theme.colors.text.inverse}
+                          />
+                          <Text style={styles.stickyButtonText}>
+                            You're Going!
+                          </Text>
+                        </>
+                      ) : (
+                        <>
+                          <TicketIcon
+                            size={20}
+                            color={theme.colors.text.inverse}
+                          />
+                          <Text style={styles.stickyButtonText}>
+                            {event.price && event.price > 0
+                              ? event.payWhatYouCan
+                                ? "Choose Amount & RSVP"
+                                : `Pay £${(event.price / 100).toFixed(2)} & RSVP`
+                              : "RSVP Free"}
+                          </Text>
+                        </>
+                      )}
+                    </>
+                  )}
+                </AnimatedButton>
+              </View>
+            </LinearGradient>
+          </View>
+        )}
       </Animated.View>
       {/* Success Confetti */}
       <SuccessConfetti
@@ -960,6 +1049,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     alignItems: "center",
+    paddingBottom: 120, // Space for sticky bottom bar
   },
   contentWrapper: {
     width: "100%",
@@ -1317,5 +1407,60 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.lg,
     fontWeight: theme.typography.fontWeight.bold,
     marginLeft: theme.spacing.sm,
+  },
+  // Sticky Bottom Bar Styles
+  stickyBottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+  },
+  bottomBarGradient: {
+    paddingTop: theme.spacing.md,
+  },
+  bottomBarContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.background,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.borderLight,
+  },
+  priceInfo: {
+    flex: 1,
+  },
+  priceLabel: {
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xs,
+  },
+  priceSubtext: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+  },
+  stickyRsvpButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.borderRadius.full,
+    minWidth: 180,
+    gap: theme.spacing.sm,
+    ...getPlatformGlow("strong"),
+  },
+  stickyRsvpButtonActive: {
+    backgroundColor: theme.colors.success,
+    ...getPlatformGlow("strong"),
+  },
+  stickyButtonText: {
+    color: theme.colors.text.inverse,
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.bold,
   },
 });
