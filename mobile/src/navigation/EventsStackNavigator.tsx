@@ -4,6 +4,7 @@ import { EventsStackParamList } from "./types";
 import EventsListScreen from "../screens/EventsListScreen";
 import EventDetailScreen from "../screens/EventDetailScreen";
 import { theme } from "../theme";
+import { Platform } from "react-native";
 
 const Stack = createNativeStackNavigator<EventsStackParamList>();
 
@@ -23,8 +24,13 @@ export default function EventsStackNavigator() {
           alignSelf: "center",
           width: "100%",
         },
-        animation: "slide_from_right",
-        animationDuration: 300,
+        // Premium spring-based animations
+        animation: Platform.OS === "ios" ? "default" : "slide_from_right",
+        animationDuration: 350,
+        animationTypeForReplace: "push",
+        // Gesture configuration for iOS
+        gestureEnabled: true,
+        fullScreenGestureEnabled: true,
       }}
     >
       <Stack.Screen
@@ -40,8 +46,11 @@ export default function EventsStackNavigator() {
         component={EventDetailScreen}
         options={{
           title: "Event Details",
-          animation: "slide_from_right",
+          // Pure fade animation - lets our custom scale animation shine
+          animation: "fade",
           presentation: "card",
+          headerShown: true,
+          animationDuration: 300,
         }}
       />
     </Stack.Navigator>

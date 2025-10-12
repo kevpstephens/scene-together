@@ -22,7 +22,7 @@ export type EventsStackParamList = {
 // Main Tab Navigator
 export type MainTabParamList = {
   EventsTab: NavigatorScreenParams<EventsStackParamList>;
-  ProfileTab: undefined;
+  ProfileTab: NavigatorScreenParams<ProfileStackParamList>;
   AdminTab?: undefined; // Optional, only shown to admins
 };
 
@@ -30,6 +30,7 @@ export type MainTabParamList = {
 export type ProfileStackParamList = {
   Profile: undefined;
   ProfileEdit: undefined;
+  EventDetail: { eventId: string };
   Settings: undefined;
 };
 

@@ -22,6 +22,8 @@ import { getCardStyle } from "../theme/styles";
 import { api } from "../services/api";
 import type { Event } from "../types";
 import GradientBackground from "../components/GradientBackground";
+import AnimatedButton from "../components/AnimatedButton";
+import * as Haptics from "expo-haptics";
 
 type RSVP = {
   id: string;
@@ -170,15 +172,19 @@ export default function ProfileScreen() {
             ) : (
               <View>
                 {rsvps.map((rsvp) => (
-                  <TouchableOpacity
+                  <AnimatedButton
                     key={rsvp.id}
                     style={styles.eventCard}
-                    onPress={() =>
-                      navigation.navigate("EventsTab", {
-                        screen: "EventDetail",
-                        params: { eventId: rsvp.event.id },
-                      })
-                    }
+                    onPress={() => {
+                      // Premium haptic feedback
+                      if (Platform.OS !== "web") {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      }
+                      navigation.navigate("EventDetail", {
+                        eventId: rsvp.event.id,
+                      });
+                    }}
+                    springConfig={{ damping: 15, stiffness: 100 }}
                   >
                     {rsvp.event.movieData?.poster && (
                       <Image
@@ -211,7 +217,7 @@ export default function ProfileScreen() {
                         </Text>
                       </View>
                     </View>
-                  </TouchableOpacity>
+                  </AnimatedButton>
                 ))}
               </View>
             )}

@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { ProfileStackParamList } from "./types";
 import ProfileScreen from "../screens/ProfileScreen";
 import ProfileEditScreen from "../screens/ProfileEditScreen";
+import EventDetailScreen from "../screens/EventDetailScreen";
 import { theme } from "../theme";
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -23,6 +24,12 @@ export default function ProfileStackNavigator() {
           alignSelf: "center",
           width: "100%",
         },
+        // Premium spring-based animations
+        animation: "default",
+        animationDuration: 350,
+        animationTypeForReplace: "push",
+        gestureEnabled: true,
+        fullScreenGestureEnabled: true,
       }}
     >
       <Stack.Screen
@@ -34,6 +41,17 @@ export default function ProfileStackNavigator() {
         name="ProfileEdit"
         component={ProfileEditScreen}
         options={{ title: "Edit Profile" }}
+      />
+      <Stack.Screen
+        name="EventDetail"
+        component={EventDetailScreen}
+        options={{
+          title: "Event Details",
+          headerShown: true,
+          animation: "fade",
+          presentation: "card",
+          animationDuration: 300,
+        }}
       />
     </Stack.Navigator>
   );

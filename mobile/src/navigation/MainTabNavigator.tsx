@@ -11,6 +11,8 @@ import ProfileStackNavigator from "./ProfileStackNavigator";
 import AdminStackNavigator from "./AdminStackNavigator";
 import { theme } from "../theme";
 import { useAuth } from "../contexts/AuthContext";
+import * as Haptics from "expo-haptics";
+import { Platform } from "react-native";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -35,6 +37,14 @@ export default function MainTabNavigator() {
           paddingBottom: theme.spacing.md,
         },
         animation: "shift",
+      }}
+      screenListeners={{
+        tabPress: () => {
+          // Premium haptic feedback on tab switch (native only)
+          if (Platform.OS !== "web") {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+        },
       }}
     >
       <Tab.Screen

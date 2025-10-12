@@ -35,35 +35,41 @@ export default function AnimatedButton({
   const opacityAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = (e: any) => {
-    // Animate both scale and opacity gradually
+    // Premium spring animation with subtle scale and opacity
     Animated.parallel([
       Animated.spring(scaleAnim, {
-        toValue: 0.96,
-        friction: springConfig.damping,
-        tension: springConfig.stiffness,
+        toValue: 0.97,
+        friction: springConfig.damping || 20,
+        tension: springConfig.stiffness || 120,
         useNativeDriver: true,
       }),
       Animated.timing(opacityAnim, {
-        toValue: 0.7, // Slightly greyed out
-        duration: theme.animation.duration.fast, // Uses shared design system timing
+        toValue: 0.8,
+        duration: theme.animation.duration.fast,
         useNativeDriver: true,
       }),
     ]).start();
+
+    // Light haptic feedback on press start for premium feel
+    if (enableHaptics && Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+
     onPressIn?.(e);
   };
 
   const handlePressOut = (e: any) => {
-    // Animate back to normal
+    // Smooth bounce-back animation
     Animated.parallel([
       Animated.spring(scaleAnim, {
         toValue: 1,
-        friction: springConfig.damping,
-        tension: springConfig.stiffness,
+        friction: springConfig.damping || 20,
+        tension: springConfig.stiffness || 120,
         useNativeDriver: true,
       }),
       Animated.timing(opacityAnim, {
-        toValue: 1, // Back to full opacity
-        duration: theme.animation.duration.fast, // Uses shared design system timing
+        toValue: 1,
+        duration: theme.animation.duration.normal,
         useNativeDriver: true,
       }),
     ]).start();
@@ -71,10 +77,6 @@ export default function AnimatedButton({
   };
 
   const handlePress = (e: any) => {
-    // Only trigger haptics on successful tap (not during scroll) and on native platforms
-    if (enableHaptics && Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
     onPress?.(e);
   };
 

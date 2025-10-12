@@ -23,7 +23,7 @@ import {
   MagnifyingGlassIcon,
   XMarkIcon,
 } from "react-native-heroicons/solid";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { EventsStackParamList } from "../navigation/types";
 import { api } from "../services/api";
@@ -70,11 +70,35 @@ export default function EventsListScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const navigation = useNavigation<NavigationProp>();
+  const isFocused = useIsFocused();
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     loadEvents();
   }, []);
+
+  // Handle tab press - scroll to top when already on this screen
+  useEffect(() => {
+    const parent = navigation.getParent();
+    if (!parent) return;
+
+    const unsubscribe = (parent as any).addListener("tabPress", (e: any) => {
+      // Only trigger scroll if screen is already focused (second tap)
+      if (isFocused) {
+        // Haptic feedback for premium feel
+        if (Platform.OS !== "web") {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+
+        // Scroll to top with animation
+        flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      }
+      // If not focused, let default navigation happen (first tap)
+    });
+
+    return unsubscribe;
+  }, [navigation, isFocused]);
 
   const loadEvents = async () => {
     try {
@@ -102,9 +126,16 @@ export default function EventsListScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
+
+    // Light haptic on pull start (native only)
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+
     await loadEvents();
     setRefreshing(false);
-    // Haptic feedback on successful refresh (native only)
+
+    // Success haptic on refresh complete (native only)
     if (Platform.OS !== "web") {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
@@ -208,8 +239,13 @@ export default function EventsListScreen() {
     return (
       <AnimatedButton
         style={styles.card}
-        onPress={() => navigation.navigate("EventDetail", { eventId: item.id })}
-        springConfig={{ damping: 25, stiffness: 90 }}
+        onPress={() => {
+          if (Platform.OS !== "web") {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          }
+          navigation.navigate("EventDetail", { eventId: item.id });
+        }}
+        springConfig={{ damping: 15, stiffness: 100 }}
       >
         {item.movieData?.poster && (
           <View style={styles.posterContainer}>
@@ -358,7 +394,14 @@ export default function EventsListScreen() {
               onChangeText={setSearchQuery}
             />
             {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <TouchableOpacity
+                onPress={() => {
+                  if (Platform.OS !== "web") {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                  setSearchQuery("");
+                }}
+              >
                 <XMarkIcon size={20} color={theme.colors.text.secondary} />
               </TouchableOpacity>
             )}
@@ -371,7 +414,12 @@ export default function EventsListScreen() {
                 styles.filterChip,
                 filterStatus === "all" && styles.filterChipActive,
               ]}
-              onPress={() => setFilterStatus("all")}
+              onPress={() => {
+                if (Platform.OS !== "web") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+                setFilterStatus("all");
+              }}
             >
               <Text
                 style={[
@@ -387,7 +435,12 @@ export default function EventsListScreen() {
                 styles.filterChip,
                 filterStatus === "upcoming" && styles.filterChipActive,
               ]}
-              onPress={() => setFilterStatus("upcoming")}
+              onPress={() => {
+                if (Platform.OS !== "web") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+                setFilterStatus("upcoming");
+              }}
             >
               <Text
                 style={[
@@ -403,7 +456,12 @@ export default function EventsListScreen() {
                 styles.filterChip,
                 filterStatus === "ongoing" && styles.filterChipActive,
               ]}
-              onPress={() => setFilterStatus("ongoing")}
+              onPress={() => {
+                if (Platform.OS !== "web") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+                setFilterStatus("ongoing");
+              }}
             >
               <Text
                 style={[
@@ -419,7 +477,12 @@ export default function EventsListScreen() {
                 styles.filterChip,
                 filterStatus === "past" && styles.filterChipActive,
               ]}
-              onPress={() => setFilterStatus("past")}
+              onPress={() => {
+                if (Platform.OS !== "web") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+                setFilterStatus("past");
+              }}
             >
               <Text
                 style={[
@@ -433,6 +496,7 @@ export default function EventsListScreen() {
           </View>
 
           <FlatList
+            ref={flatListRef}
             data={filteredEvents}
             keyExtractor={(item) => item.id}
             renderItem={renderEventCard}
