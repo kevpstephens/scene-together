@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -22,6 +22,9 @@ import {
   FilmIcon,
   CalendarIcon,
   MapPinIcon,
+  TrophyIcon,
+  FireIcon,
+  SparklesIcon,
 } from "react-native-heroicons/solid";
 import { useAuth } from "../contexts/AuthContext";
 import { theme } from "../theme";
@@ -145,6 +148,78 @@ export default function ProfileScreen() {
     });
   };
 
+  // Genre color mapping
+  const getGenreColor = (genre: string): string => {
+    const genreColors: { [key: string]: string } = {
+      Action: "#EF4444", // Red
+      Adventure: "#F59E0B", // Orange
+      Comedy: "#FBBF24", // Yellow
+      Drama: "#8B5CF6", // Purple
+      Fantasy: "#EC4899", // Pink
+      Horror: "#DC2626", // Dark Red
+      Mystery: "#6366F1", // Indigo
+      Romance: "#F472B6", // Light Pink
+      "Sci-Fi": "#3B82F6", // Blue
+      Thriller: "#7C3AED", // Violet
+      Animation: "#14B8A6", // Teal
+      Crime: "#64748B", // Slate
+      Documentary: "#059669", // Green
+      Family: "#10B981", // Emerald
+      History: "#D97706", // Amber
+      Music: "#06B6D4", // Cyan
+      War: "#78716C", // Stone
+      Western: "#A16207", // Yellow-800
+    };
+    return genreColors[genre] || theme.colors.primary; // Default to primary color
+  };
+
+  // Calculate user stats
+  const userStats = useMemo(() => {
+    const now = new Date();
+
+    // Separate past and upcoming events
+    const pastEvents = rsvps.filter(
+      (rsvp) =>
+        rsvp.status === "going" &&
+        new Date(rsvp.event.date).getTime() < now.getTime()
+    );
+    const upcomingEvents = rsvps.filter(
+      (rsvp) =>
+        rsvp.status === "going" &&
+        new Date(rsvp.event.date).getTime() >= now.getTime()
+    );
+
+    // Get most recent attended event
+    const recentEvent = pastEvents.sort(
+      (a, b) =>
+        new Date(b.event.date).getTime() - new Date(a.event.date).getTime()
+    )[0];
+
+    // Calculate favorite genres
+    const genreCounts: { [key: string]: number } = {};
+    rsvps.forEach((rsvp) => {
+      if (rsvp.event.movieData?.genre) {
+        const genres = rsvp.event.movieData.genre.split(",");
+        genres.forEach((genre) => {
+          const trimmed = genre.trim();
+          genreCounts[trimmed] = (genreCounts[trimmed] || 0) + 1;
+        });
+      }
+    });
+
+    const favoriteGenres = Object.entries(genreCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 3)
+      .map(([genre]) => genre);
+
+    return {
+      totalAttended: pastEvents.length,
+      upcomingCount: upcomingEvents.length,
+      recentEvent: recentEvent?.event,
+      favoriteGenres,
+    };
+  }, [rsvps]);
+
   return (
     <GradientBackground>
       <ScrollView
@@ -192,6 +267,102 @@ export default function ProfileScreen() {
               <Text style={styles.editButtonText}>Edit Profile</Text>
             </TouchableOpacity>
           </View>
+
+          {/* User Stats Section */}
+          {!rsvpsLoading && rsvps.length > 0 && (
+            <View style={styles.statsCard}>
+              <Text style={styles.sectionTitle}>Your Activity</Text>
+
+              {/* Stats Grid - Overlapping Circles */}
+              <View style={styles.statsGrid}>
+                {/* Left Circle - Attended (Teal/Cyan) */}
+                <View
+                  style={[
+                    styles.statCircle,
+                    styles.leftCircle,
+                    { backgroundColor: "#46D4AF" },
+                  ]}
+                >
+                  <TrophyIcon size={22} color="#fff" />
+                  <Text style={styles.statValue}>
+                    {userStats.totalAttended}
+                  </Text>
+                  <Text style={styles.statLabel}>Attended</Text>
+                </View>
+
+                {/* Center Circle - Upcoming (Dark Blue) */}
+                <View
+                  style={[
+                    styles.statCircle,
+                    styles.centerCircle,
+                    { backgroundColor: "#1E3A5F" },
+                  ]}
+                >
+                  <FireIcon size={22} color="#fff" />
+                  <Text style={styles.statValue}>
+                    {userStats.upcomingCount}
+                  </Text>
+                  <Text style={styles.statLabel}>Upcoming</Text>
+                </View>
+
+                {/* Right Circle - Total RSVPs (Accent Blue) */}
+                <View
+                  style={[
+                    styles.statCircle,
+                    styles.rightCircle,
+                    { backgroundColor: "#2D5F7E" },
+                  ]}
+                >
+                  <FilmIcon size={22} color="#fff" />
+                  <Text style={styles.statValue}>{rsvps.length}</Text>
+                  <Text style={styles.statLabel}>Total RSVPs</Text>
+                </View>
+              </View>
+
+              {/* Recent Activity */}
+              {userStats.recentEvent && (
+                <View style={styles.recentActivity}>
+                  <View style={styles.recentActivityHeader}>
+                    <SparklesIcon size={16} color={theme.colors.primary} />
+                    <Text style={styles.recentActivityTitle}>
+                      Recent Activity
+                    </Text>
+                  </View>
+                  <Text style={styles.recentActivityText}>
+                    Last attended:{" "}
+                    <Text style={styles.recentActivityEvent}>
+                      {userStats.recentEvent.title}
+                    </Text>
+                  </Text>
+                  <Text style={styles.recentActivityDate}>
+                    {formatDate(userStats.recentEvent.date)}
+                  </Text>
+                </View>
+              )}
+
+              {/* Favorite Genres */}
+              {userStats.favoriteGenres.length > 0 && (
+                <View style={styles.favoriteGenres}>
+                  <Text style={styles.favoriteGenresTitle}>
+                    Favorite Genres
+                  </Text>
+                  <View style={styles.genreChipsContainer}>
+                    {userStats.favoriteGenres.map((genre, index) => (
+                      <View
+                        key={index}
+                        style={[
+                          styles.genreChip,
+                          { backgroundColor: getGenreColor(genre) },
+                        ]}
+                      >
+                        <Text style={styles.genreChipText}>{genre}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
 
           {/* Events Section Card */}
           <View style={styles.eventsCard}>
@@ -552,6 +723,144 @@ const styles = StyleSheet.create({
     backgroundColor: "#F59E0B", // Orange
   },
   statusText: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.inverse,
+  },
+  // Stats Card Styles
+  statsCard: {
+    ...getCardStyle(),
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+  },
+  statsGrid: {
+    width: "100%",
+    height: 130,
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: theme.spacing.lg,
+  },
+  statCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "absolute",
+    borderWidth: 2,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 6,
+      },
+      web: {
+        boxShadow: "0 3px 10px rgba(0, 0, 0, 0.25)",
+      },
+    }),
+  },
+  leftCircle: {
+    left: Platform.OS === "web" ? 30 : 15,
+    zIndex: 1,
+  },
+  centerCircle: {
+    left: "50%",
+    marginLeft: -50, // Half of width to center
+    zIndex: 3, // Highest z-index for center circle
+  },
+  rightCircle: {
+    right: Platform.OS === "web" ? 30 : 15,
+    zIndex: 2,
+  },
+  statValue: {
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: "#fff",
+    marginTop: theme.spacing.xxs,
+  },
+  statLabel: {
+    fontSize: 10,
+    color: "#fff",
+    opacity: 0.95,
+    textAlign: "center",
+    lineHeight: 12,
+  },
+  recentActivity: {
+    backgroundColor: theme.components.surfaces.section,
+    padding: theme.spacing.base,
+    borderRadius: theme.borderRadius.md,
+    borderLeftWidth: 3,
+    borderLeftColor: theme.colors.primary,
+    marginBottom: theme.spacing.base,
+  },
+  recentActivityHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: theme.spacing.xs,
+  },
+  recentActivityTitle: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.primary,
+    marginLeft: theme.spacing.xs,
+  },
+  recentActivityText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.xxs,
+  },
+  recentActivityEvent: {
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+  },
+  recentActivityDate: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.text.tertiary,
+  },
+  favoriteGenres: {
+    paddingTop: theme.spacing.base,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.borderLight,
+  },
+  favoriteGenresTitle: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.sm,
+  },
+  genreChipsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginHorizontal: -theme.spacing.xxs,
+  },
+  genreChip: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.full,
+    marginHorizontal: theme.spacing.xxs,
+    marginBottom: theme.spacing.xs,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+      web: {
+        boxShadow: "0 2px 6px rgba(0, 0, 0, 0.25)",
+      },
+    }),
+  },
+  genreChipText: {
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.inverse,
