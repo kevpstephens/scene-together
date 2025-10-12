@@ -17,6 +17,7 @@ import {
   Animated,
   Platform,
   TextInput,
+  Share,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -32,13 +33,15 @@ import {
   ExclamationTriangleIcon,
   ChartBarIcon,
 } from "react-native-heroicons/solid";
+import { ShareIcon, BookmarkIcon } from "react-native-heroicons/outline";
+import { BookmarkIcon as BookmarkIconSolid } from "react-native-heroicons/solid";
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { EventsStackParamList } from "../navigation/types";
 import { api } from "../services/api";
 import { theme } from "../theme";
 import { getPlatformGlow, getCardStyle } from "../theme/styles";
-import type { Event } from "../types";
+import type { Event, RSVPStatus } from "../types";
 import EventCardSkeleton from "../components/EventCardSkeleton";
 import AnimatedButton from "../components/AnimatedButton";
 import GradientBackground from "../components/GradientBackground";
@@ -79,6 +82,7 @@ export default function EventsListScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const [userRSVPs, setUserRSVPs] = useState<Record<string, RSVPStatus>>({});
   const navigation = useNavigation<NavigationProp>();
   const isFocused = useIsFocused();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -87,6 +91,7 @@ export default function EventsListScreen() {
 
   useEffect(() => {
     loadEvents();
+    loadUserRSVPs();
   }, []);
 
   // Configure header to match other screens - dynamically show/hide
@@ -198,7 +203,7 @@ export default function EventsListScreen() {
     // Show header when pull-to-refresh
     setIsHeaderVisible(true);
 
-    await loadEvents();
+    await Promise.all([loadEvents(), loadUserRSVPs()]);
     setRefreshing(false);
 
     // Success haptic on refresh complete (native only)
@@ -247,6 +252,104 @@ export default function EventsListScreen() {
       minute: "2-digit",
       hour12: true,
     });
+  };
+
+  const handleShare = async (event: Event) => {
+    try {
+      // Build share message
+      let shareMessage = `${event.title}\n\n`;
+
+      if (event.movieData?.title) {
+        shareMessage += `Movie: ${event.movieData.title}\n`;
+      }
+      shareMessage += `📅 ${formatDate(event.date)} at ${formatTime(event.date)}\n`;
+      shareMessage += `📍 ${event.location}\n`;
+
+      if (event.price && event.price > 0) {
+        if (event.payWhatYouCan) {
+          shareMessage += `💰 Pay What You Can (min £${((event.minPrice || 0) / 100).toFixed(2)})\n`;
+        } else {
+          shareMessage += `💰 £${(event.price / 100).toFixed(2)}\n`;
+        }
+      } else {
+        shareMessage += `🎟️ Free Event\n`;
+      }
+
+      if (Platform.OS === "web") {
+        if (navigator.share) {
+          await navigator.share({
+            title: event.title,
+            text: shareMessage,
+            url: window.location.href,
+          });
+        } else {
+          // Fallback: copy to clipboard
+          await navigator.clipboard.writeText(shareMessage);
+          alert("Event details copied to clipboard!");
+        }
+      } else {
+        await Share.share({
+          message: shareMessage,
+          title: event.title,
+        });
+
+        // Haptic feedback on success
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error: any) {
+      if (error.message !== "User did not share") {
+        console.error("Share error:", error);
+      }
+    }
+  };
+
+  const loadUserRSVPs = async () => {
+    try {
+      const response = await api.get("/me/rsvps");
+      const rsvpMap: Record<string, RSVPStatus> = {};
+      response.data.forEach((rsvp: any) => {
+        rsvpMap[rsvp.eventId] = rsvp.status;
+      });
+      setUserRSVPs(rsvpMap);
+    } catch (error) {
+      console.error("Failed to load user RSVPs:", error);
+      // Don't show error - user might not have any RSVPs yet
+    }
+  };
+
+  const handleBookmark = async (event: Event) => {
+    try {
+      // Haptic feedback on tap
+      if (Platform.OS !== "web") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+
+      const currentStatus = userRSVPs[event.id];
+      const newStatus: RSVPStatus | null =
+        currentStatus === "interested" ? "not_going" : "interested";
+
+      // Optimistically update UI
+      setUserRSVPs((prev) => ({
+        ...prev,
+        [event.id]: newStatus,
+      }));
+
+      // Make API call
+      await api.post(`/events/${event.id}/rsvp`, { status: newStatus });
+
+      // Reload events to get updated attendee count
+      await loadEvents();
+
+      // Success haptic feedback
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error("Failed to update RSVP:", error);
+      // Revert optimistic update
+      await loadUserRSVPs();
+      alert("Failed to update interest status. Please try again.");
+    }
   };
 
   // Calculate event status using real RSVP data
@@ -336,11 +439,6 @@ export default function EventsListScreen() {
     return filtered;
   }, [events, debouncedSearchQuery, filterStatus]);
 
-  // Check if event is featured (for demo, make first event featured)
-  const isFeatured = (event: Event, index: number) => {
-    return index === 0; // First event is featured
-  };
-
   // Format price for display
   const formatPrice = (
     event: Event
@@ -370,7 +468,6 @@ export default function EventsListScreen() {
 
   const renderEventCard = ({ item, index }: { item: Event; index: number }) => {
     const status = getEventStatus(item);
-    const featured = isFeatured(item, index);
     const priceInfo = formatPrice(item);
     const dateLabel = formatDate(item.date);
     const isUrgent = dateLabel === "TODAY" || dateLabel === "TOMORROW";
@@ -397,14 +494,6 @@ export default function EventsListScreen() {
               colors={["transparent", "rgba(0,0,0,0.7)"]}
               style={styles.posterGradient}
             />
-
-            {/* Featured Badge */}
-            {featured && (
-              <View style={styles.featuredBadge}>
-                <StarIcon size={14} color={theme.colors.text.inverse} />
-                <Text style={styles.featuredText}>Featured</Text>
-              </View>
-            )}
 
             {/* Price Badge on Poster with Gradient */}
             {priceInfo && (
@@ -439,33 +528,66 @@ export default function EventsListScreen() {
           </View>
         )}
         <View style={styles.cardContent}>
-          {/* Date Badge */}
-          <View
-            style={[
-              styles.dateTag,
-              isUrgent && styles.dateTagUrgent, // Special styling for urgent dates
-            ]}
-          >
-            <Text style={styles.dateTagText}>{dateLabel}</Text>
+          {/* Date Badge and Action Buttons Row */}
+          <View style={styles.dateActionsRow}>
+            <View
+              style={[
+                styles.dateTag,
+                isUrgent && styles.dateTagUrgent, // Special styling for urgent dates
+              ]}
+            >
+              <Text style={styles.dateTagText}>{dateLabel}</Text>
+            </View>
+
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => handleShare(item)}
+                activeOpacity={0.7}
+              >
+                <ShareIcon size={18} color={theme.colors.primaryLight} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.iconButton,
+                  userRSVPs[item.id] === "interested" &&
+                    styles.iconButtonActive,
+                ]}
+                onPress={() => handleBookmark(item)}
+                activeOpacity={0.7}
+              >
+                {userRSVPs[item.id] === "interested" ? (
+                  <BookmarkIconSolid
+                    size={18}
+                    color={theme.colors.primaryLight}
+                  />
+                ) : (
+                  <BookmarkIcon size={18} color={theme.colors.primaryLight} />
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
 
           <Text style={styles.title} numberOfLines={2}>
             {item.title}
           </Text>
 
-          <View style={styles.detailsRow}>
-            <ClockIcon size={16} color={theme.colors.primaryLight} />
-            <Text style={styles.time}>{formatTime(item.date)}</Text>
-          </View>
-
-          {item.location && (
-            <View style={styles.detailsRow}>
-              <MapPinIcon size={16} color={theme.colors.primaryLight} />
-              <Text style={styles.location} numberOfLines={1}>
-                {item.location}
-              </Text>
+          {/* Time and Location Row */}
+          <View style={styles.timeLocationRow}>
+            <View style={styles.timeContainer}>
+              <ClockIcon size={16} color={theme.colors.primaryLight} />
+              <Text style={styles.time}>{formatTime(item.date)}</Text>
             </View>
-          )}
+            {item.location && (
+              <>
+                <Text style={styles.dotSeparator}>•</Text>
+                <View style={styles.locationContainer}>
+                  <MapPinIcon size={16} color={theme.colors.primaryLight} />
+                  <Text style={styles.location}>{item.location}</Text>
+                </View>
+              </>
+            )}
+          </View>
 
           {item.movieData && (
             <View style={styles.movieInfo}>
@@ -958,7 +1080,7 @@ const styles = StyleSheet.create({
   posterContainer: {
     position: "relative",
     width: "100%",
-    height: 240,
+    aspectRatio: 16 / 9, // Maintain movie poster aspect ratio (16:9)
     borderRadius: theme.components.radii.poster,
     overflow: "hidden",
     borderWidth: 1,
@@ -983,31 +1105,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: "60%",
-  },
-  featuredBadge: {
-    position: "absolute",
-    top: theme.spacing.md,
-    left: theme.spacing.md,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: `${theme.colors.primary}CC`, // More subtle with 80% opacity
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.full,
-    // Web-compatible shadow (more subtle)
-    ...(Platform.OS === "web"
-      ? {
-          boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.12)",
-        }
-      : theme.shadows.md),
-  },
-  featuredText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.inverse,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-    marginLeft: theme.spacing.xs,
   },
   priceBadgeOnPoster: {
     position: "absolute",
@@ -1099,19 +1196,84 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
     marginBottom: theme.spacing.sm,
   },
+  dateActionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: theme.spacing.sm,
+  },
   dateTag: {
-    alignSelf: "flex-start",
     backgroundColor: theme.colors.accent,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.full,
-    marginBottom: theme.spacing.sm,
     // Web-compatible shadow
     ...(Platform.OS === "web"
       ? {
           boxShadow: "0px 2px 3px rgba(0, 0, 0, 0.08)",
         }
       : theme.shadows.sm),
+  },
+  actionButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+  },
+  iconButton: {
+    padding: theme.spacing.xs,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.components.surfaces.section,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)",
+      },
+    }),
+  },
+  iconButtonActive: {
+    backgroundColor: `${theme.colors.primaryLight}20`, // Subtle teal background
+    ...Platform.select({
+      ios: {
+        shadowColor: theme.colors.primaryLight,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: `0px 2px 6px ${theme.colors.primaryLight}40`,
+      },
+    }),
+  },
+  timeLocationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    marginBottom: theme.spacing.sm,
+  },
+  timeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  locationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexShrink: 1,
+  },
+  dotSeparator: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.tertiary,
+    marginHorizontal: theme.spacing.sm,
   },
   dateTagText: {
     fontSize: theme.typography.fontSize.xs,
@@ -1163,7 +1325,7 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.secondary,
     fontWeight: theme.typography.fontWeight.medium,
-    flex: 1,
+    flexShrink: 1,
     marginLeft: theme.spacing.xs,
   },
   movieInfo: {
