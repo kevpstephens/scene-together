@@ -13,6 +13,7 @@ router.post(
   validate(createRSVPSchema),
   rsvpsController.createOrUpdateRSVP
 );
+router.delete("/events/:id/rsvp", requireAuth, rsvpsController.deleteRSVP);
 router.get("/me/rsvps", requireAuth, rsvpsController.getUserRSVPs);
 
 export default router;

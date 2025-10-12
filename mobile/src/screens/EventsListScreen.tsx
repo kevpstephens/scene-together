@@ -325,17 +325,30 @@ export default function EventsListScreen() {
       }
 
       const currentStatus = userRSVPs[event.id];
-      const newStatus: RSVPStatus | null =
-        currentStatus === "interested" ? "not_going" : "interested";
+      const isCurrentlyInterested = currentStatus === "interested";
 
-      // Optimistically update UI
-      setUserRSVPs((prev) => ({
-        ...prev,
-        [event.id]: newStatus,
-      }));
+      if (isCurrentlyInterested) {
+        // Remove RSVP (unmark as interested)
+        // Optimistically update UI by removing the entry
+        setUserRSVPs((prev) => {
+          const updated = { ...prev };
+          delete updated[event.id];
+          return updated;
+        });
 
-      // Make API call
-      await api.post(`/events/${event.id}/rsvp`, { status: newStatus });
+        // Make DELETE API call
+        await api.delete(`/events/${event.id}/rsvp`);
+      } else {
+        // Mark as interested
+        // Optimistically update UI
+        setUserRSVPs((prev) => ({
+          ...prev,
+          [event.id]: "interested",
+        }));
+
+        // Make POST API call
+        await api.post(`/events/${event.id}/rsvp`, { status: "interested" });
+      }
 
       // Reload events to get updated attendee count
       await loadEvents();

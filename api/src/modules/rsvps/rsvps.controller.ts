@@ -77,3 +77,36 @@ export async function getUserRSVPs(
     next(error);
   }
 }
+
+/**
+ * Delete an RSVP for an event
+ * Authenticated users only
+ */
+export async function deleteRSVP(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { id: eventId } = req.params;
+    const userId = req.user!.id;
+
+    // Check if RSVP exists
+    const rsvp = await prisma.rSVP.findUnique({
+      where: { userId_eventId: { userId, eventId } },
+    });
+
+    if (!rsvp) {
+      return res.status(404).json({ error: "RSVP not found" });
+    }
+
+    // Delete the RSVP
+    await prisma.rSVP.delete({
+      where: { userId_eventId: { userId, eventId } },
+    });
+
+    res.status(200).json({ message: "RSVP deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+}

@@ -47,12 +47,15 @@ type ProfileScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList>
 >;
 
+type EventFilter = "upcoming" | "interested" | "past";
+
 export default function ProfileScreen() {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user, userProfile, loading, signOut } = useAuth();
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [rsvpsLoading, setRsvpsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [eventFilter, setEventFilter] = useState<EventFilter>("upcoming");
 
   // Fetch user's RSVPs
   const fetchRSVPs = useCallback(async () => {
@@ -88,6 +91,28 @@ export default function ProfileScreen() {
     }
     setRefreshing(false);
   }, [fetchRSVPs]);
+
+  // Filter RSVPs based on selected filter
+  const filteredRsvps = useMemo(() => {
+    const now = new Date();
+
+    return rsvps.filter((rsvp) => {
+      const eventDate = new Date(rsvp.event.date);
+      const isPast = eventDate.getTime() < now.getTime();
+
+      switch (eventFilter) {
+        case "upcoming":
+          // Only show events user is "going" to, not just "interested"
+          return rsvp.status === "going" && !isPast;
+        case "interested":
+          return rsvp.status === "interested" && !isPast;
+        case "past":
+          return isPast;
+        default:
+          return true;
+      }
+    });
+  }, [rsvps, eventFilter]);
 
   // Show loading state while user data is being fetched
   if (loading || !user) {
@@ -366,7 +391,64 @@ export default function ProfileScreen() {
 
           {/* Events Section Card */}
           <View style={styles.eventsCard}>
-            <Text style={styles.sectionTitle}>My Events ({rsvps.length})</Text>
+            <Text style={styles.sectionTitle}>
+              My Events ({filteredRsvps.length})
+            </Text>
+
+            {/* Filter Buttons */}
+            <View style={styles.filterContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.filterButton,
+                  eventFilter === "upcoming" && styles.filterButtonActive,
+                ]}
+                onPress={() => setEventFilter("upcoming")}
+              >
+                <Text
+                  style={[
+                    styles.filterButtonText,
+                    eventFilter === "upcoming" && styles.filterButtonTextActive,
+                  ]}
+                >
+                  Upcoming
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.filterButton,
+                  eventFilter === "interested" && styles.filterButtonActive,
+                ]}
+                onPress={() => setEventFilter("interested")}
+              >
+                <Text
+                  style={[
+                    styles.filterButtonText,
+                    eventFilter === "interested" &&
+                      styles.filterButtonTextActive,
+                  ]}
+                >
+                  Interested
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.filterButton,
+                  eventFilter === "past" && styles.filterButtonActive,
+                ]}
+                onPress={() => setEventFilter("past")}
+              >
+                <Text
+                  style={[
+                    styles.filterButtonText,
+                    eventFilter === "past" && styles.filterButtonTextActive,
+                  ]}
+                >
+                  Past
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             {rsvpsLoading ? (
               <View>
@@ -421,9 +503,26 @@ export default function ProfileScreen() {
                   <Text style={styles.emptyActionText}>Browse Events</Text>
                 </TouchableOpacity>
               </View>
+            ) : filteredRsvps.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <View style={styles.emptyIconWrapper}>
+                  <CalendarIcon size={64} color={theme.colors.text.tertiary} />
+                </View>
+                <Text style={styles.emptyTitle}>
+                  {eventFilter === "upcoming" && "No Upcoming Events"}
+                  {eventFilter === "interested" &&
+                    "No Events You're Interested In"}
+                  {eventFilter === "past" && "No Past Events"}
+                </Text>
+                <Text style={styles.emptySubtitle}>
+                  {eventFilter === "past"
+                    ? "Your event history will appear here"
+                    : "Try browsing more events or changing your filter"}
+                </Text>
+              </View>
             ) : (
               <View>
-                {rsvps.map((rsvp) => (
+                {filteredRsvps.map((rsvp) => (
                   <AnimatedButton
                     key={rsvp.id}
                     style={styles.eventCard}
@@ -864,5 +963,34 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.inverse,
+  },
+  // Filter Buttons
+  filterContainer: {
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
+    flexWrap: "wrap",
+  },
+  filterButton: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.components.surfaces.section,
+    borderWidth: 1,
+    borderColor: theme.colors.borderLight,
+  },
+  filterButtonActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  filterButtonText: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.text.secondary,
+  },
+  filterButtonTextActive: {
+    color: theme.colors.text.inverse,
+    fontWeight: theme.typography.fontWeight.bold,
   },
 });
