@@ -77,7 +77,7 @@ export default function GradientBackground() {
     inputRange: [0, 0.5, 1],
     outputRange: [
       theme.colors.background,
-      "#E8F5F3", // Subtle tint of turquoise
+      "#15191F", // Subtle darker tint with hint of teal
       theme.colors.background,
     ],
   });
@@ -86,10 +86,10 @@ export default function GradientBackground() {
     <Animated.View style={[styles.container, { backgroundColor }]}>
       <LinearGradient
         colors={[
-          "rgba(70, 212, 175, 0.08)", // Turquoise with low opacity
-          "rgba(35, 121, 126, 0.05)", // Teal with low opacity
+          "rgba(70, 212, 175, 0.12)", // Turquoise with slightly higher opacity for dark mode
+          "rgba(47, 169, 137, 0.08)", // Darker teal
           "transparent",
-          "rgba(70, 212, 175, 0.06)",
+          "rgba(70, 212, 175, 0.10)",
         ]}
         locations={[0, 0.3, 0.6, 1]}
         style={styles.gradient}
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   circle: {
     position: "absolute",
     borderRadius: 9999,
-    opacity: 0.12,
+    opacity: 0.15, // Slightly more visible on dark background
   },
   circle1: {
     width: 400,

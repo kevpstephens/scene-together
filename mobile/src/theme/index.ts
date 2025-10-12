@@ -5,46 +5,46 @@
 
 export const theme = {
   colors: {
-    // Primary brand colors - custom palette
+    // Primary brand colors - Teal/Turquoise accent
     primary: "#46D4AF", // Turquoise (main brand color)
-    primaryDark: "#23797E", // Teal (darker variant)
+    primaryDark: "#2FA989", // Darker teal
     primaryLight: "#6FE0C2", // Lighter turquoise
 
     // Accent colors for visual interest
     accent: "#46D4AF", // Turquoise (for highlights/CTAs)
     accentLight: "#6FE0C2", // Lighter turquoise
 
-    // Backgrounds with more depth
-    background: "#EFF0EF", // Anti-flash white (light gray)
-    backgroundDark: "#23797E", // Teal for dark sections
-    surface: "#ffffff", // White cards/surfaces
-    surfaceElevated: "#ffffff", // White with shadows
-    overlay: "rgba(0, 1, 2, 0.6)", // Black with opacity
-    overlayLight: "rgba(0, 1, 2, 0.3)", // Black with lighter opacity
+    // Dark theme backgrounds
+    background: "#0F1419", // Very dark blue-gray (almost black)
+    backgroundDark: "#0A0E13", // Even darker for depth
+    surface: "#1A1F26", // Dark gray-blue for cards/surfaces
+    surfaceElevated: "#1F252E", // Slightly lighter for elevated elements
+    overlay: "rgba(0, 0, 0, 0.8)", // Dark overlay
+    overlayLight: "rgba(0, 0, 0, 0.5)", // Lighter dark overlay
 
     // Gradient overlays
-    gradientDark: "rgba(0, 1, 2, 0.7)", // Black gradient
-    gradientPrimary: "rgba(70, 212, 175, 0.9)", // Turquoise with opacity
+    gradientDark: "rgba(15, 20, 25, 0.95)", // Dark gradient
+    gradientPrimary: "rgba(70, 212, 175, 0.85)", // Turquoise with opacity
 
-    // Text colors
+    // Text colors for dark theme
     text: {
-      primary: "#000102", // Black from palette
-      secondary: "#23797E", // Teal from palette
-      tertiary: "#a3a3a3", // Neutral 400 (keep for subtle text)
-      inverse: "#ffffff", // White text
+      primary: "#E8EAED", // Light gray (high contrast on dark)
+      secondary: "#9BA1A6", // Medium gray (secondary text)
+      tertiary: "#6B7280", // Darker gray (subtle text)
+      inverse: "#0F1419", // Dark text (for light backgrounds)
       accent: "#46D4AF", // Turquoise for highlights
     },
 
-    // Status colors - more vibrant
-    success: "#10b981", // Green 500
-    warning: "#f59e0b", // Amber 500
-    error: "#ef4444", // Red 500
-    info: "#3b82f6", // Blue 500
+    // Status colors - adjusted for dark theme
+    success: "#34D399", // Brighter green
+    warning: "#FBBF24", // Brighter amber
+    error: "#F87171", // Brighter red
+    info: "#60A5FA", // Brighter blue
 
-    // Borders with subtle variations
-    border: "#e5e5e5", // Neutral 200
-    borderLight: "#f5f5f5", // Neutral 100
-    borderDark: "#d4d4d4", // Neutral 300
+    // Borders for dark theme
+    border: "#2D3748", // Dark border
+    borderLight: "#1F252E", // Very subtle border
+    borderDark: "#3D4753", // More visible border
 
     // Transparent variations
     transparent: "transparent",
@@ -105,30 +105,30 @@ export const theme = {
     sm: {
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 3,
-      elevation: 2,
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      elevation: 3,
     },
     md: {
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.12,
-      shadowRadius: 6,
-      elevation: 4,
+      shadowOpacity: 0.4,
+      shadowRadius: 8,
+      elevation: 6,
     },
     lg: {
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.16,
-      shadowRadius: 12,
-      elevation: 8,
+      shadowOpacity: 0.5,
+      shadowRadius: 16,
+      elevation: 10,
     },
     xl: {
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.2,
-      shadowRadius: 16,
-      elevation: 12,
+      shadowOpacity: 0.6,
+      shadowRadius: 20,
+      elevation: 15,
     },
   },
 

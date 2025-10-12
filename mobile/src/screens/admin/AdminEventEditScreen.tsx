@@ -10,13 +10,25 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from "react-native";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AdminStackParamList } from "../../navigation/types";
+import { XMarkIcon } from "react-native-heroicons/solid";
 import { theme } from "../../theme";
 import { api } from "../../services/api";
 import GradientBackground from "../../components/GradientBackground";
+import DateTimePickerComponent from "../../components/DateTimePicker";
+
+type Movie = {
+  id: number;
+  title: string;
+  year: string;
+  poster: string | null;
+  plot: string;
+  rating: string;
+};
 
 type NavigationProp = NativeStackNavigationProp<
   AdminStackParamList,
@@ -35,14 +47,53 @@ export default function AdminEventEditScreen() {
   // Form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [dateTime, setDateTime] = useState("");
+  const [eventDate, setEventDate] = useState(new Date());
   const [location, setLocation] = useState("");
   const [maxCapacity, setMaxCapacity] = useState("");
   const [price, setPrice] = useState("");
+  const [tmdbId, setTmdbId] = useState<number | undefined>();
+
+  // Movie search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Movie[]>([]);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     loadEvent();
   }, [eventId]);
+
+  const searchMovies = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const { data } = await api.get("/movies/search", {
+        params: { query },
+      });
+      setSearchResults(data.results.slice(0, 5));
+    } catch (error) {
+      console.error("Failed to search movies:", error);
+      Alert.alert("Error", "Failed to search movies");
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleMovieSelect = (movie: Movie) => {
+    setSelectedMovie(movie);
+    setSearchResults([]);
+    setSearchQuery("");
+    setTmdbId(movie.id);
+  };
+
+  const handleRemoveMovie = () => {
+    setSelectedMovie(null);
+    setTmdbId(undefined);
+  };
 
   const loadEvent = async () => {
     try {
@@ -51,20 +102,24 @@ export default function AdminEventEditScreen() {
 
       setTitle(data.title);
       setDescription(data.description || "");
-
-      // Format date for input (convert ISO to YYYY-MM-DDTHH:mm)
-      const date = new Date(data.date);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
-      setDateTime(formattedDate);
+      setEventDate(new Date(data.date));
 
       setLocation(data.location || "");
       setMaxCapacity(String(data.maxCapacity || ""));
       setPrice(String(data.price || "0"));
+
+      // Load existing movie data if available
+      if (data.movieData) {
+        setTmdbId(data.movieData.tmdbId);
+        setSelectedMovie({
+          id: data.movieData.tmdbId,
+          title: data.movieData.title,
+          year: data.movieData.year || "",
+          poster: data.movieData.poster || null,
+          plot: description,
+          rating: "",
+        });
+      }
     } catch (error) {
       console.error("Failed to load event:", error);
       Alert.alert("Error", "Failed to load event details", [
@@ -88,10 +143,6 @@ export default function AdminEventEditScreen() {
       );
       return;
     }
-    if (!dateTime.trim()) {
-      Alert.alert("Validation Error", "Please enter a date and time");
-      return;
-    }
     if (!location.trim()) {
       Alert.alert("Validation Error", "Please enter a location");
       return;
@@ -109,15 +160,26 @@ export default function AdminEventEditScreen() {
 
     setSubmitting(true);
     try {
-      const dateISO = new Date(dateTime).toISOString();
+      const dateISO = eventDate.toISOString();
+
+      // Fetch movie data from TMDB if a movie is selected
+      let movieData = null;
+      if (tmdbId) {
+        try {
+          const { data } = await api.get(`/movies/${tmdbId}`);
+          movieData = data;
+        } catch (error) {
+          console.error("Failed to fetch movie details:", error);
+        }
+      }
 
       await api.put(`/events/${eventId}`, {
         title,
         description,
-        dateTime: dateISO,
+        date: dateISO,
         location,
         maxCapacity: capacityNum,
-        price: priceNum,
+        movieData,
       });
 
       Alert.alert("Success", "Event updated successfully", [
@@ -158,6 +220,95 @@ export default function AdminEventEditScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Edit Event Details</Text>
 
+          {/* Movie Search */}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Search Movie (Optional)</Text>
+            <TextInput
+              style={styles.input}
+              value={searchQuery}
+              onChangeText={(text) => {
+                setSearchQuery(text);
+                searchMovies(text);
+              }}
+              placeholder="Search for a movie..."
+              placeholderTextColor={theme.colors.text.tertiary}
+            />
+            {searching && (
+              <ActivityIndicator
+                size="small"
+                color={theme.colors.primary}
+                style={styles.searchLoader}
+              />
+            )}
+          </View>
+
+          {/* Search Results */}
+          {searchResults.length > 0 && (
+            <View style={styles.searchResults}>
+              {searchResults.map((movie) => (
+                <TouchableOpacity
+                  key={movie.id}
+                  style={styles.movieResult}
+                  onPress={() => handleMovieSelect(movie)}
+                >
+                  {movie.poster ? (
+                    <Image
+                      source={{
+                        uri: movie.poster,
+                      }}
+                      style={styles.moviePoster}
+                    />
+                  ) : (
+                    <View style={styles.moviePosterPlaceholder}>
+                      <Text style={styles.moviePosterPlaceholderText}>
+                        No Image
+                      </Text>
+                    </View>
+                  )}
+                  <View style={styles.movieInfo}>
+                    <Text style={styles.movieTitle}>{movie.title}</Text>
+                    <Text style={styles.movieYear}>
+                      {movie.year || "Unknown"}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {/* Selected Movie */}
+          {selectedMovie && (
+            <View style={styles.selectedMovie}>
+              <Text style={styles.selectedMovieLabel}>Selected Movie:</Text>
+              <View style={styles.selectedMovieCard}>
+                {selectedMovie.poster && (
+                  <Image
+                    source={{
+                      uri: selectedMovie.poster,
+                    }}
+                    style={styles.selectedMoviePoster}
+                  />
+                )}
+                <View style={styles.selectedMovieInfo}>
+                  <Text style={styles.selectedMovieTitle}>
+                    {selectedMovie.title}
+                  </Text>
+                  {selectedMovie.year && (
+                    <Text style={styles.selectedMovieYear}>
+                      {selectedMovie.year}
+                    </Text>
+                  )}
+                </View>
+                <TouchableOpacity
+                  onPress={handleRemoveMovie}
+                  style={styles.removeButton}
+                >
+                  <XMarkIcon size={20} color={theme.colors.error} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
           <View style={styles.formGroup}>
             <Text style={styles.label}>Event Title *</Text>
             <TextInput
@@ -183,19 +334,11 @@ export default function AdminEventEditScreen() {
             />
           </View>
 
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Date & Time *</Text>
-            <TextInput
-              style={styles.input}
-              value={dateTime}
-              onChangeText={setDateTime}
-              placeholder="YYYY-MM-DDTHH:mm"
-              placeholderTextColor={theme.colors.text.tertiary}
-            />
-            <Text style={styles.hint}>
-              Format: YYYY-MM-DDTHH:mm (e.g., 2025-12-25T19:00)
-            </Text>
-          </View>
+          <DateTimePickerComponent
+            label="Date & Time *"
+            value={eventDate}
+            onChange={setEventDate}
+          />
 
           <View style={styles.formGroup}>
             <Text style={styles.label}>Location *</Text>
@@ -338,15 +481,16 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: theme.spacing.base,
     borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    backgroundColor: "transparent",
     alignItems: "center",
     justifyContent: "center",
   },
   cancelButtonText: {
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.secondary,
+    color: theme.colors.primary,
   },
   submitButton: {
     flex: 1,
@@ -364,5 +508,95 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
     color: "#fff",
+  },
+  searchLoader: {
+    marginTop: theme.spacing.sm,
+  },
+  searchResults: {
+    backgroundColor: theme.colors.surfaceElevated,
+    borderRadius: theme.borderRadius.lg,
+    marginBottom: theme.spacing.base,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  movieResult: {
+    flexDirection: "row",
+    padding: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    alignItems: "center",
+  },
+  moviePoster: {
+    width: 46,
+    height: 69,
+    borderRadius: theme.borderRadius.sm,
+    marginRight: theme.spacing.md,
+  },
+  moviePosterPlaceholder: {
+    width: 46,
+    height: 69,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: theme.colors.border,
+    marginRight: theme.spacing.md,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  moviePosterPlaceholderText: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.text.tertiary,
+    textAlign: "center",
+  },
+  movieInfo: {
+    flex: 1,
+  },
+  movieTitle: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xs,
+  },
+  movieYear: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+  },
+  selectedMovie: {
+    marginBottom: theme.spacing.base,
+  },
+  selectedMovieLabel: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.sm,
+  },
+  selectedMovieCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.colors.surfaceElevated,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+  },
+  selectedMoviePoster: {
+    width: 46,
+    height: 69,
+    borderRadius: theme.borderRadius.sm,
+    marginRight: theme.spacing.md,
+  },
+  selectedMovieInfo: {
+    flex: 1,
+  },
+  selectedMovieTitle: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+  },
+  selectedMovieYear: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+    marginTop: theme.spacing.xs,
+  },
+  removeButton: {
+    padding: theme.spacing.sm,
   },
 });

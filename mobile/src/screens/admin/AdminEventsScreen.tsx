@@ -9,6 +9,8 @@ import {
   Image,
   Alert,
   RefreshControl,
+  Modal,
+  Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -35,6 +37,7 @@ export default function AdminEventsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Event | null>(null);
 
   useEffect(() => {
     loadEvents();
@@ -65,30 +68,43 @@ export default function AdminEventsScreen() {
   };
 
   const handleDelete = (event: Event) => {
-    Alert.alert(
-      "Delete Event",
-      `Are you sure you want to delete "${event.title}"?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            setDeleting(event.id);
-            try {
-              await api.delete(`/events/${event.id}`);
-              setEvents(events.filter((e) => e.id !== event.id));
-              Alert.alert("Success", "Event deleted successfully");
-            } catch (error) {
-              console.error("Failed to delete event:", error);
-              Alert.alert("Error", "Failed to delete event");
-            } finally {
-              setDeleting(null);
-            }
-          },
-        },
-      ]
+    console.log("🗑️ Delete button pressed for event:", event.title);
+    setConfirmDelete(event);
+  };
+
+  const confirmDeleteEvent = async () => {
+    if (!confirmDelete) return;
+
+    console.log(
+      "🗑️ Confirmed deletion, starting delete for:",
+      confirmDelete.id
     );
+    setDeleting(confirmDelete.id);
+    setConfirmDelete(null);
+
+    try {
+      console.log("🗑️ Calling API to delete event:", confirmDelete.id);
+      await api.delete(`/events/${confirmDelete.id}`);
+      console.log("✅ Event deleted successfully from API");
+      setEvents(events.filter((e) => e.id !== confirmDelete.id));
+      Alert.alert("Success", "Event deleted successfully");
+    } catch (error: any) {
+      console.error("❌ Failed to delete event:", error);
+      console.error("Error response:", error.response?.data);
+      Alert.alert(
+        "Error",
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Failed to delete event"
+      );
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    console.log("Delete cancelled");
+    setConfirmDelete(null);
   };
 
   const formatDate = (dateString: string) => {
@@ -272,6 +288,37 @@ export default function AdminEventsScreen() {
           <PlusIcon size={28} color="#fff" />
         </TouchableOpacity>
       </View>
+
+      {/* Confirmation Modal */}
+      <Modal
+        visible={!!confirmDelete}
+        transparent
+        animationType="fade"
+        onRequestClose={cancelDelete}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Delete Event</Text>
+            <Text style={styles.modalMessage}>
+              Are you sure you want to delete "{confirmDelete?.title}"?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonCancel]}
+                onPress={cancelDelete}
+              >
+                <Text style={styles.modalButtonTextCancel}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonDelete]}
+                onPress={confirmDeleteEvent}
+              >
+                <Text style={styles.modalButtonTextDelete}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -325,7 +372,9 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.xl,
     padding: theme.spacing.base,
     marginBottom: theme.spacing.base,
-    ...theme.shadows.md,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.4)" }
+      : theme.shadows.md),
   },
   cardPast: {
     opacity: 0.6,
@@ -429,6 +478,64 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     alignItems: "center",
     justifyContent: "center",
-    ...theme.shadows.xl,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 12px 20px rgba(0, 0, 0, 0.6)" }
+      : theme.shadows.xl),
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.xl,
+    width: "90%",
+    maxWidth: 400,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 20px 30px rgba(0, 0, 0, 0.8)" }
+      : theme.shadows.xl),
+  },
+  modalTitle: {
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.base,
+  },
+  modalMessage: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.xl,
+    lineHeight: 22,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: theme.spacing.base,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.borderRadius.lg,
+    alignItems: "center",
+  },
+  modalButtonCancel: {
+    backgroundColor: theme.colors.surface,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+  },
+  modalButtonDelete: {
+    backgroundColor: theme.colors.error,
+  },
+  modalButtonTextCancel: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+  },
+  modalButtonTextDelete: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: "#fff",
   },
 });

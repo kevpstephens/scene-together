@@ -19,6 +19,7 @@ import { MagnifyingGlassIcon, XMarkIcon } from "react-native-heroicons/solid";
 import { theme } from "../../theme";
 import { api } from "../../services/api";
 import GradientBackground from "../../components/GradientBackground";
+import DateTimePickerComponent from "../../components/DateTimePicker";
 
 type NavigationProp = NativeStackNavigationProp<
   AdminStackParamList,
@@ -28,9 +29,10 @@ type NavigationProp = NativeStackNavigationProp<
 interface Movie {
   id: number;
   title: string;
-  poster_path: string | null;
-  release_date: string;
-  overview: string;
+  year: string;
+  poster: string | null;
+  plot: string;
+  rating: string;
 }
 
 export default function AdminEventCreateScreen() {
@@ -39,7 +41,7 @@ export default function AdminEventCreateScreen() {
   // Form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [dateTime, setDateTime] = useState("");
+  const [eventDate, setEventDate] = useState(new Date());
   const [location, setLocation] = useState("");
   const [maxCapacity, setMaxCapacity] = useState("50");
   const [price, setPrice] = useState("0");
@@ -79,7 +81,7 @@ export default function AdminEventCreateScreen() {
     setSearchResults([]);
     setSearchQuery("");
     setTitle(movie.title);
-    setDescription(movie.overview || "");
+    setDescription(movie.plot || "");
     setTmdbId(movie.id);
   };
 
@@ -101,8 +103,8 @@ export default function AdminEventCreateScreen() {
       );
       return;
     }
-    if (!dateTime.trim()) {
-      Alert.alert("Validation Error", "Please enter a date and time");
+    if (eventDate < new Date()) {
+      Alert.alert("Validation Error", "Event date must be in the future");
       return;
     }
     if (!location.trim()) {
@@ -122,27 +124,35 @@ export default function AdminEventCreateScreen() {
 
     setSubmitting(true);
     try {
-      // Format the date for the API
-      // Expected format: ISO string (e.g., "2024-12-25T19:00:00.000Z")
-      // User input should be in format "YYYY-MM-DDTHH:mm" for datetime-local
-      const dateISO = new Date(dateTime).toISOString();
+      const dateISO = eventDate.toISOString();
 
-      await api.post("/events", {
+      // Fetch movie data from TMDB if a movie is selected
+      let movieData = null;
+      if (tmdbId) {
+        try {
+          const { data } = await api.get(`/movies/${tmdbId}`);
+          movieData = data;
+        } catch (error) {
+          console.error("Failed to fetch movie details:", error);
+        }
+      }
+
+      const response = await api.post("/events", {
         title,
         description,
-        dateTime: dateISO,
+        date: dateISO,
         location,
         maxCapacity: capacityNum,
-        price: priceNum,
-        tmdbId,
+        movieData,
       });
 
-      Alert.alert("Success", "Event created successfully", [
-        {
-          text: "OK",
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      // Navigate back immediately for instant feedback
+      navigation.goBack();
+
+      // Show success toast after navigation
+      setTimeout(() => {
+        Alert.alert("Success", "Event created successfully!");
+      }, 100);
     } catch (error: any) {
       console.error("Failed to create event:", error);
       const errorMessage =
@@ -209,10 +219,10 @@ export default function AdminEventCreateScreen() {
                   style={styles.movieResult}
                   onPress={() => handleMovieSelect(movie)}
                 >
-                  {movie.poster_path ? (
+                  {movie.poster ? (
                     <Image
                       source={{
-                        uri: `https://image.tmdb.org/t/p/w92${movie.poster_path}`,
+                        uri: movie.poster,
                       }}
                       style={styles.moviePoster}
                     />
@@ -226,12 +236,10 @@ export default function AdminEventCreateScreen() {
                   <View style={styles.movieInfo}>
                     <Text style={styles.movieTitle}>{movie.title}</Text>
                     <Text style={styles.movieYear}>
-                      {movie.release_date
-                        ? new Date(movie.release_date).getFullYear()
-                        : "Unknown"}
+                      {movie.year || "Unknown"}
                     </Text>
                     <Text style={styles.movieOverview} numberOfLines={2}>
-                      {movie.overview}
+                      {movie.plot}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -242,10 +250,10 @@ export default function AdminEventCreateScreen() {
           {/* Selected Movie */}
           {selectedMovie && (
             <View style={styles.selectedMovie}>
-              {selectedMovie.poster_path && (
+              {selectedMovie.poster && (
                 <Image
                   source={{
-                    uri: `https://image.tmdb.org/t/p/w92${selectedMovie.poster_path}`,
+                    uri: selectedMovie.poster,
                   }}
                   style={styles.selectedMoviePoster}
                 />
@@ -294,19 +302,12 @@ export default function AdminEventCreateScreen() {
             />
           </View>
 
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Date & Time *</Text>
-            <TextInput
-              style={styles.input}
-              value={dateTime}
-              onChangeText={setDateTime}
-              placeholder="YYYY-MM-DDTHH:mm (e.g., 2025-12-25T19:00)"
-              placeholderTextColor={theme.colors.text.tertiary}
-            />
-            <Text style={styles.hint}>
-              Format: YYYY-MM-DDTHH:mm (e.g., 2025-12-25T19:00)
-            </Text>
-          </View>
+          <DateTimePickerComponent
+            label="Date & Time *"
+            value={eventDate}
+            onChange={setEventDate}
+            minimumDate={new Date()}
+          />
 
           <View style={styles.formGroup}>
             <Text style={styles.label}>Location *</Text>
@@ -548,15 +549,16 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: theme.spacing.base,
     borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    backgroundColor: "transparent",
     alignItems: "center",
     justifyContent: "center",
   },
   cancelButtonText: {
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.secondary,
+    color: theme.colors.primary,
   },
   submitButton: {
     flex: 1,
