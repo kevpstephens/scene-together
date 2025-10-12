@@ -472,6 +472,19 @@ export default function EventDetailScreen() {
                   </Text>
                 )}
 
+                {/* IMDB Button */}
+                {event.movieData?.imdbId && (
+                  <View style={styles.actionButtons}>
+                    <AnimatedButton
+                      style={styles.imdbButton}
+                      onPress={handleOpenIMDB}
+                    >
+                      <FilmIcon size={20} color={theme.colors.primary} />
+                      <Text style={styles.imdbButtonText}>View on IMDB</Text>
+                    </AnimatedButton>
+                  </View>
+                )}
+
                 {/* Embedded YouTube Trailer */}
                 {event.movieData.trailer &&
                   (() => {
@@ -490,19 +503,24 @@ export default function EventDetailScreen() {
                           </View>
 
                           {Platform.OS === "web" ? (
-                            // Web: Use iframe directly
+                            // Web: Use iframe directly with 16:9 aspect ratio
                             <View style={styles.videoWrapper}>
-                              <iframe
-                                style={{
-                                  width: "100%",
-                                  height: 220,
-                                  border: 0,
-                                  borderRadius: 12,
-                                }}
-                                src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              />
+                              <View style={styles.videoAspectRatio}>
+                                <iframe
+                                  style={{
+                                    position: "absolute",
+                                    top: 0,
+                                    left: 0,
+                                    width: "100%",
+                                    height: "100%",
+                                    border: 0,
+                                    borderRadius: 12,
+                                  }}
+                                  src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                  allowFullScreen
+                                />
+                              </View>
                             </View>
                           ) : (
                             // Mobile: Use WebView
@@ -649,26 +667,13 @@ export default function EventDetailScreen() {
               {/* Show attendee count */}
               {event.maxCapacity && (
                 <View style={styles.attendeeInfo}>
-                  <UsersIcon size={16} color={theme.colors.text.secondary} />
+                  <UsersIcon size={16} color={theme.colors.primary} />
                   <Text style={styles.attendeeInfoText}>
                     {event.attendeeCount || 0} / {event.maxCapacity} spots taken
                   </Text>
                 </View>
               )}
             </View>
-
-            {/* IMDB Button */}
-            {event.movieData?.imdbId && (
-              <View style={styles.actionButtons}>
-                <AnimatedButton
-                  style={styles.imdbButton}
-                  onPress={handleOpenIMDB}
-                >
-                  <FilmIcon size={20} color={theme.colors.primary} />
-                  <Text style={styles.imdbButtonText}>View on IMDB</Text>
-                </AnimatedButton>
-              </View>
-            )}
           </View>
         </View>
       </Animated.ScrollView>
@@ -883,13 +888,19 @@ const styles = StyleSheet.create({
       ? { boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }
       : theme.shadows.md),
   },
+  videoAspectRatio: {
+    position: "relative",
+    width: "100%",
+    paddingBottom: "56.25%", // 16:9 aspect ratio
+  },
   video: {
     width: "100%",
-    height: 220,
+    aspectRatio: 16 / 9,
   },
   rsvpSection: {
     marginTop: theme.spacing.xl,
     paddingTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.xxxl,
     borderTopWidth: 1,
     borderTopColor: theme.colors.borderLight,
   },
@@ -902,11 +913,15 @@ const styles = StyleSheet.create({
   },
   rsvpButtons: {
     flexDirection: "row",
-    marginBottom: theme.spacing.md,
-    marginHorizontal: -theme.spacing.xs,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: theme.spacing.lg,
+    marginHorizontal: Platform.OS === "web" ? "auto" : 0,
+    maxWidth: Platform.OS === "web" ? 600 : "100%",
+    paddingHorizontal: theme.spacing.md,
   },
   rsvpOption: {
-    flex: 1,
+    width: 110,
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
@@ -915,7 +930,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.sm,
-    marginHorizontal: theme.spacing.xs,
+    marginHorizontal: theme.spacing.sm,
     borderRadius: theme.borderRadius.lg,
     ...(Platform.OS === "web"
       ? { boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)" }
@@ -941,21 +956,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    alignSelf: "center",
     marginTop: theme.spacing.sm,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    backgroundColor: theme.components.surfaces.section,
-    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.xl,
+    backgroundColor: "rgba(21, 28, 35, 0.8)",
+    borderWidth: 1,
+    borderColor: theme.components.borders.subtle,
+    borderRadius: theme.borderRadius.lg,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.2)" }
+      : theme.shadows.md),
   },
   attendeeInfoText: {
     fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.text.primary,
+    fontWeight: theme.typography.fontWeight.semibold,
     marginLeft: theme.spacing.xs,
   },
   actionButtons: {
     marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.xxxl,
+    marginBottom: theme.spacing.md,
   },
   imdbButton: {
     flexDirection: "row",
