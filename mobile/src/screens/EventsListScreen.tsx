@@ -33,8 +33,10 @@ import {
   ExclamationTriangleIcon,
   ChartBarIcon,
 } from "react-native-heroicons/solid";
-import { ShareIcon, BookmarkIcon } from "react-native-heroicons/outline";
-import { BookmarkIcon as BookmarkIconSolid } from "react-native-heroicons/solid";
+import {
+  ShareIcon,
+  StarIcon as StarIconOutline,
+} from "react-native-heroicons/outline";
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { EventsStackParamList } from "../navigation/types";
@@ -45,6 +47,7 @@ import type { Event, RSVPStatus } from "../types";
 import EventCardSkeleton from "../components/EventCardSkeleton";
 import AnimatedButton from "../components/AnimatedButton";
 import GradientBackground from "../components/GradientBackground";
+import { useToast } from "../contexts/ToastContext";
 import * as Haptics from "expo-haptics";
 
 type NavigationProp = NativeStackNavigationProp<
@@ -88,6 +91,7 @@ export default function EventsListScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef<FlatList>(null);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadEvents();
@@ -338,6 +342,9 @@ export default function EventsListScreen() {
 
         // Make DELETE API call
         await api.delete(`/events/${event.id}/rsvp`);
+
+        // Show success feedback
+        showToast("Removed from interested", "success");
       } else {
         // Mark as interested
         // Optimistically update UI
@@ -348,10 +355,10 @@ export default function EventsListScreen() {
 
         // Make POST API call
         await api.post(`/events/${event.id}/rsvp`, { status: "interested" });
-      }
 
-      // Reload events to get updated attendee count
-      await loadEvents();
+        // Show success feedback
+        showToast("⭐ Added to interested!", "success");
+      }
 
       // Success haptic feedback
       if (Platform.OS !== "web") {
@@ -361,7 +368,7 @@ export default function EventsListScreen() {
       console.error("Failed to update RSVP:", error);
       // Revert optimistic update
       await loadUserRSVPs();
-      alert("Failed to update interest status. Please try again.");
+      showToast("Failed to update. Please try again.", "error");
     }
   };
 
@@ -558,7 +565,7 @@ export default function EventsListScreen() {
                 onPress={() => handleShare(item)}
                 activeOpacity={0.7}
               >
-                <ShareIcon size={18} color={theme.colors.primaryLight} />
+                <ShareIcon size={25} color={theme.colors.primaryLight} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -570,12 +577,12 @@ export default function EventsListScreen() {
                 activeOpacity={0.7}
               >
                 {userRSVPs[item.id] === "interested" ? (
-                  <BookmarkIconSolid
-                    size={18}
+                  <StarIcon size={25} color={theme.colors.warning} />
+                ) : (
+                  <StarIconOutline
+                    size={25}
                     color={theme.colors.primaryLight}
                   />
-                ) : (
-                  <BookmarkIcon size={18} color={theme.colors.primaryLight} />
                 )}
               </TouchableOpacity>
             </View>
@@ -1233,7 +1240,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
   },
   iconButton: {
-    padding: theme.spacing.xs,
+    padding: theme.spacing.md,
     borderRadius: theme.borderRadius.full,
     backgroundColor: theme.components.surfaces.section,
     ...Platform.select({
@@ -1252,10 +1259,10 @@ const styles = StyleSheet.create({
     }),
   },
   iconButtonActive: {
-    backgroundColor: `${theme.colors.primaryLight}20`, // Subtle teal background
+    backgroundColor: `${theme.colors.warning}20`, // Subtle orange background
     ...Platform.select({
       ios: {
-        shadowColor: theme.colors.primaryLight,
+        shadowColor: theme.colors.warning,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 4,
@@ -1264,7 +1271,7 @@ const styles = StyleSheet.create({
         elevation: 4,
       },
       web: {
-        boxShadow: `0px 2px 6px ${theme.colors.primaryLight}40`,
+        boxShadow: `0px 2px 6px ${theme.colors.warning}40`,
       },
     }),
   },

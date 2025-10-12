@@ -171,95 +171,112 @@ export default function EventDetailScreen() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
 
-      await api.post(`/events/${eventId}/rsvp`, { status });
+      // Toggle logic: if clicking the same status, remove RSVP
+      if (userRSVP === status) {
+        await api.delete(`/events/${eventId}/rsvp`);
+
+        // Update local state
+        setUserRSVP(null);
+
+        // Reload event to get updated attendee count
+        await loadEvent();
+
+        // Show success toast
+        showToast("RSVP removed", "success");
+      } else {
+        // Create or update RSVP
+        await api.post(`/events/${eventId}/rsvp`, { status });
+
+        // Update local state
+        setUserRSVP(status);
+
+        // Reload event to get updated attendee count
+        await loadEvent();
+
+        // Show success toast
+        const statusMessages = {
+          going: "You're going! 🎉",
+          interested: "Marked as interested ⭐",
+          not_going: "RSVP removed",
+        };
+        showToast(statusMessages[status], "success");
+
+        // Show confetti for "going" status
+        if (status === "going") {
+          setShowConfetti(true);
+        }
+
+        // If user is going, prompt to add to calendar
+        if (status === "going" && event) {
+          // Add small delay for better UX flow
+          setTimeout(async () => {
+            try {
+              console.log("🗓️ Starting calendar add process...");
+              console.log("Event data:", {
+                date: event.date,
+                title: event.title,
+                location: event.location,
+              });
+
+              // Parse the date safely (use 'date' property from Event type)
+              const startDate = new Date(event.date);
+
+              // Validate the date is valid
+              if (isNaN(startDate.getTime())) {
+                console.error("❌ Invalid event date:", event.date);
+                showToast("Invalid event date", "error");
+                return;
+              }
+
+              console.log(
+                "✅ Date parsed successfully:",
+                startDate.toISOString()
+              );
+
+              // Assume 3 hour duration (typical movie + socializing)
+              const endDate = new Date(
+                startDate.getTime() + 3 * 60 * 60 * 1000
+              );
+
+              console.log("📅 Calling promptAddToCalendar...");
+              const added = await promptAddToCalendar({
+                title: event.title,
+                startDate,
+                endDate,
+                location: event.location,
+                notes: event.description
+                  ? `${event.description}\n\n${
+                      event.movieData?.title
+                        ? `Movie: ${event.movieData.title}`
+                        : ""
+                    }`
+                  : undefined,
+              });
+
+              console.log("📅 Calendar result:", added);
+
+              if (added) {
+                // Success! Alert is shown by the calendar service
+                if (Platform.OS !== "web") {
+                  Haptics.notificationAsync(
+                    Haptics.NotificationFeedbackType.Success
+                  );
+                }
+              } else {
+                console.log("⚠️ User canceled or calendar failed");
+              }
+            } catch (error) {
+              console.error("❌ Error adding to calendar:", error);
+              // Show the error to user so we can debug
+              showToast(`Calendar error: ${error}`, "error");
+            }
+          }, 500);
+        }
+      }
 
       // Success haptic feedback (native only)
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-
-      // Update local state
-      setUserRSVP(status);
-
-      // Reload event to get updated attendee count
-      await loadEvent();
-
-      // Show success toast
-      const statusMessages = {
-        going: "You're going! 🎉",
-        interested: "Marked as interested ⭐",
-        not_going: "RSVP removed",
-      };
-      showToast(statusMessages[status], "success");
-
-      // Show confetti for "going" status
-      if (status === "going") {
-        setShowConfetti(true);
-      }
-
-      // If user is going, prompt to add to calendar
-      if (status === "going" && event) {
-        // Add small delay for better UX flow
-        setTimeout(async () => {
-          try {
-            console.log("🗓️ Starting calendar add process...");
-            console.log("Event data:", {
-              date: event.date,
-              title: event.title,
-              location: event.location,
-            });
-
-            // Parse the date safely (use 'date' property from Event type)
-            const startDate = new Date(event.date);
-
-            // Validate the date is valid
-            if (isNaN(startDate.getTime())) {
-              console.error("❌ Invalid event date:", event.date);
-              showToast("Invalid event date", "error");
-              return;
-            }
-
-            console.log(
-              "✅ Date parsed successfully:",
-              startDate.toISOString()
-            );
-
-            // Assume 3 hour duration (typical movie + socializing)
-            const endDate = new Date(startDate.getTime() + 3 * 60 * 60 * 1000);
-
-            console.log("📅 Calling promptAddToCalendar...");
-            const added = await promptAddToCalendar({
-              title: event.title,
-              startDate,
-              endDate,
-              location: event.location,
-              notes: event.description
-                ? `${event.description}\n\n${
-                    event.movieData?.title
-                      ? `Movie: ${event.movieData.title}`
-                      : ""
-                  }`
-                : undefined,
-            });
-
-            console.log("📅 Calendar result:", added);
-
-            if (added) {
-              // Success! Alert is shown by the calendar service
-              if (Platform.OS !== "web") {
-                Haptics.notificationAsync(
-                  Haptics.NotificationFeedbackType.Success
-                );
-              }
-            } else {
-              console.log("⚠️ User canceled or calendar failed");
-            }
-          } catch (error) {
-            console.error("❌ Error adding to calendar:", error);
-            // Show the error to user so we can debug
-            showToast(`Calendar error: ${error}`, "error");
-          }
-        }, 500);
       }
     } catch (error: any) {
       console.error("Failed to RSVP:", error);
@@ -561,6 +578,14 @@ export default function EventDetailScreen() {
               {/* Event Title */}
               <Text style={styles.title}>{event.title}</Text>
 
+              {/* Description */}
+              {event.description && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>About this event</Text>
+                  <Text style={styles.description}>{event.description}</Text>
+                </View>
+              )}
+
               {/* Date & Time */}
               <View style={styles.infoCard}>
                 <View style={styles.infoRow}>
@@ -625,13 +650,130 @@ export default function EventDetailScreen() {
                 </View>
               </View>
 
-              {/* Description */}
-              {event.description && (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>About this event</Text>
-                  <Text style={styles.description}>{event.description}</Text>
-                </View>
-              )}
+              {/* RSVP Section */}
+              <View style={styles.rsvpSection}>
+                <Text style={styles.rsvpTitle}>
+                  {eventHasStarted ? "Event Status" : "Will you attend?"}
+                </Text>
+
+                {eventHasStarted ? (
+                  <View style={styles.eventClosedContainer}>
+                    <XCircleIcon
+                      size={32}
+                      color={theme.colors.text.secondary}
+                    />
+                    <Text style={styles.eventClosedText}>
+                      This event has started and is no longer accepting RSVPs
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.rsvpButtons}>
+                    {/* Going Button */}
+                    <AnimatedButton
+                      style={[
+                        styles.rsvpOption,
+                        userRSVP === "going" && styles.rsvpOptionActive,
+                      ]}
+                      onPress={() => handleRSVP("going")}
+                      disabled={rsvpLoading}
+                    >
+                      <CheckCircleIcon
+                        size={24}
+                        color={
+                          userRSVP === "going"
+                            ? theme.colors.text.inverse
+                            : theme.colors.success
+                        }
+                      />
+                      <Text
+                        style={[
+                          styles.rsvpOptionText,
+                          userRSVP === "going" && styles.rsvpOptionTextActive,
+                        ]}
+                      >
+                        Going
+                      </Text>
+                    </AnimatedButton>
+
+                    {/* Interested Button */}
+                    <AnimatedButton
+                      style={[
+                        styles.rsvpOption,
+                        userRSVP === "interested" && styles.rsvpOptionActive,
+                      ]}
+                      onPress={() => handleRSVP("interested")}
+                      disabled={rsvpLoading}
+                    >
+                      <StarIcon
+                        size={24}
+                        color={
+                          userRSVP === "interested"
+                            ? theme.colors.text.inverse
+                            : theme.colors.warning
+                        }
+                      />
+                      <Text
+                        style={[
+                          styles.rsvpOptionText,
+                          userRSVP === "interested" &&
+                            styles.rsvpOptionTextActive,
+                        ]}
+                      >
+                        Interested
+                      </Text>
+                    </AnimatedButton>
+
+                    {/* Not Going Button */}
+                    {userRSVP && (
+                      <AnimatedButton
+                        style={[
+                          styles.rsvpOption,
+                          userRSVP === "not_going" && styles.rsvpOptionActive,
+                        ]}
+                        onPress={() => handleRSVP("not_going")}
+                        disabled={rsvpLoading}
+                      >
+                        <XCircleIcon
+                          size={24}
+                          color={
+                            userRSVP === "not_going"
+                              ? theme.colors.text.inverse
+                              : theme.colors.error
+                          }
+                        />
+                        <Text
+                          style={[
+                            styles.rsvpOptionText,
+                            userRSVP === "not_going" &&
+                              styles.rsvpOptionTextActive,
+                          ]}
+                        >
+                          Can't Go
+                        </Text>
+                      </AnimatedButton>
+                    )}
+                  </View>
+                )}
+
+                {!eventHasStarted && rsvpLoading && (
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.primaryLight}
+                    style={styles.rsvpLoader}
+                  />
+                )}
+
+                {/* Attendee Count and Capacity */}
+                {event.maxCapacity && (
+                  <View style={styles.attendeeInfo}>
+                    <UsersIcon size={16} color={theme.colors.primary} />
+                    <Text style={styles.attendeeInfoText}>
+                      {event.attendeeCount || 0} / {event.maxCapacity} spots
+                      taken
+                    </Text>
+                  </View>
+                )}
+              </View>
 
               {/* Movie Details */}
               {event.movieData && (
@@ -816,131 +958,6 @@ export default function EventDetailScreen() {
                     })()}
                 </View>
               )}
-
-              {/* RSVP Section */}
-              <View style={styles.rsvpSection}>
-                <Text style={styles.rsvpTitle}>
-                  {eventHasStarted ? "Event Status" : "Will you attend?"}
-                </Text>
-
-                {eventHasStarted ? (
-                  <View style={styles.eventClosedContainer}>
-                    <XCircleIcon
-                      size={32}
-                      color={theme.colors.text.secondary}
-                    />
-                    <Text style={styles.eventClosedText}>
-                      This event has started and is no longer accepting RSVPs
-                    </Text>
-                  </View>
-                ) : (
-                  <View style={styles.rsvpButtons}>
-                    {/* Going Button */}
-                    <AnimatedButton
-                      style={[
-                        styles.rsvpOption,
-                        userRSVP === "going" && styles.rsvpOptionActive,
-                      ]}
-                      onPress={() => handleRSVP("going")}
-                      disabled={rsvpLoading}
-                    >
-                      <CheckCircleIcon
-                        size={24}
-                        color={
-                          userRSVP === "going"
-                            ? theme.colors.text.inverse
-                            : theme.colors.success
-                        }
-                      />
-                      <Text
-                        style={[
-                          styles.rsvpOptionText,
-                          userRSVP === "going" && styles.rsvpOptionTextActive,
-                        ]}
-                      >
-                        Going
-                      </Text>
-                    </AnimatedButton>
-
-                    {/* Interested Button */}
-                    <AnimatedButton
-                      style={[
-                        styles.rsvpOption,
-                        userRSVP === "interested" && styles.rsvpOptionActive,
-                      ]}
-                      onPress={() => handleRSVP("interested")}
-                      disabled={rsvpLoading}
-                    >
-                      <HeartIcon
-                        size={24}
-                        color={
-                          userRSVP === "interested"
-                            ? theme.colors.text.inverse
-                            : theme.colors.warning
-                        }
-                      />
-                      <Text
-                        style={[
-                          styles.rsvpOptionText,
-                          userRSVP === "interested" &&
-                            styles.rsvpOptionTextActive,
-                        ]}
-                      >
-                        Interested
-                      </Text>
-                    </AnimatedButton>
-
-                    {/* Not Going Button */}
-                    {userRSVP && (
-                      <AnimatedButton
-                        style={[
-                          styles.rsvpOption,
-                          userRSVP === "not_going" && styles.rsvpOptionActive,
-                        ]}
-                        onPress={() => handleRSVP("not_going")}
-                        disabled={rsvpLoading}
-                      >
-                        <XCircleIcon
-                          size={24}
-                          color={
-                            userRSVP === "not_going"
-                              ? theme.colors.text.inverse
-                              : theme.colors.error
-                          }
-                        />
-                        <Text
-                          style={[
-                            styles.rsvpOptionText,
-                            userRSVP === "not_going" &&
-                              styles.rsvpOptionTextActive,
-                          ]}
-                        >
-                          Can't Go
-                        </Text>
-                      </AnimatedButton>
-                    )}
-                  </View>
-                )}
-
-                {!eventHasStarted && rsvpLoading && (
-                  <ActivityIndicator
-                    size="small"
-                    color={theme.colors.primaryLight}
-                    style={styles.rsvpLoader}
-                  />
-                )}
-
-                {/* Show attendee count */}
-                {event.maxCapacity && (
-                  <View style={styles.attendeeInfo}>
-                    <UsersIcon size={16} color={theme.colors.primary} />
-                    <Text style={styles.attendeeInfoText}>
-                      {event.attendeeCount || 0} / {event.maxCapacity} spots
-                      taken
-                    </Text>
-                  </View>
-                )}
-              </View>
             </View>
           </View>
         </Animated.ScrollView>
@@ -1282,11 +1299,14 @@ const styles = StyleSheet.create({
     aspectRatio: 16 / 9,
   },
   rsvpSection: {
-    marginTop: theme.spacing.xl,
+    marginTop: theme.spacing.md,
     paddingTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.xxxl,
     borderTopWidth: 1,
     borderTopColor: theme.colors.borderLight,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderLight,
+    marginBottom: theme.spacing.xl,
+    paddingBottom: theme.spacing.xl,
   },
   rsvpTitle: {
     fontSize: theme.typography.fontSize.lg,
