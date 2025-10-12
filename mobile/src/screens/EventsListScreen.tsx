@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Animated,
   Platform,
+  TextInput,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -19,6 +20,8 @@ import {
   FilmIcon,
   StarIcon,
   FireIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
 } from "react-native-heroicons/solid";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -58,10 +61,14 @@ const getGenreColor = (genre: string): string => {
   return "#46D4AF"; // Default - Turquoise from palette
 };
 
+type FilterStatus = "all" | "upcoming" | "ongoing" | "past";
+
 export default function EventsListScreen() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const navigation = useNavigation<NavigationProp>();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -143,6 +150,51 @@ export default function EventsListScreen() {
     }
     return null;
   };
+
+  // Get event time status
+  const getEventTimeStatus = (
+    event: Event
+  ): "upcoming" | "ongoing" | "past" => {
+    const eventDate = new Date(event.date);
+    const now = new Date();
+
+    // Check if event is today
+    const isToday =
+      eventDate.getDate() === now.getDate() &&
+      eventDate.getMonth() === now.getMonth() &&
+      eventDate.getFullYear() === now.getFullYear();
+
+    if (isToday) return "ongoing"; // "Today" filter
+
+    // Check if event is in the future or past
+    if (eventDate.getTime() > now.getTime()) return "upcoming";
+    return "past";
+  };
+
+  // Filter and search events
+  const filteredEvents = useMemo(() => {
+    let filtered = [...events];
+
+    // Apply search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (event) =>
+          event.title.toLowerCase().includes(query) ||
+          event.movieData?.title?.toLowerCase().includes(query) ||
+          event.location?.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply status filter
+    if (filterStatus !== "all") {
+      filtered = filtered.filter(
+        (event) => getEventTimeStatus(event) === filterStatus
+      );
+    }
+
+    return filtered;
+  }, [events, searchQuery, filterStatus]);
 
   // Check if event is featured (for demo, make first event featured)
   const isFeatured = (event: Event, index: number) => {
@@ -295,12 +347,97 @@ export default function EventsListScreen() {
       <GradientBackground />
       <View style={styles.contentWrapper}>
         <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+          {/* Search Bar */}
+          <View style={styles.searchContainer}>
+            <MagnifyingGlassIcon size={20} color={theme.colors.text.tertiary} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search events, movies, locations..."
+              placeholderTextColor={theme.colors.text.tertiary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
+                <XMarkIcon size={20} color={theme.colors.text.secondary} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Filter Chips */}
+          <View style={styles.filterContainer}>
+            <TouchableOpacity
+              style={[
+                styles.filterChip,
+                filterStatus === "all" && styles.filterChipActive,
+              ]}
+              onPress={() => setFilterStatus("all")}
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  filterStatus === "all" && styles.filterChipTextActive,
+                ]}
+              >
+                All
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.filterChip,
+                filterStatus === "upcoming" && styles.filterChipActive,
+              ]}
+              onPress={() => setFilterStatus("upcoming")}
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  filterStatus === "upcoming" && styles.filterChipTextActive,
+                ]}
+              >
+                Upcoming
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.filterChip,
+                filterStatus === "ongoing" && styles.filterChipActive,
+              ]}
+              onPress={() => setFilterStatus("ongoing")}
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  filterStatus === "ongoing" && styles.filterChipTextActive,
+                ]}
+              >
+                Today
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.filterChip,
+                filterStatus === "past" && styles.filterChipActive,
+              ]}
+              onPress={() => setFilterStatus("past")}
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  filterStatus === "past" && styles.filterChipTextActive,
+                ]}
+              >
+                Past
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           <FlatList
-            data={events}
+            data={filteredEvents}
             keyExtractor={(item) => item.id}
             renderItem={renderEventCard}
             contentContainerStyle={
-              events.length === 0 ? styles.emptyContainer : styles.list
+              filteredEvents.length === 0 ? styles.emptyContainer : styles.list
             }
             showsVerticalScrollIndicator={false}
             refreshControl={
@@ -360,6 +497,52 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: theme.layout.maxWidth,
   },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.components.surfaces.card,
+    borderRadius: theme.borderRadius.lg,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    marginHorizontal: theme.spacing.base,
+    marginTop: theme.spacing.base,
+    marginBottom: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.components.borders.default,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: theme.spacing.sm,
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text.primary,
+  },
+  filterContainer: {
+    flexDirection: "row",
+    paddingHorizontal: theme.spacing.base,
+    marginBottom: theme.spacing.sm,
+  },
+  filterChip: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.xl,
+    backgroundColor: theme.components.surfaces.section,
+    borderWidth: 1,
+    borderColor: theme.components.borders.default,
+    marginHorizontal: theme.spacing.xs,
+  },
+  filterChipActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  filterChipText: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.text.secondary,
+  },
+  filterChipTextActive: {
+    color: theme.colors.text.inverse,
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
   centered: {
     flex: 1,
     justifyContent: "center",
@@ -376,12 +559,11 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     flexGrow: 1,
+    paddingBottom: 100,
   },
   emptyContent: {
-    flex: 1,
-    justifyContent: "center",
     alignItems: "center",
-    paddingVertical: theme.spacing.xxxl,
+    paddingVertical: theme.spacing.xl,
     paddingHorizontal: theme.spacing.xl,
   },
   emptyIconContainer: {
@@ -420,28 +602,41 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
   },
   emptyFeatures: {
+    alignSelf: "center",
     flexDirection: "column",
-    marginTop: theme.spacing.lg,
+    marginTop: theme.spacing.sm,
     backgroundColor: theme.colors.surface,
-    padding: theme.spacing.lg,
+    paddingVertical:
+      Platform.OS === "web" ? theme.spacing.xl : theme.spacing.lg,
+    paddingHorizontal:
+      Platform.OS === "web" ? theme.spacing.xxl : theme.spacing.xl,
     borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    borderColor: theme.components.borders.default,
+    minWidth: 280,
     // Web-compatible shadow
     ...(Platform.OS === "web"
       ? {
           boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.12)",
         }
-      : theme.shadows.md),
+      : {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 8,
+        }),
   },
   featureItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: theme.spacing.md,
+    marginBottom: Platform.OS === "web" ? theme.spacing.lg : theme.spacing.md,
   },
   featureText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text.primary,
     fontWeight: theme.typography.fontWeight.medium,
-    marginLeft: theme.spacing.md,
+    marginLeft: Platform.OS === "web" ? theme.spacing.lg : theme.spacing.md,
     flex: 1,
   },
   card: {

@@ -11,6 +11,7 @@ import {
   Linking,
   Platform,
   Animated,
+  Share,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { LinearGradient } from "expo-linear-gradient";
@@ -25,6 +26,7 @@ import {
   CheckCircleIcon,
   HeartIcon,
   XCircleIcon,
+  ShareIcon,
 } from "react-native-heroicons/outline";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { EventsStackParamList } from "../navigation/types";
@@ -217,6 +219,129 @@ export default function EventDetailScreen() {
     }
   };
 
+  const handleAddToCalendar = async () => {
+    if (!event) return;
+
+    try {
+      // Haptic feedback (native only)
+      if (Platform.OS !== "web") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+
+      const startDate = new Date(event.date);
+
+      // Validate the date
+      if (isNaN(startDate.getTime())) {
+        showToast("Invalid event date", "error");
+        return;
+      }
+
+      // Assume 3 hour duration (typical movie + socializing)
+      const endDate = new Date(startDate.getTime() + 3 * 60 * 60 * 1000);
+
+      const added = await promptAddToCalendar({
+        title: event.title,
+        startDate,
+        endDate,
+        location: event.location,
+        notes: event.description
+          ? `${event.description}\n\n${
+              event.movieData?.title ? `Movie: ${event.movieData.title}` : ""
+            }`
+          : undefined,
+      });
+
+      if (added && Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error("Error adding to calendar:", error);
+      showToast("Failed to add to calendar", "error");
+    }
+  };
+
+  const handleShare = async () => {
+    if (!event) return;
+
+    try {
+      // Haptic feedback (native only)
+      if (Platform.OS !== "web") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+
+      // Format event details for sharing
+      const eventDate = new Date(event.date);
+      const formattedDate = eventDate.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      const formattedTime = eventDate.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+
+      // Build share message
+      let shareMessage = `🎬 ${event.title}\n\n`;
+
+      if (event.movieData?.title) {
+        shareMessage += `Movie: ${event.movieData.title}\n`;
+      }
+
+      shareMessage += `📅 ${formattedDate}\n`;
+      shareMessage += `🕐 ${formattedTime}\n`;
+
+      if (event.location) {
+        shareMessage += `📍 ${event.location}\n`;
+      }
+
+      if (event.description) {
+        shareMessage += `\n${event.description}\n`;
+      }
+
+      shareMessage += `\nJoin us at SceneTogether! 🍿`;
+
+      // For web, use Web Share API if available, otherwise copy to clipboard
+      if (Platform.OS === "web") {
+        if (navigator.share) {
+          await navigator.share({
+            title: event.title,
+            text: shareMessage,
+            url: window.location.href,
+          });
+          showToast("Shared successfully! 🎉", "success");
+        } else {
+          // Fallback: Copy to clipboard
+          await navigator.clipboard.writeText(shareMessage);
+          showToast("Event details copied to clipboard! 📋", "success");
+        }
+      } else {
+        // Native sharing - use React Native's Share API
+        const result = await Share.share({
+          message: shareMessage,
+          title: event.title,
+        });
+
+        if (result.action === Share.sharedAction) {
+          showToast("Shared successfully! 🎉", "success");
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error sharing event:", error);
+
+      // Don't show error if user cancelled
+      if (
+        error?.message !== "User cancelled" &&
+        error?.code !== "ERR_CANCELED"
+      ) {
+        showToast("Failed to share event", "error");
+      }
+    }
+  };
+
   const handleOpenIMDB = async () => {
     if (!event?.movieData?.imdbId) {
       Alert.alert("No IMDB", "IMDB link not available for this film");
@@ -383,6 +508,25 @@ export default function EventDetailScreen() {
                   </View>
                 </View>
               )}
+
+              {/* Action Buttons Row */}
+              <View style={styles.actionButtonsRow}>
+                <AnimatedButton
+                  style={styles.actionButton}
+                  onPress={handleAddToCalendar}
+                >
+                  <CalendarIcon size={18} color={theme.colors.primary} />
+                  <Text style={styles.actionButtonText}>Add to Calendar</Text>
+                </AnimatedButton>
+
+                <AnimatedButton
+                  style={styles.actionButton}
+                  onPress={handleShare}
+                >
+                  <ShareIcon size={18} color={theme.colors.accent} />
+                  <Text style={styles.actionButtonText}>Share Event</Text>
+                </AnimatedButton>
+              </View>
             </View>
 
             {/* Description */}
@@ -773,6 +917,35 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.text.primary,
     fontWeight: theme.typography.fontWeight.medium,
+  },
+  actionButtonsRow: {
+    flexDirection: Platform.OS === "web" ? "row" : "column",
+    gap: theme.spacing.md,
+    marginTop: theme.spacing.lg,
+    ...(Platform.OS === "web" && {
+      justifyContent: "space-between",
+    }),
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.components.surfaces.section,
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.borderRadius.lg,
+    flex: Platform.OS === "web" ? 1 : undefined,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)" }
+      : theme.shadows.sm),
+  },
+  actionButtonText: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.primary,
+    marginLeft: theme.spacing.sm,
   },
   section: {
     ...getCardStyle(),
