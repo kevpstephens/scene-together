@@ -244,8 +244,11 @@ export default function AdminEventsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+      <View style={styles.container}>
+        <GradientBackground />
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
       </View>
     );
   }
@@ -326,22 +329,20 @@ export default function AdminEventsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   contentWrapper: {
     flex: 1,
-    alignItems: "center",
+    ...(Platform.OS === "web" && { alignItems: "center" }),
   },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: theme.colors.background,
   },
   list: {
     padding: theme.spacing.base,
     width: "100%",
-    maxWidth: theme.layout.maxWidth,
+    ...(Platform.OS === "web" && { maxWidth: theme.layout.maxWidth }),
   },
   emptyContainer: {
     flexGrow: 1,
@@ -368,6 +369,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   card: {
+    width: "100%",
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.xl,
     padding: theme.spacing.base,
@@ -434,15 +436,16 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: "row",
-    gap: theme.spacing.sm,
+    justifyContent: "space-between",
   },
   actionButton: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: theme.spacing.xs,
     paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.xs,
+    marginHorizontal: theme.spacing.xxs,
     borderRadius: theme.borderRadius.md,
   },
   actionButtonPrimary: {
@@ -458,9 +461,10 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   actionButtonText: {
-    fontSize: theme.typography.fontSize.sm,
+    fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.semibold,
     color: "#fff",
+    marginLeft: 4,
   },
   actionButtonTextSecondary: {
     color: theme.colors.primary,
@@ -512,11 +516,12 @@ const styles = StyleSheet.create({
   },
   modalButtons: {
     flexDirection: "row",
-    gap: theme.spacing.base,
+    justifyContent: "space-between",
   },
   modalButton: {
     flex: 1,
     paddingVertical: theme.spacing.md,
+    marginHorizontal: theme.spacing.xs / 2,
     borderRadius: theme.borderRadius.lg,
     alignItems: "center",
   },

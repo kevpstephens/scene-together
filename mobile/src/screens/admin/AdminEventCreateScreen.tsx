@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
   },
   formRow: {
     flexDirection: "row",
-    gap: theme.spacing.base,
+    justifyContent: "space-between",
   },
   label: {
     fontSize: theme.typography.fontSize.sm,
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: "row",
-    gap: theme.spacing.base,
+    justifyContent: "space-between",
     marginTop: theme.spacing.xl,
     marginBottom: theme.spacing.xl,
   },

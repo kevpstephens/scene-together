@@ -21,6 +21,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { theme } from "../theme";
 import { api } from "../services/api";
 import type { Event } from "../types";
+import GradientBackground from "../components/GradientBackground";
 
 type RSVP = {
   id: string;
@@ -63,9 +64,12 @@ export default function ProfileScreen() {
   // Show loading state while user data is being fetched
   if (loading || !user) {
     return (
-      <View style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={styles.loadingText}>Loading profile...</Text>
+      <View style={styles.wrapper}>
+        <GradientBackground />
+        <View style={[styles.container, styles.centerContent]}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
       </View>
     );
   }
@@ -117,105 +121,110 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        {userProfile?.avatarUrl ? (
-          <Image
-            source={{ uri: userProfile.avatarUrl }}
-            style={styles.avatarImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {userProfile?.name?.charAt(0).toUpperCase() || "👤"}
-            </Text>
-          </View>
-        )}
-        <Text style={styles.name}>{userProfile?.name || "User"}</Text>
-        <Text style={styles.email}>{user?.email}</Text>
-
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => navigation.navigate("ProfileEdit")}
-        >
-          <PencilSquareIcon size={20} color={theme.colors.primary} />
-          <Text style={styles.editButtonText}>Edit Profile</Text>
-        </TouchableOpacity>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>My Events ({rsvps.length})</Text>
-
-          {rsvpsLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={theme.colors.primary} />
-              <Text style={styles.loadingSmallText}>Loading events...</Text>
-            </View>
-          ) : rsvps.length === 0 ? (
-            <Text style={styles.placeholder}>
-              No RSVPs yet. Browse events to get started! 🎬
-            </Text>
+    <View style={styles.wrapper}>
+      <GradientBackground />
+      <ScrollView style={styles.container}>
+        <View style={styles.content}>
+          {userProfile?.avatarUrl ? (
+            <Image
+              source={{ uri: userProfile.avatarUrl }}
+              style={styles.avatarImage}
+              resizeMode="cover"
+            />
           ) : (
-            <View>
-              {rsvps.map((rsvp) => (
-                <TouchableOpacity
-                  key={rsvp.id}
-                  style={styles.eventCard}
-                  onPress={() =>
-                    eventsNavigation.navigate("EventDetail", {
-                      eventId: rsvp.event.id,
-                    })
-                  }
-                >
-                  {rsvp.event.movieData?.poster && (
-                    <Image
-                      source={{ uri: rsvp.event.movieData.poster }}
-                      style={styles.eventPoster}
-                      resizeMode="cover"
-                    />
-                  )}
-                  <View style={styles.eventInfo}>
-                    <Text style={styles.eventTitle} numberOfLines={2}>
-                      {rsvp.event.title}
-                    </Text>
-                    <Text style={styles.eventDate}>
-                      📅 {formatDate(rsvp.event.date)} at{" "}
-                      {formatTime(rsvp.event.date)}
-                    </Text>
-                    <Text style={styles.eventLocation} numberOfLines={1}>
-                      📍 {rsvp.event.location}
-                    </Text>
-                    <View
-                      style={[
-                        styles.statusBadge,
-                        rsvp.status === "going"
-                          ? styles.statusGoing
-                          : styles.statusInterested,
-                      ]}
-                    >
-                      <Text style={styles.statusText}>
-                        {rsvp.status === "going" ? "✓ Going" : "★ Interested"}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {userProfile?.name?.charAt(0).toUpperCase() || "👤"}
+              </Text>
             </View>
           )}
-        </View>
+          <Text style={styles.name}>{userProfile?.name || "User"}</Text>
+          <Text style={styles.email}>{user?.email}</Text>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Sign Out</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => navigation.navigate("ProfileEdit")}
+          >
+            <PencilSquareIcon size={20} color={theme.colors.primary} />
+            <Text style={styles.editButtonText}>Edit Profile</Text>
+          </TouchableOpacity>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>My Events ({rsvps.length})</Text>
+
+            {rsvpsLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+                <Text style={styles.loadingSmallText}>Loading events...</Text>
+              </View>
+            ) : rsvps.length === 0 ? (
+              <Text style={styles.placeholder}>
+                No RSVPs yet. Browse events to get started! 🎬
+              </Text>
+            ) : (
+              <View>
+                {rsvps.map((rsvp) => (
+                  <TouchableOpacity
+                    key={rsvp.id}
+                    style={styles.eventCard}
+                    onPress={() =>
+                      eventsNavigation.navigate("EventDetail", {
+                        eventId: rsvp.event.id,
+                      })
+                    }
+                  >
+                    {rsvp.event.movieData?.poster && (
+                      <Image
+                        source={{ uri: rsvp.event.movieData.poster }}
+                        style={styles.eventPoster}
+                        resizeMode="cover"
+                      />
+                    )}
+                    <View style={styles.eventInfo}>
+                      <Text style={styles.eventTitle} numberOfLines={2}>
+                        {rsvp.event.title}
+                      </Text>
+                      <Text style={styles.eventDate}>
+                        📅 {formatDate(rsvp.event.date)} at{" "}
+                        {formatTime(rsvp.event.date)}
+                      </Text>
+                      <Text style={styles.eventLocation} numberOfLines={1}>
+                        📍 {rsvp.event.location}
+                      </Text>
+                      <View
+                        style={[
+                          styles.statusBadge,
+                          rsvp.status === "going"
+                            ? styles.statusGoing
+                            : styles.statusInterested,
+                        ]}
+                      >
+                        <Text style={styles.statusText}>
+                          {rsvp.status === "going" ? "✓ Going" : "★ Interested"}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   content: {
     padding: theme.spacing.base,

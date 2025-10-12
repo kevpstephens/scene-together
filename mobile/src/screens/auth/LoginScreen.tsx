@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import GradientBackground from "../../components/GradientBackground";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../navigation/types";
@@ -69,104 +70,110 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <View style={styles.content}>
-        <Text style={styles.logo}>🎬</Text>
-        <Text style={styles.title}>SceneTogether</Text>
-        <Text style={styles.subtitle}>Welcome back!</Text>
+    <GradientBackground>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.content}>
+          <Text style={styles.logo}>🎬</Text>
+          <Text style={styles.title}>SceneTogether</Text>
+          <Text style={styles.subtitle}>Welcome back!</Text>
 
-        {/* Demo Credentials Banner */}
-        <View style={styles.demoBanner}>
-          <View style={styles.demoHeader}>
-            <Text style={styles.demoIcon}>🎭</Text>
-            <Text style={styles.demoTitle}>Demo Account</Text>
+          {/* Demo Credentials Banner */}
+          <View style={styles.demoBanner}>
+            <View style={styles.demoHeader}>
+              <Text style={styles.demoIcon}>🎭</Text>
+              <Text style={styles.demoTitle}>Demo Account</Text>
+            </View>
+            <Text style={styles.demoText}>
+              <Text style={styles.demoLabel}>Email: </Text>
+              demo@scenetogether.com
+            </Text>
+            <Text style={styles.demoText}>
+              <Text style={styles.demoLabel}>Password: </Text>
+              DemoPassword123!
+            </Text>
+            <TouchableOpacity
+              style={styles.demoButton}
+              onPress={handleDemoFill}
+            >
+              <Text style={styles.demoButtonText}>← Click to Auto-Fill</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.demoText}>
-            <Text style={styles.demoLabel}>Email: </Text>
-            demo@scenetogether.com
-          </Text>
-          <Text style={styles.demoText}>
-            <Text style={styles.demoLabel}>Password: </Text>
-            DemoPassword123!
-          </Text>
-          <TouchableOpacity style={styles.demoButton} onPress={handleDemoFill}>
-            <Text style={styles.demoButtonText}>← Click to Auto-Fill</Text>
+
+          <View style={styles.form}>
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor={theme.colors.text.tertiary}
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor={theme.colors.text.tertiary}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoComplete="password"
+            />
+
+            <AnimatedButton
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? "Signing In..." : "Sign In"}
+              </Text>
+            </AnimatedButton>
+
+            {/* Divider */}
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Google Sign In Button */}
+            <AnimatedButton
+              style={[
+                styles.googleButton,
+                googleLoading && styles.buttonDisabled,
+              ]}
+              onPress={handleGoogleSignIn}
+              disabled={googleLoading}
+            >
+              <Text style={styles.googleIcon}>G</Text>
+              <Text style={styles.googleButtonText}>
+                {googleLoading ? "Signing In..." : "Continue with Google"}
+              </Text>
+            </AnimatedButton>
+          </View>
+
+          <TouchableOpacity
+            style={styles.linkButton}
+            onPress={() => navigation.navigate("SignUp")}
+          >
+            <Text style={styles.linkText}>
+              Don't have an account?{" "}
+              <Text style={styles.linkTextBold}>Sign Up</Text>
+            </Text>
           </TouchableOpacity>
         </View>
-
-        <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoComplete="email"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoComplete="password"
-          />
-
-          <AnimatedButton
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>
-              {loading ? "Signing In..." : "Sign In"}
-            </Text>
-          </AnimatedButton>
-
-          {/* Divider */}
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Google Sign In Button */}
-          <AnimatedButton
-            style={[
-              styles.googleButton,
-              googleLoading && styles.buttonDisabled,
-            ]}
-            onPress={handleGoogleSignIn}
-            disabled={googleLoading}
-          >
-            <Text style={styles.googleIcon}>G</Text>
-            <Text style={styles.googleButtonText}>
-              {googleLoading ? "Signing In..." : "Continue with Google"}
-            </Text>
-          </AnimatedButton>
-        </View>
-
-        <TouchableOpacity
-          style={styles.linkButton}
-          onPress={() => navigation.navigate("SignUp")}
-        >
-          <Text style={styles.linkText}>
-            Don't have an account?{" "}
-            <Text style={styles.linkTextBold}>Sign Up</Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.surface,
   },
   content: {
     flex: 1,
@@ -201,6 +208,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.base,
     fontSize: theme.typography.fontSize.base,
     backgroundColor: theme.colors.surface,
+    color: theme.colors.text.primary,
   },
   button: {
     backgroundColor: theme.colors.primary,
@@ -255,7 +263,9 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.xl,
     borderRadius: theme.borderRadius.md,
-    ...theme.shadows.sm,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.3)" }
+      : theme.shadows.sm),
   },
   googleIcon: {
     fontSize: theme.typography.fontSize.xl,
@@ -269,15 +279,17 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
   },
   demoBanner: {
-    backgroundColor: "#EFF6FF", // Light blue background
-    borderWidth: 1,
-    borderColor: "#93C5FD", // Blue border
+    backgroundColor: theme.colors.surfaceElevated,
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.base,
     marginBottom: theme.spacing.lg,
     width: "100%",
     maxWidth: 400,
-    ...theme.shadows.sm,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 4px rgba(70, 212, 175, 0.3)" }
+      : theme.shadows.sm),
   },
   demoHeader: {
     flexDirection: "row",
@@ -291,19 +303,20 @@ const styles = StyleSheet.create({
   demoTitle: {
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.bold,
-    color: "#1E40AF", // Blue text
+    color: theme.colors.primary,
   },
   demoText: {
     fontSize: theme.typography.fontSize.sm,
-    color: "#1E3A8A", // Dark blue
+    color: theme.colors.text.secondary,
     marginBottom: theme.spacing.xs,
     fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
   },
   demoLabel: {
     fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
   },
   demoButton: {
-    backgroundColor: "#3B82F6", // Blue button
+    backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.base,
     borderRadius: theme.borderRadius.md,

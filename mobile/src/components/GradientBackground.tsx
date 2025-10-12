@@ -3,7 +3,11 @@ import { View, StyleSheet, Animated } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../theme";
 
-export default function GradientBackground() {
+interface Props {
+  children?: React.ReactNode;
+}
+
+export default function GradientBackground({ children }: Props) {
   const animatedValue = useRef(new Animated.Value(0)).current;
   const scaleAnim1 = useRef(new Animated.Value(1)).current;
   const scaleAnim2 = useRef(new Animated.Value(1)).current;
@@ -82,49 +86,107 @@ export default function GradientBackground() {
     ],
   });
 
-  return (
-    <Animated.View style={[styles.container, { backgroundColor }]}>
-      <LinearGradient
-        colors={[
-          "rgba(70, 212, 175, 0.12)", // Turquoise with slightly higher opacity for dark mode
-          "rgba(47, 169, 137, 0.08)", // Darker teal
-          "transparent",
-          "rgba(70, 212, 175, 0.10)",
-        ]}
-        locations={[0, 0.3, 0.6, 1]}
-        style={styles.gradient}
-      />
+  // If no children, render as standalone background (for screens that already have layout)
+  if (!children) {
+    return (
+      <Animated.View
+        style={[styles.standaloneContainer, { backgroundColor }]}
+        pointerEvents="none"
+      >
+        <LinearGradient
+          colors={[
+            "rgba(70, 212, 175, 0.12)",
+            "rgba(47, 169, 137, 0.08)",
+            "transparent",
+            "rgba(70, 212, 175, 0.10)",
+          ]}
+          locations={[0, 0.3, 0.6, 1]}
+          style={styles.gradient}
+          pointerEvents="none"
+        />
 
-      {/* Animated decorative circles with breathing effect */}
+        <Animated.View
+          style={[
+            styles.circle,
+            styles.circle1,
+            { transform: [{ scale: scaleAnim1 }] },
+          ]}
+        />
+        <Animated.View
+          style={[
+            styles.circle,
+            styles.circle2,
+            { transform: [{ scale: scaleAnim2 }] },
+          ]}
+        />
+        <Animated.View
+          style={[
+            styles.circle,
+            styles.circle3,
+            { transform: [{ scale: scaleAnim3 }] },
+          ]}
+        />
+      </Animated.View>
+    );
+  }
+
+  // If children provided, render as wrapper (for auth screens)
+  return (
+    <View style={styles.wrapper}>
       <Animated.View
-        style={[
-          styles.circle,
-          styles.circle1,
-          { transform: [{ scale: scaleAnim1 }] },
-        ]}
-      />
-      <Animated.View
-        style={[
-          styles.circle,
-          styles.circle2,
-          { transform: [{ scale: scaleAnim2 }] },
-        ]}
-      />
-      <Animated.View
-        style={[
-          styles.circle,
-          styles.circle3,
-          { transform: [{ scale: scaleAnim3 }] },
-        ]}
-      />
-    </Animated.View>
+        style={[styles.container, { backgroundColor }]}
+        pointerEvents="none"
+      >
+        <LinearGradient
+          colors={[
+            "rgba(70, 212, 175, 0.12)",
+            "rgba(47, 169, 137, 0.08)",
+            "transparent",
+            "rgba(70, 212, 175, 0.10)",
+          ]}
+          locations={[0, 0.3, 0.6, 1]}
+          style={styles.gradient}
+          pointerEvents="none"
+        />
+
+        <Animated.View
+          style={[
+            styles.circle,
+            styles.circle1,
+            { transform: [{ scale: scaleAnim1 }] },
+          ]}
+        />
+        <Animated.View
+          style={[
+            styles.circle,
+            styles.circle2,
+            { transform: [{ scale: scaleAnim2 }] },
+          ]}
+        />
+        <Animated.View
+          style={[
+            styles.circle,
+            styles.circle3,
+            { transform: [{ scale: scaleAnim3 }] },
+          ]}
+        />
+      </Animated.View>
+      {children}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
+    flex: 1,
+    overflow: "hidden",
+  },
+  standaloneContainer: {
     ...StyleSheet.absoluteFillObject,
     zIndex: -1,
+  },
+  container: {
+    ...StyleSheet.absoluteFillObject,
   },
   gradient: {
     ...StyleSheet.absoluteFillObject,

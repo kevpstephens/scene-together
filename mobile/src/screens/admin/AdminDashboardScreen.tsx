@@ -191,10 +191,11 @@ const styles = StyleSheet.create({
     maxWidth: theme.layout.maxWidth,
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.base,
+    justifyContent: "space-between",
     marginBottom: theme.spacing.xl,
   },
   statCard: {
+    marginBottom: theme.spacing.base,
     flex: 1,
     minWidth: 100,
     padding: theme.spacing.lg,

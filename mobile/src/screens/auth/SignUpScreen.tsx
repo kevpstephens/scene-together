@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
+import GradientBackground from "../../components/GradientBackground";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../navigation/types";
@@ -73,106 +74,111 @@ export default function SignUpScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
+    <GradientBackground>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.content}>
-          <Text style={styles.logo}>🎬</Text>
-          <Text style={styles.title}>Join SceneTogether</Text>
-          <Text style={styles.subtitle}>Create your account</Text>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.content}>
+            <Text style={styles.logo}>🎬</Text>
+            <Text style={styles.title}>Join SceneTogether</Text>
+            <Text style={styles.subtitle}>Create your account</Text>
 
-          <View style={styles.form}>
-            <TextInput
-              style={styles.input}
-              placeholder="Name"
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
-              autoComplete="name"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              autoComplete="email"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoComplete="password-new"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              autoComplete="password-new"
-            />
+            <View style={styles.form}>
+              <TextInput
+                style={styles.input}
+                placeholder="Name"
+                placeholderTextColor={theme.colors.text.tertiary}
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
+                autoComplete="name"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor={theme.colors.text.tertiary}
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoComplete="email"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor={theme.colors.text.tertiary}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoComplete="password-new"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm Password"
+                placeholderTextColor={theme.colors.text.tertiary}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+                autoComplete="password-new"
+              />
 
-            <AnimatedButton
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={handleSignUp}
-              disabled={loading}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? "Creating Account..." : "Sign Up"}
-              </Text>
-            </AnimatedButton>
+              <AnimatedButton
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={handleSignUp}
+                disabled={loading}
+              >
+                <Text style={styles.buttonText}>
+                  {loading ? "Creating Account..." : "Sign Up"}
+                </Text>
+              </AnimatedButton>
 
-            {/* Divider */}
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR</Text>
-              <View style={styles.dividerLine} />
+              {/* Divider */}
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>OR</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              {/* Google Sign In Button */}
+              <AnimatedButton
+                style={[
+                  styles.googleButton,
+                  googleLoading && styles.buttonDisabled,
+                ]}
+                onPress={handleGoogleSignIn}
+                disabled={googleLoading}
+              >
+                <Text style={styles.googleIcon}>G</Text>
+                <Text style={styles.googleButtonText}>
+                  {googleLoading ? "Signing In..." : "Continue with Google"}
+                </Text>
+              </AnimatedButton>
             </View>
 
-            {/* Google Sign In Button */}
-            <AnimatedButton
-              style={[
-                styles.googleButton,
-                googleLoading && styles.buttonDisabled,
-              ]}
-              onPress={handleGoogleSignIn}
-              disabled={googleLoading}
+            <TouchableOpacity
+              style={styles.linkButton}
+              onPress={() => navigation.navigate("Login")}
             >
-              <Text style={styles.googleIcon}>G</Text>
-              <Text style={styles.googleButtonText}>
-                {googleLoading ? "Signing In..." : "Continue with Google"}
+              <Text style={styles.linkText}>
+                Already have an account?{" "}
+                <Text style={styles.linkTextBold}>Log In</Text>
               </Text>
-            </AnimatedButton>
+            </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            style={styles.linkButton}
-            onPress={() => navigation.navigate("Login")}
-          >
-            <Text style={styles.linkText}>
-              Already have an account?{" "}
-              <Text style={styles.linkTextBold}>Log In</Text>
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.surface,
   },
   scrollContent: {
     flexGrow: 1,
@@ -210,6 +216,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.base,
     fontSize: theme.typography.fontSize.base,
     backgroundColor: theme.colors.surface,
+    color: theme.colors.text.primary,
   },
   button: {
     backgroundColor: theme.colors.primary,
@@ -264,7 +271,9 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.xl,
     borderRadius: theme.borderRadius.md,
-    ...theme.shadows.sm,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.3)" }
+      : theme.shadows.sm),
   },
   googleIcon: {
     fontSize: theme.typography.fontSize.xl,
