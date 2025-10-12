@@ -88,6 +88,11 @@ export default function EventDetailScreen() {
   const scaleAnim = useRef(new Animated.Value(0.92)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
+  // Check if event has already started
+  const eventHasStarted = event
+    ? new Date(event.date).getTime() < new Date().getTime()
+    : false;
+
   useEffect(() => {
     loadEvent();
     loadUserRSVP();
@@ -150,6 +155,15 @@ export default function EventDetailScreen() {
 
   const handleRSVP = async (status: RSVPStatus) => {
     try {
+      // Check if event has already started
+      if (event && new Date(event.date).getTime() < new Date().getTime()) {
+        Alert.alert(
+          "Event Closed",
+          "This event has already started and is no longer accepting RSVPs."
+        );
+        return;
+      }
+
       setRsvpLoading(true);
 
       // Premium haptic feedback on tap (native only)
@@ -805,96 +819,110 @@ export default function EventDetailScreen() {
 
               {/* RSVP Section */}
               <View style={styles.rsvpSection}>
-                <Text style={styles.rsvpTitle}>Will you attend?</Text>
+                <Text style={styles.rsvpTitle}>
+                  {eventHasStarted ? "Event Status" : "Will you attend?"}
+                </Text>
 
-                <View style={styles.rsvpButtons}>
-                  {/* Going Button */}
-                  <AnimatedButton
-                    style={[
-                      styles.rsvpOption,
-                      userRSVP === "going" && styles.rsvpOptionActive,
-                    ]}
-                    onPress={() => handleRSVP("going")}
-                    disabled={rsvpLoading}
-                  >
-                    <CheckCircleIcon
-                      size={24}
-                      color={
-                        userRSVP === "going"
-                          ? theme.colors.text.inverse
-                          : theme.colors.success
-                      }
+                {eventHasStarted ? (
+                  <View style={styles.eventClosedContainer}>
+                    <XCircleIcon
+                      size={32}
+                      color={theme.colors.text.secondary}
                     />
-                    <Text
-                      style={[
-                        styles.rsvpOptionText,
-                        userRSVP === "going" && styles.rsvpOptionTextActive,
-                      ]}
-                    >
-                      Going
+                    <Text style={styles.eventClosedText}>
+                      This event has started and is no longer accepting RSVPs
                     </Text>
-                  </AnimatedButton>
-
-                  {/* Interested Button */}
-                  <AnimatedButton
-                    style={[
-                      styles.rsvpOption,
-                      userRSVP === "interested" && styles.rsvpOptionActive,
-                    ]}
-                    onPress={() => handleRSVP("interested")}
-                    disabled={rsvpLoading}
-                  >
-                    <HeartIcon
-                      size={24}
-                      color={
-                        userRSVP === "interested"
-                          ? theme.colors.text.inverse
-                          : theme.colors.warning
-                      }
-                    />
-                    <Text
-                      style={[
-                        styles.rsvpOptionText,
-                        userRSVP === "interested" &&
-                          styles.rsvpOptionTextActive,
-                      ]}
-                    >
-                      Interested
-                    </Text>
-                  </AnimatedButton>
-
-                  {/* Not Going Button */}
-                  {userRSVP && (
+                  </View>
+                ) : (
+                  <View style={styles.rsvpButtons}>
+                    {/* Going Button */}
                     <AnimatedButton
                       style={[
                         styles.rsvpOption,
-                        userRSVP === "not_going" && styles.rsvpOptionActive,
+                        userRSVP === "going" && styles.rsvpOptionActive,
                       ]}
-                      onPress={() => handleRSVP("not_going")}
+                      onPress={() => handleRSVP("going")}
                       disabled={rsvpLoading}
                     >
-                      <XCircleIcon
+                      <CheckCircleIcon
                         size={24}
                         color={
-                          userRSVP === "not_going"
+                          userRSVP === "going"
                             ? theme.colors.text.inverse
-                            : theme.colors.error
+                            : theme.colors.success
                         }
                       />
                       <Text
                         style={[
                           styles.rsvpOptionText,
-                          userRSVP === "not_going" &&
+                          userRSVP === "going" && styles.rsvpOptionTextActive,
+                        ]}
+                      >
+                        Going
+                      </Text>
+                    </AnimatedButton>
+
+                    {/* Interested Button */}
+                    <AnimatedButton
+                      style={[
+                        styles.rsvpOption,
+                        userRSVP === "interested" && styles.rsvpOptionActive,
+                      ]}
+                      onPress={() => handleRSVP("interested")}
+                      disabled={rsvpLoading}
+                    >
+                      <HeartIcon
+                        size={24}
+                        color={
+                          userRSVP === "interested"
+                            ? theme.colors.text.inverse
+                            : theme.colors.warning
+                        }
+                      />
+                      <Text
+                        style={[
+                          styles.rsvpOptionText,
+                          userRSVP === "interested" &&
                             styles.rsvpOptionTextActive,
                         ]}
                       >
-                        Can't Go
+                        Interested
                       </Text>
                     </AnimatedButton>
-                  )}
-                </View>
 
-                {rsvpLoading && (
+                    {/* Not Going Button */}
+                    {userRSVP && (
+                      <AnimatedButton
+                        style={[
+                          styles.rsvpOption,
+                          userRSVP === "not_going" && styles.rsvpOptionActive,
+                        ]}
+                        onPress={() => handleRSVP("not_going")}
+                        disabled={rsvpLoading}
+                      >
+                        <XCircleIcon
+                          size={24}
+                          color={
+                            userRSVP === "not_going"
+                              ? theme.colors.text.inverse
+                              : theme.colors.error
+                          }
+                        />
+                        <Text
+                          style={[
+                            styles.rsvpOptionText,
+                            userRSVP === "not_going" &&
+                              styles.rsvpOptionTextActive,
+                          ]}
+                        >
+                          Can't Go
+                        </Text>
+                      </AnimatedButton>
+                    )}
+                  </View>
+                )}
+
+                {!eventHasStarted && rsvpLoading && (
                   <ActivityIndicator
                     size="small"
                     color={theme.colors.primaryLight}
@@ -1193,6 +1221,24 @@ const styles = StyleSheet.create({
     marginHorizontal: Platform.OS === "web" ? "auto" : 0,
     maxWidth: Platform.OS === "web" ? 600 : "100%",
     paddingHorizontal: theme.spacing.md,
+  },
+  eventClosedContainer: {
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: theme.spacing.xl,
+    backgroundColor: theme.components.surfaces.section,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.borderLight,
+    marginHorizontal: theme.spacing.md,
+  },
+  eventClosedText: {
+    marginTop: theme.spacing.md,
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text.secondary,
+    textAlign: "center",
+    lineHeight: 22,
   },
   rsvpOption: {
     width: 110,

@@ -251,11 +251,11 @@ export default function EventsListScreen() {
 
   // Calculate event status using real RSVP data
   const getEventStatus = (event: Event) => {
-    // Check if event is in the past
+    // Check if event is in the past (start time has passed)
     const eventDate = new Date(event.date);
     const now = new Date();
-    if (eventDate.getTime() < now.getTime() - 24 * 60 * 60 * 1000) {
-      // Event is more than 24 hours old
+    if (eventDate.getTime() < now.getTime()) {
+      // Event start time has passed
       return { type: "past" as const, label: "Past Event" };
     }
 
@@ -289,7 +289,10 @@ export default function EventsListScreen() {
     const eventDate = new Date(event.date);
     const now = new Date();
 
-    // Check if event is today
+    // If event start time has passed, it's past
+    if (eventDate.getTime() < now.getTime()) return "past";
+
+    // Check if event is today (but hasn't started yet)
     const isToday =
       eventDate.getDate() === now.getDate() &&
       eventDate.getMonth() === now.getMonth() &&
@@ -297,9 +300,8 @@ export default function EventsListScreen() {
 
     if (isToday) return "ongoing"; // "Today" filter
 
-    // Check if event is in the future or past
-    if (eventDate.getTime() > now.getTime()) return "upcoming";
-    return "past";
+    // Event is in the future
+    return "upcoming";
   };
 
   // Filter and search events
@@ -319,7 +321,13 @@ export default function EventsListScreen() {
     }
 
     // Apply status filter
-    if (filterStatus !== "all") {
+    if (filterStatus === "all") {
+      // "All" means all non-past events (upcoming + ongoing)
+      filtered = filtered.filter(
+        (event) => getEventTimeStatus(event) !== "past"
+      );
+    } else {
+      // Filter by specific status
       filtered = filtered.filter(
         (event) => getEventTimeStatus(event) === filterStatus
       );

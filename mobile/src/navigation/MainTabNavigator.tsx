@@ -5,6 +5,9 @@ import {
   UserIcon,
   Cog6ToothIcon,
 } from "react-native-heroicons/outline";
+import { FilmIcon as FilmIconSolid } from "react-native-heroicons/solid";
+import { UserIcon as UserIconSolid } from "react-native-heroicons/solid";
+import { Cog6ToothIcon as Cog6ToothIconSolid } from "react-native-heroicons/solid";
 import { MainTabParamList } from "./types";
 import EventsStackNavigator from "./EventsStackNavigator";
 import ProfileStackNavigator from "./ProfileStackNavigator";
@@ -12,9 +15,52 @@ import AdminStackNavigator from "./AdminStackNavigator";
 import { theme } from "../theme";
 import { useAuth } from "../contexts/AuthContext";
 import * as Haptics from "expo-haptics";
-import { Platform } from "react-native";
+import { Platform, View, StyleSheet } from "react-native";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+// Custom Tab Icon with Top Indicator
+interface TabIconProps {
+  focused: boolean;
+  color: string;
+  IconOutline: React.ComponentType<{ size: number; color: string }>;
+  IconSolid: React.ComponentType<{ size: number; color: string }>;
+}
+
+const TabIcon: React.FC<TabIconProps> = ({
+  focused,
+  color,
+  IconOutline,
+  IconSolid,
+}) => {
+  const Icon = focused ? IconSolid : IconOutline;
+
+  return (
+    <View style={styles.iconContainer}>
+      {/* Active indicator line */}
+      {focused && <View style={styles.activeIndicator} />}
+      <Icon size={24} color={color} />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  iconContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    height: "100%",
+  },
+  activeIndicator: {
+    position: "absolute",
+    top: -12,
+    left: "10%",
+    right: "10%",
+    height: 4,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 2,
+  },
+});
 
 export default function MainTabNavigator() {
   const { isAdmin } = useAuth();
@@ -57,7 +103,14 @@ export default function MainTabNavigator() {
         component={EventsStackNavigator}
         options={{
           tabBarLabel: "Events",
-          tabBarIcon: ({ color }) => <FilmIcon size={24} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              focused={focused}
+              color={color}
+              IconOutline={FilmIcon}
+              IconSolid={FilmIconSolid}
+            />
+          ),
         }}
       />
       {isAdmin && (
@@ -66,8 +119,13 @@ export default function MainTabNavigator() {
           component={AdminStackNavigator}
           options={{
             tabBarLabel: "Admin",
-            tabBarIcon: ({ color }) => (
-              <Cog6ToothIcon size={24} color={color} />
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                focused={focused}
+                color={color}
+                IconOutline={Cog6ToothIcon}
+                IconSolid={Cog6ToothIconSolid}
+              />
             ),
           }}
         />
@@ -77,7 +135,14 @@ export default function MainTabNavigator() {
         component={ProfileStackNavigator}
         options={{
           tabBarLabel: "Profile",
-          tabBarIcon: ({ color }) => <UserIcon size={24} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              focused={focused}
+              color={color}
+              IconOutline={UserIcon}
+              IconSolid={UserIconSolid}
+            />
+          ),
         }}
       />
     </Tab.Navigator>

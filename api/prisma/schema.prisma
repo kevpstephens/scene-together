@@ -35,6 +35,7 @@ model Event {
   onlineLink     String?
   movieId        String?  // OMDb/TMDb ID
   movieData      Json?    // Store movie metadata (poster, trailer, etc)
+  posterCrop     Json?    // Crop settings for poster in cards (scale, translateX, translateY)
   maxCapacity    Int?     // Optional capacity limit
   createdById    String?  // Staff member who created it
   // Payment fields

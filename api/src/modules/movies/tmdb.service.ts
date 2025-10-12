@@ -42,6 +42,14 @@ interface TMDbMovieDetails {
  * Search for movies by title
  */
 export async function searchMovies(query: string, page = 1) {
+  // Check if API key is configured
+  if (!TMDB_API_KEY) {
+    console.error("TMDB_API_KEY is not configured in environment variables");
+    throw new Error(
+      "Movie search is temporarily unavailable. Please contact an administrator."
+    );
+  }
+
   try {
     const response = await axios.get(`${TMDB_BASE_URL}/search/movie`, {
       params: {
@@ -67,9 +75,23 @@ export async function searchMovies(query: string, page = 1) {
       totalPages: response.data.total_pages,
       totalResults: response.data.total_results,
     };
-  } catch (error) {
-    console.error("TMDb search error:", error);
-    throw new Error("Failed to search movies");
+  } catch (error: any) {
+    console.error("TMDb search error:", error.response?.data || error.message);
+
+    // Handle specific error cases
+    if (error.response?.status === 401) {
+      throw new Error("Movie search authentication failed. Invalid API key.");
+    } else if (error.response?.status === 429) {
+      throw new Error(
+        "Movie search rate limit exceeded. Please try again in a moment."
+      );
+    } else if (error.code === "ENOTFOUND" || error.code === "ETIMEDOUT") {
+      throw new Error(
+        "Unable to connect to movie database. Please check your internet connection."
+      );
+    }
+
+    throw new Error("Failed to search movies. Please try again.");
   }
 }
 
@@ -77,6 +99,14 @@ export async function searchMovies(query: string, page = 1) {
  * Get detailed movie information by TMDb ID
  */
 export async function getMovieDetails(tmdbId: string): Promise<MovieData> {
+  // Check if API key is configured
+  if (!TMDB_API_KEY) {
+    console.error("TMDB_API_KEY is not configured in environment variables");
+    throw new Error(
+      "Movie details are temporarily unavailable. Please contact an administrator."
+    );
+  }
+
   try {
     // Fetch movie details with credits, videos, and external IDs (IMDB)
     const response = await axios.get<TMDbMovieDetails>(
@@ -123,9 +153,25 @@ export async function getMovieDetails(tmdbId: string): Promise<MovieData> {
         ? `https://www.youtube.com/watch?v=${trailer.key}`
         : undefined,
     };
-  } catch (error) {
-    console.error("TMDb details error:", error);
-    throw new Error("Failed to fetch movie details");
+  } catch (error: any) {
+    console.error("TMDb details error:", error.response?.data || error.message);
+
+    // Handle specific error cases
+    if (error.response?.status === 401) {
+      throw new Error("Movie details authentication failed. Invalid API key.");
+    } else if (error.response?.status === 404) {
+      throw new Error(
+        "Movie not found. The movie may have been removed from the database."
+      );
+    } else if (error.response?.status === 429) {
+      throw new Error("Rate limit exceeded. Please try again in a moment.");
+    } else if (error.code === "ENOTFOUND" || error.code === "ETIMEDOUT") {
+      throw new Error(
+        "Unable to connect to movie database. Please check your internet connection."
+      );
+    }
+
+    throw new Error("Failed to fetch movie details. Please try again.");
   }
 }
 
@@ -133,6 +179,14 @@ export async function getMovieDetails(tmdbId: string): Promise<MovieData> {
  * Get popular movies (for suggestions)
  */
 export async function getPopularMovies(page = 1) {
+  // Check if API key is configured
+  if (!TMDB_API_KEY) {
+    console.error("TMDB_API_KEY is not configured in environment variables");
+    throw new Error(
+      "Popular movies are temporarily unavailable. Please contact an administrator."
+    );
+  }
+
   try {
     const response = await axios.get(`${TMDB_BASE_URL}/movie/popular`, {
       params: {
@@ -156,8 +210,23 @@ export async function getPopularMovies(page = 1) {
       page: response.data.page,
       totalPages: response.data.total_pages,
     };
-  } catch (error) {
-    console.error("TMDb popular movies error:", error);
-    throw new Error("Failed to fetch popular movies");
+  } catch (error: any) {
+    console.error(
+      "TMDb popular movies error:",
+      error.response?.data || error.message
+    );
+
+    // Handle specific error cases
+    if (error.response?.status === 401) {
+      throw new Error("Popular movies authentication failed. Invalid API key.");
+    } else if (error.response?.status === 429) {
+      throw new Error("Rate limit exceeded. Please try again in a moment.");
+    } else if (error.code === "ENOTFOUND" || error.code === "ETIMEDOUT") {
+      throw new Error(
+        "Unable to connect to movie database. Please check your internet connection."
+      );
+    }
+
+    throw new Error("Failed to fetch popular movies. Please try again.");
   }
 }

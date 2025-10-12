@@ -7,20 +7,32 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
   Image,
+  Alert,
+  Modal,
+  Platform,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AdminStackParamList } from "../../navigation/types";
-import { XMarkIcon } from "react-native-heroicons/solid";
+import {
+  CalendarIcon,
+  ClockIcon,
+  MapPinIcon,
+  UsersIcon,
+  TicketIcon,
+  PencilIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
+  FilmIcon,
+  PlusIcon,
+} from "react-native-heroicons/outline";
 import { theme } from "../../theme";
-import { getCardStyle } from "../../theme/styles";
 import { api } from "../../services/api";
 import GradientBackground from "../../components/GradientBackground";
 import DateTimePickerComponent from "../../components/DateTimePicker";
+import AnimatedButton from "../../components/AnimatedButton";
 
 type Movie = {
   id: number;
@@ -55,9 +67,10 @@ export default function AdminEventEditScreen() {
   const [payWhatYouCan, setPayWhatYouCan] = useState(false);
   const [minPrice, setMinPrice] = useState("");
   const [tmdbId, setTmdbId] = useState<number | undefined>();
-  const [existingMovieData, setExistingMovieData] = useState<any>(null); // Preserve existing movie data
+  const [existingMovieData, setExistingMovieData] = useState<any>(null);
 
   // Movie search state
+  const [showMovieSearch, setShowMovieSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
@@ -66,6 +79,34 @@ export default function AdminEventEditScreen() {
   useEffect(() => {
     loadEvent();
   }, [eventId]);
+
+  const loadEvent = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get(`/events/${eventId}`);
+
+      setTitle(data.title);
+      setDescription(data.description);
+      setEventDate(new Date(data.date));
+      setLocation(data.location);
+      setMaxCapacity(data.maxCapacity?.toString() || "");
+
+      // Convert cents to pounds for display
+      setPrice(data.price ? (data.price / 100).toFixed(2) : "0");
+      setMinPrice(data.minPrice ? (data.minPrice / 100).toFixed(2) : "0");
+      setPayWhatYouCan(data.payWhatYouCan || false);
+
+      if (data.movieData) {
+        setExistingMovieData(data.movieData);
+        setTmdbId(data.movieData.tmdbId);
+      }
+    } catch (error) {
+      console.error("Failed to load event:", error);
+      Alert.alert("Error", "Failed to load event details");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const searchMovies = async (query: string) => {
     if (!query.trim()) {
@@ -79,9 +120,13 @@ export default function AdminEventEditScreen() {
         params: { query },
       });
       setSearchResults(data.results.slice(0, 5));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to search movies:", error);
-      Alert.alert("Error", "Failed to search movies");
+      const errorMsg =
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to search movies";
+      Alert.alert("Error", errorMsg);
     } finally {
       setSearching(false);
     }
@@ -89,63 +134,35 @@ export default function AdminEventEditScreen() {
 
   const handleMovieSelect = (movie: Movie) => {
     setSelectedMovie(movie);
+    setExistingMovieData(null); // Clear existing movie data
     setSearchResults([]);
     setSearchQuery("");
+    setTitle(movie.title);
     setTmdbId(movie.id);
-    setExistingMovieData(null); // Clear existing data when selecting a new movie
+    setShowMovieSearch(false);
   };
 
   const handleRemoveMovie = () => {
     setSelectedMovie(null);
+    setExistingMovieData(null);
     setTmdbId(undefined);
-    setExistingMovieData(null); // Clear existing movie data when removing
   };
 
-  const loadEvent = async () => {
-    try {
-      setLoading(true);
-      const { data } = await api.get(`/events/${eventId}`);
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
-      setTitle(data.title);
-      setDescription(data.description || "");
-      setEventDate(new Date(data.date));
-
-      setLocation(data.location || "");
-      setMaxCapacity(String(data.maxCapacity || ""));
-
-      // Convert price from cents to pounds for display
-      const priceInPounds = data.price ? (data.price / 100).toFixed(2) : "0.00";
-      setPrice(priceInPounds);
-
-      setPayWhatYouCan(data.payWhatYouCan || false);
-
-      // Convert minPrice from cents to pounds for display
-      const minPriceInPounds = data.minPrice
-        ? (data.minPrice / 100).toFixed(2)
-        : "0.00";
-      setMinPrice(minPriceInPounds);
-
-      // Load existing movie data if available
-      if (data.movieData) {
-        setExistingMovieData(data.movieData); // Store the full movie data
-        setTmdbId(data.movieData.tmdbId);
-        setSelectedMovie({
-          id: data.movieData.tmdbId,
-          title: data.movieData.title,
-          year: data.movieData.year || "",
-          poster: data.movieData.poster || null,
-          plot: description,
-          rating: "",
-        });
-      }
-    } catch (error) {
-      console.error("Failed to load event:", error);
-      Alert.alert("Error", "Failed to load event details", [
-        { text: "OK", onPress: () => navigation.goBack() },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
   const handleSubmit = async () => {
@@ -154,54 +171,33 @@ export default function AdminEventEditScreen() {
       Alert.alert("Validation Error", "Please enter an event title");
       return;
     }
-    if (!description.trim() || description.length < 10) {
-      Alert.alert(
-        "Validation Error",
-        "Please enter a description (at least 10 characters)"
-      );
-      return;
-    }
+
     if (!location.trim()) {
       Alert.alert("Validation Error", "Please enter a location");
       return;
     }
-    const capacityNum = parseInt(maxCapacity);
-    if (isNaN(capacityNum) || capacityNum < 1) {
-      Alert.alert("Validation Error", "Capacity must be at least 1");
-      return;
-    }
-    const priceNum = parseFloat(price);
-    if (isNaN(priceNum) || priceNum < 0) {
-      Alert.alert("Validation Error", "Price cannot be negative");
-      return;
-    }
 
-    // Validate minPrice if pay-what-you-can is enabled
-    if (payWhatYouCan) {
-      const minPriceNum = parseFloat(minPrice);
-      if (isNaN(minPriceNum) || minPriceNum < 0) {
-        Alert.alert("Validation Error", "Minimum price cannot be negative");
-        return;
-      }
-      if (minPriceNum > priceNum && priceNum > 0) {
-        Alert.alert(
-          "Validation Error",
-          "Minimum price cannot be greater than suggested price"
-        );
-        return;
-      }
+    if (!description.trim()) {
+      Alert.alert("Validation Error", "Please enter an event description");
+      return;
     }
 
     setSubmitting(true);
-    try {
-      const dateISO = eventDate.toISOString();
 
-      // Handle movie data - use existing if unchanged, fetch if new selection
+    try {
+      // Convert prices from pounds to cents for storage
+      const priceInCents = Math.round(parseFloat(price) * 100);
+      const minPriceInCents = minPrice
+        ? Math.round(parseFloat(minPrice) * 100)
+        : null;
+
+      // Handle movie data
       let movieData = null;
-      if (existingMovieData && tmdbId === existingMovieData.tmdbId) {
-        // Movie hasn't changed, use existing data to preserve it
+
+      if (existingMovieData && existingMovieData.tmdbId === tmdbId) {
+        // Movie hasn't changed, use existing data
         movieData = existingMovieData;
-      } else if (tmdbId) {
+      } else if (tmdbId && selectedMovie) {
         // New movie selected, fetch fresh data
         try {
           const { data } = await api.get(`/movies/${tmdbId}`);
@@ -211,26 +207,18 @@ export default function AdminEventEditScreen() {
         }
       }
 
-      // Convert prices from pounds to cents
-      const priceInCents = priceNum > 0 ? Math.round(priceNum * 100) : null;
-      const minPriceInCents =
-        payWhatYouCan && parseFloat(minPrice) > 0
-          ? Math.round(parseFloat(minPrice) * 100)
-          : null;
-
-      // Build update payload, omitting null/undefined fields
       const updatePayload: any = {
         title,
         description,
-        date: dateISO,
+        date: eventDate.toISOString(),
         location,
-        maxCapacity: capacityNum,
-        price: priceInCents,
-        payWhatYouCan,
-        minPrice: minPriceInCents,
+        maxCapacity: parseInt(maxCapacity),
+        price: priceInCents || null,
+        payWhatYouCan: payWhatYouCan || false,
+        minPrice: minPriceInCents || null,
       };
 
-      // Only include movieData if it exists
+      // Only include movieData if we have it
       if (movieData) {
         updatePayload.movieData = movieData;
       }
@@ -238,20 +226,12 @@ export default function AdminEventEditScreen() {
       await api.put(`/events/${eventId}`, updatePayload);
 
       Alert.alert("Success", "Event updated successfully", [
-        {
-          text: "OK",
-          onPress: () => navigation.goBack(),
-        },
+        { text: "OK", onPress: () => navigation.goBack() },
       ]);
     } catch (error: any) {
       console.error("Failed to update event:", error);
-      console.error("Error response:", error.response?.data);
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        JSON.stringify(error.response?.data) ||
-        "Failed to update event";
-      Alert.alert("Error", errorMessage);
+      const errorMsg = error.response?.data?.error || "Failed to update event";
+      Alert.alert("Error", errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -259,263 +239,296 @@ export default function AdminEventEditScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.primaryLight} />
-      </View>
+      <>
+        <GradientBackground />
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={theme.colors.primaryLight} />
+        </View>
+      </>
     );
   }
 
+  const currentPoster = selectedMovie?.poster || existingMovieData?.poster;
+
   return (
-    <GradientBackground>
-      <KeyboardAvoidingView
+    <>
+      <GradientBackground />
+      <ScrollView
         style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        contentContainerStyle={styles.content}
       >
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text style={styles.pageTitle}>Edit Event</Text>
+        {/* Inline Editing Hint */}
+        <View style={styles.hintBanner}>
+          <PencilIcon size={16} color={theme.colors.primary} />
+          <Text style={styles.hintText}>
+            Tap sections to edit • Updating your event listing
+          </Text>
+        </View>
 
-          <View style={styles.formCard}>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Event Details</Text>
-
-              {/* Movie Search */}
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Search Movie (Optional)</Text>
-                <TextInput
-                  style={styles.input}
-                  value={searchQuery}
-                  onChangeText={(text) => {
-                    setSearchQuery(text);
-                    searchMovies(text);
-                  }}
-                  placeholder="Search for a movie..."
-                  placeholderTextColor={theme.colors.text.tertiary}
-                />
-                {searching && (
-                  <ActivityIndicator
-                    size="small"
-                    color={theme.colors.primaryLight}
-                    style={styles.searchLoader}
-                  />
-                )}
-              </View>
-
-              {/* Search Results */}
-              {searchResults.length > 0 && (
-                <View style={styles.searchResults}>
-                  {searchResults.map((movie) => (
-                    <TouchableOpacity
-                      key={movie.id}
-                      style={styles.movieResult}
-                      onPress={() => handleMovieSelect(movie)}
-                    >
-                      {movie.poster ? (
-                        <Image
-                          source={{
-                            uri: movie.poster,
-                          }}
-                          style={styles.moviePoster}
-                        />
-                      ) : (
-                        <View style={styles.moviePosterPlaceholder}>
-                          <Text style={styles.moviePosterPlaceholderText}>
-                            No Image
-                          </Text>
-                        </View>
-                      )}
-                      <View style={styles.movieInfo}>
-                        <Text style={styles.movieTitle}>{movie.title}</Text>
-                        <Text style={styles.movieYear}>
-                          {movie.year || "Unknown"}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-
-              {/* Selected Movie */}
-              {selectedMovie && (
-                <View style={styles.selectedMovie}>
-                  <Text style={styles.selectedMovieLabel}>Selected Movie:</Text>
-                  <View style={styles.selectedMovieCard}>
-                    {selectedMovie.poster && (
-                      <Image
-                        source={{
-                          uri: selectedMovie.poster,
-                        }}
-                        style={styles.selectedMoviePoster}
-                      />
-                    )}
-                    <View style={styles.selectedMovieInfo}>
-                      <Text style={styles.selectedMovieTitle}>
-                        {selectedMovie.title}
-                      </Text>
-                      {selectedMovie.year && (
-                        <Text style={styles.selectedMovieYear}>
-                          {selectedMovie.year}
-                        </Text>
-                      )}
-                    </View>
-                    <TouchableOpacity
-                      onPress={handleRemoveMovie}
-                      style={styles.removeButton}
-                    >
-                      <XMarkIcon size={20} color={theme.colors.error} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Event Title *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={title}
-                  onChangeText={setTitle}
-                  placeholder="Grand Budapest Hotel Screening"
-                  placeholderTextColor={theme.colors.text.tertiary}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Description *</Text>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  value={description}
-                  onChangeText={setDescription}
-                  placeholder="Join us for an unforgettable screening..."
-                  placeholderTextColor={theme.colors.text.tertiary}
-                  multiline
-                  numberOfLines={4}
-                  textAlignVertical="top"
-                />
-              </View>
-
-              <DateTimePickerComponent
-                label="Date & Time *"
-                value={eventDate}
-                onChange={setEventDate}
+        {/* Hero Image / Movie Poster */}
+        {currentPoster ? (
+          <View style={styles.heroContainer}>
+            <View style={styles.posterWrapper}>
+              <Image
+                source={{ uri: currentPoster }}
+                style={styles.heroImage}
+                resizeMode="contain"
               />
-
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Location *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={location}
-                  onChangeText={setLocation}
-                  placeholder="The Grand Cinema, London"
-                  placeholderTextColor={theme.colors.text.tertiary}
-                />
-              </View>
-
-              <View style={styles.formRow}>
-                <View style={[styles.formGroup, styles.formGroupHalf]}>
-                  <Text style={styles.label}>Max Capacity *</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={maxCapacity}
-                    onChangeText={setMaxCapacity}
-                    placeholder="50"
-                    placeholderTextColor={theme.colors.text.tertiary}
-                    keyboardType="number-pad"
-                  />
-                </View>
-
-                <View style={[styles.formGroup, styles.formGroupHalf]}>
-                  <Text style={styles.label}>
-                    {payWhatYouCan ? "Suggested Price (£)" : "Price (£)"}
-                  </Text>
-                  <TextInput
-                    style={styles.input}
-                    value={price}
-                    onChangeText={setPrice}
-                    placeholder="0.00"
-                    placeholderTextColor={theme.colors.text.tertiary}
-                    keyboardType="decimal-pad"
-                  />
-                </View>
-              </View>
-
-              {/* Pay What You Can Option */}
-              <View style={styles.formGroup}>
-                <TouchableOpacity
-                  style={styles.checkboxContainer}
-                  onPress={() => setPayWhatYouCan(!payWhatYouCan)}
-                  activeOpacity={0.7}
-                >
-                  <View
-                    style={[
-                      styles.checkbox,
-                      payWhatYouCan && styles.checkboxChecked,
-                    ]}
-                  >
-                    {payWhatYouCan && (
-                      <Text style={styles.checkboxCheckmark}>✓</Text>
-                    )}
-                  </View>
-                  <View style={styles.checkboxLabelContainer}>
-                    <Text style={styles.checkboxLabel}>
-                      Enable "Pay What You Can"
-                    </Text>
-                    <Text style={styles.checkboxSubtext}>
-                      Allow attendees to choose their own price
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-
-              {/* Minimum Price (shown only when pay-what-you-can is enabled) */}
-              {payWhatYouCan && (
-                <View style={styles.formGroup}>
-                  <Text style={styles.label}>Minimum Price (£)</Text>
-                  <Text style={styles.helperText}>
-                    Optional minimum amount attendees must pay
-                  </Text>
-                  <TextInput
-                    style={styles.input}
-                    value={minPrice}
-                    onChangeText={setMinPrice}
-                    placeholder="0.00"
-                    placeholderTextColor={theme.colors.text.tertiary}
-                    keyboardType="decimal-pad"
-                  />
-                </View>
-              )}
-            </View>
-
-            {/* Action Buttons */}
-            <View style={styles.actions}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => navigation.goBack()}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.submitButton,
-                  submitting && styles.submitButtonDisabled,
+              <LinearGradient
+                colors={[
+                  "transparent",
+                  "rgba(10, 15, 20, 0.3)",
+                  "rgba(10, 15, 20, 0.6)",
                 ]}
-                onPress={handleSubmit}
-                disabled={submitting}
+                style={styles.posterGradient}
+              />
+              {/* Remove Movie Button */}
+              <TouchableOpacity
+                style={styles.removeMovieButton}
+                onPress={handleRemoveMovie}
               >
-                {submitting ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.submitButtonText}>Save Changes</Text>
-                )}
+                <XMarkIcon size={20} color={theme.colors.text.inverse} />
+              </TouchableOpacity>
+              {/* Change Movie Button */}
+              <TouchableOpacity
+                style={styles.changeMovieButton}
+                onPress={() => setShowMovieSearch(true)}
+              >
+                <PencilIcon size={20} color={theme.colors.text.inverse} />
               </TouchableOpacity>
             </View>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </GradientBackground>
+        ) : (
+          <TouchableOpacity
+            style={styles.addMoviePlaceholder}
+            onPress={() => setShowMovieSearch(true)}
+          >
+            <PlusIcon size={48} color={theme.colors.primary} />
+            <Text style={styles.addMovieText}>Add Movie Poster</Text>
+            <Text style={styles.addMovieSubtext}>Search TMDB (Optional)</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Content Section */}
+        <View style={styles.contentSection}>
+          {/* Event Title - Editable */}
+          <View style={styles.editableSection}>
+            <TextInput
+              style={styles.titleInput}
+              placeholder="Event Title"
+              placeholderTextColor={theme.colors.text.tertiary}
+              value={title}
+              onChangeText={setTitle}
+              multiline
+            />
+          </View>
+
+          {/* Event Details Card */}
+          <View style={styles.infoCard}>
+            {/* Date & Time */}
+            <View style={styles.infoRowFull}>
+              <View style={styles.dateTimeHeader}>
+                <CalendarIcon size={20} color={theme.colors.primary} />
+                <Text style={styles.infoLabel}>Date & Time</Text>
+              </View>
+              <DateTimePickerComponent
+                value={eventDate}
+                onChange={setEventDate}
+              />
+            </View>
+
+            {/* Location - Editable */}
+            <View style={styles.infoRow}>
+              <MapPinIcon size={20} color={theme.colors.primary} />
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>Location</Text>
+                <TextInput
+                  style={styles.infoValueInput}
+                  placeholder="Enter location"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  value={location}
+                  onChangeText={setLocation}
+                />
+              </View>
+            </View>
+
+            {/* Capacity - Editable */}
+            <View style={styles.infoRow}>
+              <UsersIcon size={20} color={theme.colors.primary} />
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>Capacity</Text>
+                <TextInput
+                  style={styles.infoValueInput}
+                  placeholder="50"
+                  placeholderTextColor={theme.colors.text.tertiary}
+                  value={maxCapacity}
+                  onChangeText={setMaxCapacity}
+                  keyboardType="numeric"
+                />
+              </View>
+            </View>
+
+            {/* Price - Editable */}
+            <View style={styles.infoRow}>
+              <TicketIcon size={20} color={theme.colors.primary} />
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>Price</Text>
+                <View style={styles.priceInputContainer}>
+                  <TextInput
+                    style={[styles.infoValueInput, styles.priceInput]}
+                    placeholder="0.00"
+                    placeholderTextColor={theme.colors.text.tertiary}
+                    value={price}
+                    onChangeText={setPrice}
+                    keyboardType="decimal-pad"
+                  />
+                  {parseFloat(price) > 0 && (
+                    <TouchableOpacity
+                      style={styles.pywcToggle}
+                      onPress={() => setPayWhatYouCan(!payWhatYouCan)}
+                    >
+                      <Text style={styles.pywcToggleText}>
+                        {payWhatYouCan ? "✓ PWYC" : "PWYC?"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                {payWhatYouCan && (
+                  <View style={styles.minPriceRow}>
+                    <Text style={styles.minPriceLabel}>Min Price: £</Text>
+                    <TextInput
+                      style={styles.minPriceInput}
+                      placeholder="0.00"
+                      placeholderTextColor={theme.colors.text.tertiary}
+                      value={minPrice}
+                      onChangeText={setMinPrice}
+                      keyboardType="decimal-pad"
+                    />
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
+
+          {/* Description - Editable */}
+          <View style={styles.descriptionSection}>
+            <Text style={styles.sectionTitle}>About This Event</Text>
+            <TextInput
+              style={styles.descriptionInput}
+              placeholder="Describe your event..."
+              placeholderTextColor={theme.colors.text.tertiary}
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              numberOfLines={6}
+              textAlignVertical="top"
+            />
+          </View>
+
+          {/* Movie Info (if selected) */}
+          {(selectedMovie || existingMovieData) && (
+            <TouchableOpacity
+              style={styles.movieSection}
+              onPress={() => setShowMovieSearch(true)}
+            >
+              <View style={styles.sectionHeader}>
+                <FilmIcon size={20} color={theme.colors.primary} />
+                <Text style={styles.sectionTitle}>
+                  Film: {selectedMovie?.title || existingMovieData?.title}
+                </Text>
+                <PencilIcon size={16} color={theme.colors.text.tertiary} />
+              </View>
+              <Text style={styles.movieSubtext}>Tap to change movie</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Action Buttons */}
+          <View style={styles.actionButtons}>
+            <AnimatedButton
+              style={styles.createButton}
+              onPress={handleSubmit}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <ActivityIndicator color={theme.colors.text.inverse} />
+              ) : (
+                <Text style={styles.createButtonText}>Save Changes</Text>
+              )}
+            </AnimatedButton>
+
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => navigation.goBack()}
+              disabled={submitting}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Movie Search Modal */}
+      <Modal
+        visible={showMovieSearch}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowMovieSearch(false)}
+      >
+        <View style={styles.modalContainer}>
+          <GradientBackground />
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Search Movie</Text>
+            <TouchableOpacity onPress={() => setShowMovieSearch(false)}>
+              <XMarkIcon size={24} color={theme.colors.text.primary} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.searchContainer}>
+            <View style={styles.searchInputContainer}>
+              <MagnifyingGlassIcon
+                size={20}
+                color={theme.colors.text.tertiary}
+              />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search TMDB..."
+                placeholderTextColor={theme.colors.text.tertiary}
+                value={searchQuery}
+                onChangeText={(text) => {
+                  setSearchQuery(text);
+                  searchMovies(text);
+                }}
+                autoFocus
+              />
+              {searching && (
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+              )}
+            </View>
+          </View>
+
+          <ScrollView style={styles.searchResults}>
+            {searchResults.map((movie) => (
+              <TouchableOpacity
+                key={movie.id}
+                style={styles.movieResult}
+                onPress={() => handleMovieSelect(movie)}
+              >
+                {movie.poster && (
+                  <Image
+                    source={{ uri: movie.poster }}
+                    style={styles.moviePoster}
+                  />
+                )}
+                <View style={styles.movieInfo}>
+                  <Text style={styles.movieTitle}>{movie.title}</Text>
+                  <Text style={styles.movieYear}>{movie.year}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -523,243 +536,374 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  content: {
+    flexGrow: 1,
+  },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    padding: theme.spacing.lg,
-    maxWidth: theme.layout.maxWidth,
-    width: "100%",
-    alignSelf: "center",
-  },
-  pageTitle: {
-    fontSize: theme.typography.fontSize.xxl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xl,
-  },
-  formCard: {
-    ...getCardStyle(),
-    padding: theme.spacing.lg,
-  },
-  section: {
-    marginBottom: theme.spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.base,
-  },
-  formGroup: {
-    marginBottom: theme.spacing.base,
-  },
-  formGroupHalf: {
-    flex: 1,
-  },
-  formRow: {
+  hintBanner: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.spacing.sm,
+    backgroundColor: `${theme.colors.primary}20`,
+    paddingVertical: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: `${theme.colors.primary}40`,
   },
-  label: {
+  hintText: {
     fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm,
+    color: theme.colors.primary,
+    fontWeight: "600",
   },
-  input: {
-    backgroundColor: theme.components.surfaces.section,
+  heroContainer: {
+    width: "100%",
+    height: 400,
+    position: "relative",
+  },
+  posterWrapper: {
+    width: "100%",
+    height: "100%",
+  },
+  heroImage: {
+    width: "100%",
+    height: "100%",
+  },
+  posterGradient: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: "60%",
+  },
+  cropButton: {
+    position: "absolute",
+    bottom: theme.spacing.lg,
+    left: "50%",
+    transform: [{ translateX: -60 }],
+    backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.lg,
     paddingHorizontal: theme.spacing.base,
-    paddingVertical: theme.spacing.base,
-    fontSize: theme.typography.fontSize.base,
+    paddingVertical: theme.spacing.sm,
+    borderWidth: 2,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.5,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.5)",
+      },
+    }),
+  },
+  cropButtonText: {
+    color: theme.colors.text.inverse,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  removeMovieButton: {
+    position: "absolute",
+    top: theme.spacing.lg,
+    right: theme.spacing.lg,
+    backgroundColor: theme.colors.error,
+    borderRadius: theme.borderRadius.full,
+    padding: theme.spacing.sm,
+    borderWidth: 2,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.5,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.5)",
+      },
+    }),
+  },
+  changeMovieButton: {
+    position: "absolute",
+    top: theme.spacing.lg,
+    right: theme.spacing.lg + 56,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.full,
+    padding: theme.spacing.sm,
+    borderWidth: 2,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.5,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.5)",
+      },
+    }),
+  },
+  addMoviePlaceholder: {
+    width: "100%",
+    height: 300,
+    backgroundColor: theme.colors.backgroundDark,
+    justifyContent: "center",
+    alignItems: "center",
+    borderBottomWidth: 2,
+    borderBottomColor: theme.colors.primary,
+  },
+  addMovieText: {
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: "700",
     color: theme.colors.text.primary,
+    marginTop: theme.spacing.base,
+  },
+  addMovieSubtext: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.tertiary,
+    marginTop: theme.spacing.xs,
+  },
+  contentSection: {
+    padding: theme.spacing.lg,
+  },
+  editableSection: {
+    marginBottom: theme.spacing.lg,
+  },
+  titleInput: {
+    fontSize: theme.typography.fontSize.xxl,
+    fontWeight: "800",
+    color: theme.colors.text.primary,
+    padding: 0,
+    minHeight: 40,
+  },
+  infoCard: {
+    backgroundColor: theme.components.surfaces.card,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.base,
+    marginBottom: theme.spacing.lg,
     borderWidth: 1,
     borderColor: theme.components.borders.default,
   },
-  textArea: {
-    minHeight: 100,
-    paddingTop: theme.spacing.base,
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.components.borders.subtle,
   },
-  hint: {
+  infoRowFull: {
+    paddingVertical: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.components.borders.subtle,
+  },
+  dateTimeHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  infoTextContainer: {
+    flex: 1,
+  },
+  infoLabel: {
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.text.tertiary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  infoValue: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: "600",
+    color: theme.colors.text.primary,
+  },
+  infoValueInput: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: "600",
+    color: theme.colors.text.primary,
+    padding: 0,
+    minHeight: 24,
+  },
+  priceInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+  },
+  priceInput: {
+    flex: 1,
+  },
+  pywcToggle: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: theme.borderRadius.sm,
+  },
+  pywcToggleText: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: "700",
+    color: theme.colors.text.inverse,
+  },
+  minPriceRow: {
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: theme.spacing.xs,
   },
-  actions: {
+  minPriceLabel: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+  },
+  minPriceInput: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: "600",
+    color: theme.colors.text.primary,
+    flex: 1,
+    padding: 0,
+  },
+  descriptionSection: {
+    marginBottom: theme.spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: "700",
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.sm,
+  },
+  descriptionInput: {
+    backgroundColor: theme.components.surfaces.card,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.base,
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text.primary,
+    minHeight: 120,
+    borderWidth: 1,
+    borderColor: theme.components.borders.default,
+  },
+  movieSection: {
+    backgroundColor: theme.components.surfaces.card,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.base,
+    marginBottom: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.components.borders.default,
+  },
+  sectionHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+  },
+  movieSubtext: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.tertiary,
+    marginTop: theme.spacing.xs,
+    marginLeft: 28,
+  },
+  actionButtons: {
+    gap: theme.spacing.base,
     marginTop: theme.spacing.xl,
-    marginBottom: theme.spacing.xl,
+  },
+  createButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: theme.spacing.base,
+    borderRadius: theme.borderRadius.lg,
+    alignItems: "center",
+  },
+  createButtonText: {
+    color: theme.colors.text.inverse,
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 1,
   },
   cancelButton: {
-    flex: 1,
     paddingVertical: theme.spacing.base,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.primary,
-    backgroundColor: "transparent",
     alignItems: "center",
-    justifyContent: "center",
   },
   cancelButtonText: {
+    color: theme.colors.text.secondary,
     fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.primary,
+    fontWeight: "600",
   },
-  submitButton: {
+  // Modal styles
+  modalContainer: {
     flex: 1,
-    paddingVertical: theme.spacing.base,
-    borderRadius: theme.borderRadius.lg,
-    backgroundColor: theme.colors.primary,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    justifyContent: "center",
-    ...theme.shadows.md,
+    padding: theme.spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.components.borders.default,
   },
-  submitButtonDisabled: {
-    opacity: 0.5,
+  modalTitle: {
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: "700",
+    color: theme.colors.text.primary,
   },
-  submitButtonText: {
+  searchContainer: {
+    padding: theme.spacing.lg,
+  },
+  searchInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.components.surfaces.card,
+    borderRadius: theme.borderRadius.lg,
+    paddingHorizontal: theme.spacing.base,
+    paddingVertical: theme.spacing.sm,
+    gap: theme.spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
     fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: "#fff",
-  },
-  searchLoader: {
-    marginTop: theme.spacing.sm,
+    color: theme.colors.text.primary,
+    padding: 0,
   },
   searchResults: {
-    backgroundColor: theme.colors.surfaceElevated,
-    borderRadius: theme.borderRadius.lg,
-    marginBottom: theme.spacing.base,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    flex: 1,
   },
   movieResult: {
     flexDirection: "row",
-    padding: theme.spacing.md,
+    padding: theme.spacing.base,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    alignItems: "center",
+    borderBottomColor: theme.components.borders.subtle,
+    gap: theme.spacing.base,
   },
   moviePoster: {
-    width: 46,
-    height: 69,
+    width: 60,
+    height: 90,
     borderRadius: theme.borderRadius.sm,
-    marginRight: theme.spacing.md,
-  },
-  moviePosterPlaceholder: {
-    width: 46,
-    height: 69,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: theme.colors.border,
-    marginRight: theme.spacing.md,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  moviePosterPlaceholderText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
-    textAlign: "center",
+    backgroundColor: theme.colors.backgroundDark,
   },
   movieInfo: {
     flex: 1,
+    justifyContent: "center",
   },
   movieTitle: {
     fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
+    fontWeight: "600",
     color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
+    marginBottom: 4,
   },
   movieYear: {
     fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-  },
-  selectedMovie: {
-    marginBottom: theme.spacing.base,
-  },
-  selectedMovieLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.sm,
-  },
-  selectedMovieCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.surfaceElevated,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.primary,
-  },
-  selectedMoviePoster: {
-    width: 46,
-    height: 69,
-    borderRadius: theme.borderRadius.sm,
-    marginRight: theme.spacing.md,
-  },
-  selectedMovieInfo: {
-    flex: 1,
-  },
-  selectedMovieTitle: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-  },
-  selectedMovieYear: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
-  },
-  removeButton: {
-    padding: theme.spacing.sm,
-  },
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    paddingVertical: theme.spacing.sm,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: theme.borderRadius.sm,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: theme.spacing.base,
-    backgroundColor: theme.components.surfaces.section,
-  },
-  checkboxChecked: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  checkboxCheckmark: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: theme.typography.fontWeight.bold,
-  },
-  checkboxLabelContainer: {
-    flex: 1,
-  },
-  checkboxLabel: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xxs,
-  },
-  checkboxSubtext: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-  },
-  helperText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.sm,
+    color: theme.colors.text.tertiary,
   },
 });
