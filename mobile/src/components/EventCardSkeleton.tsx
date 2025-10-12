@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { View, StyleSheet, Animated } from "react-native";
+import { View, StyleSheet, Animated, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../theme";
 
@@ -74,7 +74,12 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.xl,
     marginBottom: theme.spacing.lg,
     overflow: "hidden",
-    ...theme.shadows.lg,
+    // Web-compatible shadow
+    ...(Platform.OS === "web"
+      ? {
+          boxShadow: "0px 8px 12px rgba(0, 0, 0, 0.16)",
+        }
+      : theme.shadows.lg),
   },
   posterContainer: {
     width: "100%",

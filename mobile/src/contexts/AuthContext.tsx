@@ -11,9 +11,20 @@ WebBrowser.maybeCompleteAuthSession();
 
 type UserRole = "USER" | "ADMIN" | "SUPER_ADMIN";
 
+type UserProfile = {
+  id: string;
+  email: string;
+  role: UserRole;
+  name: string | null;
+  avatarUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 type AuthContextType = {
   session: Session | null;
   user: User | null;
+  userProfile: UserProfile | null;
   userRole: UserRole | null;
   loading: boolean;
   isAdmin: boolean;
@@ -29,17 +40,45 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refreshUserRole = async () => {
+  const refreshUserRole = async (accessToken?: string) => {
     try {
+      let token = accessToken;
+
+      // Only fetch session if token not provided
+      if (!token) {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        token = session?.access_token;
+      }
+
+      if (!token) {
+        console.log("🔐 AuthContext: No session token available");
+        setUserProfile(null);
+        setUserRole(null);
+        return;
+      }
+
       const response = await api.get("/auth/me");
+      setUserProfile(response.data);
       setUserRole(response.data.role);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch user role:", error);
-      // Default to USER role if fetch fails but user is authenticated
-      setUserRole("USER");
+
+      // Only default to USER if it's not an auth error
+      if (error?.response?.status === 401) {
+        console.log("🔐 AuthContext: Unauthorized - clearing role");
+        setUserProfile(null);
+        setUserRole(null);
+      } else {
+        // Default to USER role for other errors (network, etc)
+        console.log("🔐 AuthContext: Error fetching role, defaulting to USER");
+        setUserRole("USER");
+      }
     }
   };
 
@@ -63,8 +102,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
 
-        if (session?.user) {
-          await refreshUserRole();
+        if (session?.user && session?.access_token) {
+          await refreshUserRole(session.access_token);
         }
 
         clearTimeout(timeoutId);
@@ -88,9 +127,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
 
-      if (session?.user) {
-        await refreshUserRole();
+      if (session?.user && session?.access_token) {
+        await refreshUserRole(session.access_token);
       } else {
+        setUserProfile(null);
         setUserRole(null);
       }
 
@@ -118,6 +158,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
 
     // User profile will be created automatically by Supabase database trigger
+    // Fetch user role after successful sign up
+    if (data.session) {
+      await refreshUserRole();
+    }
   };
 
   const signIn = async (email: string, password: string) => {
@@ -127,6 +171,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (error) throw error;
+
+    // Fetch user role after successful sign in
+    await refreshUserRole();
   };
 
   const signInWithGoogle = async () => {
@@ -182,16 +229,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     console.log("🔐 [AuthContext] Signing out...");
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("❌ [AuthContext] Sign out error:", error);
-      throw error;
-    }
-    // Clear local state immediately
+
+    // Clear local state immediately for instant feedback
+    console.log("🔐 [AuthContext] Clearing local session state...");
     setSession(null);
     setUser(null);
+    setUserProfile(null);
     setUserRole(null);
-    console.log("✅ [AuthContext] Sign out successful");
+
+    // Try to sign out from Supabase in the background with a short timeout
+    try {
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Sign out timeout")), 1000);
+      });
+
+      const { error } = (await Promise.race([
+        supabase.auth.signOut(),
+        timeoutPromise,
+      ])) as { error: any };
+
+      if (error) {
+        console.warn("⚠️ [AuthContext] Supabase sign out error:", error);
+      } else {
+        console.log("✅ [AuthContext] Supabase sign out successful");
+      }
+    } catch (error: any) {
+      console.warn(
+        "⚠️ [AuthContext] Supabase sign out timeout:",
+        error?.message || error
+      );
+    }
+
+    console.log("✅ [AuthContext] Sign out complete");
   };
 
   const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
@@ -201,6 +270,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         session,
         user,
+        userProfile,
         userRole,
         loading,
         isAdmin,

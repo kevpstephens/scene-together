@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Animated } from "react-native";
+import { View, Text, StyleSheet, Animated, Platform } from "react-native";
 import {
   CheckCircleIcon,
   XCircleIcon,
@@ -133,8 +133,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.xl,
-    ...theme.shadows.lg,
     zIndex: 9999,
+    // Web-compatible shadow
+    ...(Platform.OS === "web"
+      ? {
+          boxShadow: "0px 8px 12px rgba(0, 0, 0, 0.16)",
+        }
+      : theme.shadows.lg),
   },
   message: {
     flex: 1,

@@ -426,7 +426,12 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     padding: theme.spacing.lg,
     borderRadius: theme.borderRadius.xl,
-    ...theme.shadows.md,
+    // Web-compatible shadow
+    ...(Platform.OS === "web"
+      ? {
+          boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.12)",
+        }
+      : theme.shadows.md),
   },
   featureItem: {
     flexDirection: "row",
@@ -445,7 +450,12 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(70, 212, 175, 0.1)", // Subtle turquoise border
-    ...theme.shadows.xl, // Stronger shadow for more depth
+    // Web-compatible shadow - stronger shadow for more depth
+    ...(Platform.OS === "web"
+      ? {
+          boxShadow: "0px 12px 16px rgba(0, 0, 0, 0.2)",
+        }
+      : theme.shadows.xl),
   },
   posterContainer: {
     position: "relative",
@@ -475,7 +485,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.full,
-    ...theme.shadows.lg,
+    // Web-compatible shadow
+    ...(Platform.OS === "web"
+      ? {
+          boxShadow: "0px 8px 12px rgba(0, 0, 0, 0.16)",
+        }
+      : theme.shadows.lg),
   },
   featuredText: {
     fontSize: theme.typography.fontSize.xs,
@@ -494,7 +509,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.full,
-    ...theme.shadows.md,
+    // Web-compatible shadow
+    ...(Platform.OS === "web"
+      ? {
+          boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.12)",
+        }
+      : theme.shadows.md),
   },
   almostFullBadge: {
     backgroundColor: theme.colors.warning,
@@ -519,7 +539,12 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.full,
     marginBottom: theme.spacing.sm,
-    ...theme.shadows.sm,
+    // Web-compatible shadow
+    ...(Platform.OS === "web"
+      ? {
+          boxShadow: "0px 2px 3px rgba(0, 0, 0, 0.08)",
+        }
+      : theme.shadows.sm),
   },
   dateTagText: {
     fontSize: theme.typography.fontSize.xs,
@@ -573,7 +598,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xxs,
     borderRadius: theme.borderRadius.full,
-    ...theme.shadows.sm,
+    // Web-compatible shadow
+    ...(Platform.OS === "web"
+      ? {
+          boxShadow: "0px 2px 3px rgba(0, 0, 0, 0.08)",
+        }
+      : theme.shadows.sm),
   },
   genreChipText: {
     fontSize: theme.typography.fontSize.xs,

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,12 +7,52 @@ import {
   Alert,
   Platform,
   ActivityIndicator,
+  ScrollView,
+  Image,
 } from "react-native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { EventsStackParamList } from "../navigation/types";
 import { useAuth } from "../contexts/AuthContext";
 import { theme } from "../theme";
+import { api } from "../services/api";
+import type { Event } from "../types";
+
+type RSVP = {
+  id: string;
+  status: "going" | "interested";
+  event: Event;
+};
+
+type NavigationProp = NativeStackNavigationProp<EventsStackParamList>;
 
 export default function ProfileScreen() {
-  const { user, loading, signOut } = useAuth();
+  const navigation = useNavigation<NavigationProp>();
+  const { user, userProfile, loading, signOut } = useAuth();
+  const [rsvps, setRsvps] = useState<RSVP[]>([]);
+  const [rsvpsLoading, setRsvpsLoading] = useState(true);
+
+  // Fetch user's RSVPs
+  const fetchRSVPs = useCallback(async () => {
+    try {
+      setRsvpsLoading(true);
+      const response = await api.get("/me/rsvps");
+      setRsvps(response.data);
+    } catch (error) {
+      console.error("Failed to fetch RSVPs:", error);
+    } finally {
+      setRsvpsLoading(false);
+    }
+  }, []);
+
+  // Refetch RSVPs when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        fetchRSVPs();
+      }
+    }, [user, fetchRSVPs])
+  );
 
   // Show loading state while user data is being fetched
   if (loading || !user) {
@@ -53,27 +93,108 @@ export default function ProfileScreen() {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.content}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {user?.user_metadata?.name?.charAt(0).toUpperCase() || "👤"}
-          </Text>
-        </View>
-        <Text style={styles.name}>{user?.user_metadata?.name || "User"}</Text>
+        {userProfile?.avatarUrl ? (
+          <Image
+            source={{ uri: userProfile.avatarUrl }}
+            style={styles.avatarImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {userProfile?.name?.charAt(0).toUpperCase() || "👤"}
+            </Text>
+          </View>
+        )}
+        <Text style={styles.name}>{userProfile?.name || "User"}</Text>
         <Text style={styles.email}>{user?.email}</Text>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>My Events</Text>
-          <Text style={styles.placeholder}>No RSVPs yet</Text>
+          <Text style={styles.sectionTitle}>My Events ({rsvps.length})</Text>
+
+          {rsvpsLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <Text style={styles.loadingSmallText}>Loading events...</Text>
+            </View>
+          ) : rsvps.length === 0 ? (
+            <Text style={styles.placeholder}>
+              No RSVPs yet. Browse events to get started! 🎬
+            </Text>
+          ) : (
+            <View>
+              {rsvps.map((rsvp) => (
+                <TouchableOpacity
+                  key={rsvp.id}
+                  style={styles.eventCard}
+                  onPress={() =>
+                    navigation.navigate("EventDetail", {
+                      eventId: rsvp.event.id,
+                    })
+                  }
+                >
+                  {rsvp.event.movieData?.poster && (
+                    <Image
+                      source={{ uri: rsvp.event.movieData.poster }}
+                      style={styles.eventPoster}
+                      resizeMode="cover"
+                    />
+                  )}
+                  <View style={styles.eventInfo}>
+                    <Text style={styles.eventTitle} numberOfLines={2}>
+                      {rsvp.event.title}
+                    </Text>
+                    <Text style={styles.eventDate}>
+                      📅 {formatDate(rsvp.event.date)} at{" "}
+                      {formatTime(rsvp.event.date)}
+                    </Text>
+                    <Text style={styles.eventLocation} numberOfLines={1}>
+                      📍 {rsvp.event.location}
+                    </Text>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        rsvp.status === "going"
+                          ? styles.statusGoing
+                          : styles.statusInterested,
+                      ]}
+                    >
+                      <Text style={styles.statusText}>
+                        {rsvp.status === "going" ? "✓ Going" : "★ Interested"}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Sign Out</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -93,6 +214,13 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     justifyContent: "center",
     alignItems: "center",
+    marginBottom: theme.spacing.base,
+    marginTop: theme.spacing.xl,
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: theme.borderRadius.full,
     marginBottom: theme.spacing.base,
     marginTop: theme.spacing.xl,
   },
@@ -152,5 +280,64 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.base,
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.text.secondary,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    paddingVertical: theme.spacing.lg,
+  },
+  loadingSmallText: {
+    marginTop: theme.spacing.sm,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+  },
+  eventCard: {
+    flexDirection: "row",
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.md,
+    marginBottom: theme.spacing.md,
+    overflow: "hidden",
+    ...theme.shadows.sm,
+  },
+  eventPoster: {
+    width: 80,
+    height: 120,
+  },
+  eventInfo: {
+    flex: 1,
+    padding: theme.spacing.md,
+    justifyContent: "center",
+  },
+  eventTitle: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xs,
+  },
+  eventDate: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.xs,
+  },
+  eventLocation: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.sm,
+  },
+  statusBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.sm,
+  },
+  statusGoing: {
+    backgroundColor: "#10B981", // Green
+  },
+  statusInterested: {
+    backgroundColor: "#F59E0B", // Orange
+  },
+  statusText: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.inverse,
   },
 });
