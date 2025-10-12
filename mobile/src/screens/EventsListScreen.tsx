@@ -155,20 +155,37 @@ export default function EventsListScreen() {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const eventDate = new Date(dateString);
     const now = new Date();
-    const diffTime = date.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Tomorrow";
-    if (diffDays > 1 && diffDays < 7) return `In ${diffDays} days`;
+    // Strip time for accurate day comparison
+    const eventDateOnly = new Date(
+      eventDate.getFullYear(),
+      eventDate.getMonth(),
+      eventDate.getDate()
+    );
+    const todayDateOnly = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
 
-    return date.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
+    // Calculate difference in days
+    const diffTime = eventDateOnly.getTime() - todayDateOnly.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+    // Only show special labels for TODAY and TOMORROW
+    if (diffDays === 0) return "TODAY";
+    if (diffDays === 1) return "TOMORROW";
+
+    // For all other dates, show formatted date
+    return eventDate
+      .toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      })
+      .toUpperCase();
   };
 
   const formatTime = (dateString: string) => {
@@ -294,6 +311,8 @@ export default function EventsListScreen() {
     const status = getEventStatus(item);
     const featured = isFeatured(item, index);
     const priceInfo = formatPrice(item);
+    const dateLabel = formatDate(item.date);
+    const isUrgent = dateLabel === "TODAY" || dateLabel === "TOMORROW";
 
     return (
       <AnimatedButton
@@ -326,28 +345,47 @@ export default function EventsListScreen() {
               </View>
             )}
 
-            {/* Price Badge on Poster */}
+            {/* Price Badge on Poster with Gradient */}
             {priceInfo && (
-              <View
-                style={[
-                  styles.priceBadgeOnPoster,
-                  {
-                    backgroundColor: `${priceInfo.color}E6`, // 90% opacity for better visibility
-                    borderColor: `${priceInfo.color}`,
-                  },
-                ]}
-              >
-                <Text style={[styles.priceTextOnPoster, { color: "#FFFFFF" }]}>
-                  {priceInfo.label}
-                </Text>
+              <View style={styles.priceBadgeOnPoster}>
+                <LinearGradient
+                  colors={
+                    priceInfo.label === "FREE"
+                      ? [`${priceInfo.color}F0`, `${priceInfo.color}D9`] // Solid for free
+                      : [
+                          `${priceInfo.color}F0`,
+                          `${priceInfo.color}CC`,
+                          `${priceInfo.color}E6`,
+                        ] // Gradient for paid
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[
+                    styles.priceBadgeGradient,
+                    {
+                      borderColor: `${priceInfo.color}`,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.priceTextOnPoster, { color: "#FFFFFF" }]}
+                  >
+                    {priceInfo.label}
+                  </Text>
+                </LinearGradient>
               </View>
             )}
           </View>
         )}
         <View style={styles.cardContent}>
           {/* Date Badge */}
-          <View style={styles.dateTag}>
-            <Text style={styles.dateTagText}>{formatDate(item.date)}</Text>
+          <View
+            style={[
+              styles.dateTag,
+              isUrgent && styles.dateTagUrgent, // Special styling for urgent dates
+            ]}
+          >
+            <Text style={styles.dateTagText}>{dateLabel}</Text>
           </View>
 
           <Text style={styles.title} numberOfLines={2}>
@@ -355,13 +393,13 @@ export default function EventsListScreen() {
           </Text>
 
           <View style={styles.detailsRow}>
-            <ClockIcon size={16} color={theme.colors.text.secondary} />
+            <ClockIcon size={16} color={theme.colors.primaryLight} />
             <Text style={styles.time}>{formatTime(item.date)}</Text>
           </View>
 
           {item.location && (
             <View style={styles.detailsRow}>
-              <MapPinIcon size={16} color={theme.colors.text.secondary} />
+              <MapPinIcon size={16} color={theme.colors.primaryLight} />
               <Text style={styles.location} numberOfLines={1}>
                 {item.location}
               </Text>
@@ -826,6 +864,24 @@ const styles = StyleSheet.create({
     ...getCardStyle(),
     marginBottom: theme.spacing.lg,
     overflow: "hidden",
+    borderRadius: 20, // Increased from default for more modern feel
+    borderWidth: 1.5, // Slightly thicker border
+    borderColor: `${theme.colors.primary}20`, // Subtle teal border (12.5% opacity)
+    // Enhanced depth with glow
+    ...Platform.select({
+      ios: {
+        shadowColor: theme.colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 6,
+      },
+      web: {
+        boxShadow: `0 4px 16px rgba(70, 212, 175, 0.1), 0 0 0 1px ${theme.colors.primary}20`,
+      },
+    }),
   },
   posterContainer: {
     position: "relative",
@@ -833,7 +889,16 @@ const styles = StyleSheet.create({
     height: 240,
     borderRadius: theme.components.radii.poster,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)", // Subtle white border
     ...getPlatformGlow("subtle"),
+    // Inner shadow for depth
+    ...Platform.select({
+      web: {
+        boxShadow:
+          "inset 0 2px 8px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.2)",
+      },
+    }),
   },
   poster: {
     width: "100%",
@@ -876,16 +941,27 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: theme.spacing.md,
     right: theme.spacing.md,
+  },
+  priceBadgeGradient: {
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.full,
     borderWidth: 1.5,
     // Web-compatible shadow (subtle)
-    ...(Platform.OS === "web"
-      ? {
-          boxShadow: "0px 2px 6px rgba(0, 0, 0, 0.1)",
-        }
-      : theme.shadows.sm),
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+      web: {
+        boxShadow: "0px 3px 8px rgba(0, 0, 0, 0.2)",
+      },
+    }),
   },
   priceTextOnPoster: {
     fontSize: theme.typography.fontSize.xs,
@@ -940,7 +1016,9 @@ const styles = StyleSheet.create({
     marginLeft: theme.spacing.xs,
   },
   cardContent: {
-    padding: theme.spacing.base,
+    paddingTop: theme.spacing.md, // Reduced to bring date badge closer to poster
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.md, // Reduced to tighten bottom spacing
   },
   badgeRow: {
     flexDirection: "row",
@@ -970,17 +1048,38 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
+  dateTagUrgent: {
+    backgroundColor: theme.colors.warning, // Brighter orange for urgency
+    borderWidth: 2,
+    borderColor: `${theme.colors.warning}40`, // Subtle glow effect
+    // Enhanced shadow for urgent dates
+    ...Platform.select({
+      ios: {
+        shadowColor: theme.colors.warning,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.4,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 8,
+      },
+      web: {
+        boxShadow: `0px 4px 12px ${theme.colors.warning}60`,
+      },
+    }),
+  },
   title: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: theme.typography.fontSize.xxl, // Increased from xl to xxl
+    fontWeight: "800" as any, // Extra bold (800 weight)
     color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm,
-    lineHeight: theme.typography.fontSize.xl * 1.3,
+    marginBottom: theme.spacing.md, // Increased for better separation
+    lineHeight: theme.typography.fontSize.xxl * 1.25, // Tighter line height for xxl
+    letterSpacing: -0.5, // Slightly tighter letter spacing for impact
   },
   detailsRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.sm, // Increased from xs for better rhythm
   },
   time: {
     fontSize: theme.typography.fontSize.sm,
@@ -996,7 +1095,7 @@ const styles = StyleSheet.create({
     marginLeft: theme.spacing.xs,
   },
   movieInfo: {
-    marginTop: theme.spacing.sm,
+    marginTop: theme.spacing.sm, // Reduced for tighter spacing
     paddingTop: theme.spacing.sm,
     borderTopWidth: 1,
     borderTopColor: theme.colors.borderLight,
@@ -1018,12 +1117,24 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.full,
     marginHorizontal: theme.spacing.xxs,
     marginBottom: theme.spacing.xs,
-    // Web-compatible shadow
-    ...(Platform.OS === "web"
-      ? {
-          boxShadow: "0px 2px 3px rgba(0, 0, 0, 0.08)",
-        }
-      : theme.shadows.sm),
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.15)", // Subtle border for definition
+    // Enhanced shadows for depth
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow:
+          "0px 3px 6px rgba(0, 0, 0, 0.25), 0px 1px 2px rgba(0, 0, 0, 0.15)",
+      },
+    }),
   },
   genreChipText: {
     fontSize: theme.typography.fontSize.xs,
@@ -1032,12 +1143,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   capacityContainer: {
-    marginTop: theme.spacing.md, // Increased spacing from genre chips
+    marginTop: theme.spacing.lg, // Reduced for tighter spacing
   },
   capacityRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.sm,
     gap: theme.spacing.sm,
   },
   capacityText: {
@@ -1063,15 +1174,42 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   progressBarContainer: {
-    height: 4,
+    height: 6, // Slightly taller for better visibility
     backgroundColor: theme.colors.borderLight,
     borderRadius: theme.borderRadius.full,
     overflow: "hidden",
+    // Inner shadow for depth
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 1,
+      },
+      web: {
+        boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.3)",
+      },
+    }),
   },
   progressBar: {
     height: "100%",
-    backgroundColor: theme.colors.accent,
     borderRadius: theme.borderRadius.full,
+    // Dynamic color is set inline based on percentage
+    // Add subtle gradient overlay
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.15,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        boxShadow: "0 1px 2px rgba(0, 0, 0, 0.15)",
+      },
+    }),
   },
   priceBadge: {
     paddingHorizontal: theme.spacing.base,
