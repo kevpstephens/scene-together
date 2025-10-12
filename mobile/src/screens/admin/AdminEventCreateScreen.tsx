@@ -208,7 +208,7 @@ export default function AdminEventCreateScreen() {
                 {searching && (
                   <ActivityIndicator
                     size="small"
-                    color={theme.colors.primary}
+                    color={theme.colors.primaryLight}
                     style={styles.searchLoading}
                   />
                 )}

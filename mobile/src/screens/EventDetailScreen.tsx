@@ -12,6 +12,7 @@ import {
   Platform,
   Animated,
   Share,
+  RefreshControl,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { LinearGradient } from "expo-linear-gradient";
@@ -36,6 +37,7 @@ import { getPlatformGlow, getCardStyle } from "../theme/styles";
 import type { Event, RSVPStatus } from "../types";
 import AnimatedButton from "../components/AnimatedButton";
 import GradientBackground from "../components/GradientBackground";
+import SuccessConfetti from "../components/SuccessConfetti";
 import { useToast } from "../contexts/ToastContext";
 import * as Haptics from "expo-haptics";
 import { promptAddToCalendar } from "../services/calendarService";
@@ -80,6 +82,8 @@ export default function EventDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [userRSVP, setUserRSVP] = useState<RSVPStatus | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.92)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -131,6 +135,19 @@ export default function EventDetailScreen() {
     }
   };
 
+  // Pull to refresh handler
+  const onRefresh = async () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setRefreshing(true);
+    await Promise.all([loadEvent(), loadUserRSVP()]);
+    if (Platform.OS !== "web") {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+    setRefreshing(false);
+  };
+
   const handleRSVP = async (status: RSVPStatus) => {
     try {
       setRsvpLoading(true);
@@ -160,6 +177,11 @@ export default function EventDetailScreen() {
         not_going: "RSVP removed",
       };
       showToast(statusMessages[status], "success");
+
+      // Show confetti for "going" status
+      if (status === "going") {
+        setShowConfetti(true);
+      }
 
       // If user is going, prompt to add to calendar
       if (status === "going" && event) {
@@ -274,8 +296,12 @@ export default function EventDetailScreen() {
           : undefined,
       });
 
-      if (added && Platform.OS !== "web") {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (added) {
+        if (Platform.OS !== "web") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        // Show confetti on successful calendar add
+        setShowConfetti(true);
       }
     } catch (error) {
       console.error("Error adding to calendar:", error);
@@ -433,7 +459,7 @@ export default function EventDetailScreen() {
           }}
         >
           <View style={styles.centered}>
-            <ActivityIndicator size="small" color={theme.colors.primary} />
+            <ActivityIndicator size="small" color={theme.colors.primaryLight} />
           </View>
         </Animated.View>
       </>
@@ -471,6 +497,15 @@ export default function EventDetailScreen() {
             { useNativeDriver: true }
           )}
           scrollEventThrottle={16}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[theme.colors.primaryLight]}
+              tintColor={theme.colors.primaryLight}
+              progressBackgroundColor={theme.colors.surface}
+            />
+          }
         >
           <View style={styles.contentWrapper}>
             {/* Hero Image with Gradient Overlay and Parallax */}
@@ -862,7 +897,7 @@ export default function EventDetailScreen() {
                 {rsvpLoading && (
                   <ActivityIndicator
                     size="small"
-                    color={theme.colors.primary}
+                    color={theme.colors.primaryLight}
                     style={styles.rsvpLoader}
                   />
                 )}
@@ -882,6 +917,11 @@ export default function EventDetailScreen() {
           </View>
         </Animated.ScrollView>
       </Animated.View>
+      {/* Success Confetti */}
+      <SuccessConfetti
+        visible={showConfetti}
+        onComplete={() => setShowConfetti(false)}
+      />
     </>
   );
 }

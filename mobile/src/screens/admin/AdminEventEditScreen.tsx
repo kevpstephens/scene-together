@@ -202,7 +202,7 @@ export default function AdminEventEditScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <ActivityIndicator size="large" color={theme.colors.primaryLight} />
       </View>
     );
   }
@@ -240,7 +240,7 @@ export default function AdminEventEditScreen() {
                 {searching && (
                   <ActivityIndicator
                     size="small"
-                    color={theme.colors.primary}
+                    color={theme.colors.primaryLight}
                     style={styles.searchLoader}
                   />
                 )}

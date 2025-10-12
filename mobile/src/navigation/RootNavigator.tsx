@@ -23,7 +23,7 @@ export default function RootNavigator() {
           backgroundColor: theme.colors.background,
         }}
       >
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <ActivityIndicator size="large" color={theme.colors.primaryLight} />
       </View>
     );
   }

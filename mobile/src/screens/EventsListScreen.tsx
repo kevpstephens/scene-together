@@ -68,6 +68,7 @@ export default function EventsListScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const navigation = useNavigation<NavigationProp>();
   const isFocused = useIsFocused();
@@ -77,6 +78,15 @@ export default function EventsListScreen() {
   useEffect(() => {
     loadEvents();
   }, []);
+
+  // Debounce search query (300ms delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Handle tab press - scroll to top when already on this screen
   useEffect(() => {
@@ -168,6 +178,14 @@ export default function EventsListScreen() {
 
   // Calculate event status using real RSVP data
   const getEventStatus = (event: Event) => {
+    // Check if event is in the past
+    const eventDate = new Date(event.date);
+    const now = new Date();
+    if (eventDate.getTime() < now.getTime() - 24 * 60 * 60 * 1000) {
+      // Event is more than 24 hours old
+      return { type: "past" as const, label: "Past Event" };
+    }
+
     if (!event.maxCapacity) return null;
 
     // Use real attendee count from API (defaults to 0 if no RSVPs yet)
@@ -178,6 +196,8 @@ export default function EventsListScreen() {
       return { type: "soldOut" as const, label: "Sold Out" };
     } else if (percentageFull >= 80) {
       return { type: "almostFull" as const, label: "Almost Full" };
+    } else if (percentageFull < 50 && currentAttendees > 0) {
+      return { type: "available" as const, label: "Available" };
     }
     return null;
   };
@@ -206,14 +226,15 @@ export default function EventsListScreen() {
   const filteredEvents = useMemo(() => {
     let filtered = [...events];
 
-    // Apply search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+    // Apply search query (debounced)
+    if (debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase();
       filtered = filtered.filter(
         (event) =>
           event.title.toLowerCase().includes(query) ||
           event.movieData?.title?.toLowerCase().includes(query) ||
-          event.location?.toLowerCase().includes(query)
+          event.location?.toLowerCase().includes(query) ||
+          event.movieData?.genre?.toLowerCase().includes(query)
       );
     }
 
@@ -225,7 +246,7 @@ export default function EventsListScreen() {
     }
 
     return filtered;
-  }, [events, searchQuery, filterStatus]);
+  }, [events, debouncedSearchQuery, filterStatus]);
 
   // Check if event is featured (for demo, make first event featured)
   const isFeatured = (event: Event, index: number) => {
@@ -274,10 +295,15 @@ export default function EventsListScreen() {
                   styles.statusBadge,
                   status.type === "soldOut" && styles.soldOutBadge,
                   status.type === "almostFull" && styles.almostFullBadge,
+                  status.type === "available" && styles.availableBadge,
+                  status.type === "past" && styles.pastBadge,
                 ]}
               >
                 {status.type === "almostFull" && (
                   <FireIcon size={12} color={theme.colors.text.inverse} />
+                )}
+                {status.type === "available" && (
+                  <UsersIcon size={12} color={theme.colors.text.inverse} />
                 )}
                 <Text style={styles.statusText}>{status.label}</Text>
               </View>
@@ -508,8 +534,8 @@ export default function EventsListScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                colors={[theme.colors.primary]}
-                tintColor={theme.colors.primary}
+                colors={[theme.colors.primaryLight]}
+                tintColor={theme.colors.primaryLight}
               />
             }
             ListEmptyComponent={
@@ -774,6 +800,13 @@ const styles = StyleSheet.create({
   },
   soldOutBadge: {
     backgroundColor: theme.colors.error,
+  },
+  availableBadge: {
+    backgroundColor: theme.colors.success,
+  },
+  pastBadge: {
+    backgroundColor: theme.colors.text.tertiary,
+    opacity: 0.8,
   },
   statusText: {
     fontSize: theme.typography.fontSize.xs,

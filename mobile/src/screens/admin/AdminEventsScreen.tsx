@@ -28,6 +28,7 @@ import { getCardStyle } from "../../theme/styles";
 import { api } from "../../services/api";
 import type { Event } from "../../types";
 import GradientBackground from "../../components/GradientBackground";
+import * as Haptics from "expo-haptics";
 
 type NavigationProp = NativeStackNavigationProp<
   AdminStackParamList,
@@ -46,9 +47,11 @@ export default function AdminEventsScreen() {
     loadEvents();
   }, []);
 
-  const loadEvents = async () => {
+  const loadEvents = async (isRefreshing = false) => {
     try {
-      setLoading(true);
+      if (!isRefreshing) {
+        setLoading(true);
+      }
       const { data } = await api.get("/events");
       // Sort by date (upcoming first)
       const sorted = data.sort(
@@ -60,14 +63,26 @@ export default function AdminEventsScreen() {
       console.error("Failed to load events:", error);
       Alert.alert("Error", "Failed to load events");
     } finally {
-      setLoading(false);
+      if (!isRefreshing) {
+        setLoading(false);
+      }
     }
   };
 
   const onRefresh = async () => {
+    // Light haptic on pull start (native only)
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+
     setRefreshing(true);
-    await loadEvents();
+    await loadEvents(true);
     setRefreshing(false);
+
+    // Success haptic on refresh complete (native only)
+    if (Platform.OS !== "web") {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
   };
 
   const handleDelete = (event: Event) => {
@@ -253,7 +268,7 @@ export default function AdminEventsScreen() {
       <View style={styles.container}>
         <GradientBackground />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <ActivityIndicator size="large" color={theme.colors.primaryLight} />
         </View>
       </View>
     );
@@ -274,17 +289,27 @@ export default function AdminEventsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[theme.colors.primary]}
-              tintColor={theme.colors.primary}
+              colors={[theme.colors.primaryLight]}
+              tintColor={theme.colors.primaryLight}
             />
           }
           ListEmptyComponent={
             <View style={styles.empty}>
-              <FilmIcon size={64} color={theme.colors.text.tertiary} />
-              <Text style={styles.emptyTitle}>No events yet</Text>
+              <View style={styles.emptyIconWrapper}>
+                <FilmIcon size={72} color={theme.colors.primary} />
+              </View>
+              <Text style={styles.emptyTitle}>No Events Yet</Text>
               <Text style={styles.emptyText}>
-                Create your first event to get started
+                Create your first screening event and start building your
+                community!
               </Text>
+              <TouchableOpacity
+                style={styles.emptyActionButton}
+                onPress={() => navigation.navigate("AdminEventCreate")}
+              >
+                <PlusIcon size={20} color="#fff" />
+                <Text style={styles.emptyActionText}>Create First Event</Text>
+              </TouchableOpacity>
             </View>
           }
         />
@@ -359,17 +384,56 @@ const styles = StyleSheet.create({
     padding: theme.spacing.xxxl,
     alignItems: "center",
   },
+  emptyIconWrapper: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: `${theme.colors.primary}15`,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: theme.spacing.lg,
+  },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.xl,
+    fontSize: theme.typography.fontSize.xxl,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
     marginBottom: theme.spacing.sm,
-    marginTop: theme.spacing.base,
   },
   emptyText: {
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.text.secondary,
     textAlign: "center",
+    marginBottom: theme.spacing.xl,
+    lineHeight: 22,
+    maxWidth: 300,
+  },
+  emptyActionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.xl,
+    borderRadius: theme.borderRadius.lg,
+    ...Platform.select({
+      ios: {
+        shadowColor: theme.colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: "0 4px 12px rgba(70, 212, 175, 0.3)",
+      },
+    }),
+  },
+  emptyActionText: {
+    color: theme.colors.text.inverse,
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
+    marginLeft: theme.spacing.xs,
   },
   card: {
     width: "100%",

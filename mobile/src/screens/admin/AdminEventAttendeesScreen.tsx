@@ -131,7 +131,7 @@ export default function AdminEventAttendeesScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <ActivityIndicator size="large" color={theme.colors.primaryLight} />
       </View>
     );
   }
@@ -198,8 +198,8 @@ export default function AdminEventAttendeesScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[theme.colors.primary]}
-              tintColor={theme.colors.primary}
+              colors={[theme.colors.primaryLight]}
+              tintColor={theme.colors.primaryLight}
             />
           }
           ListEmptyComponent={

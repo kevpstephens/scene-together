@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   ScrollView,
   Image,
+  RefreshControl,
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -29,6 +30,7 @@ import { api } from "../services/api";
 import type { Event } from "../types";
 import GradientBackground from "../components/GradientBackground";
 import AnimatedButton from "../components/AnimatedButton";
+import SkeletonLoader from "../components/SkeletonLoader";
 import * as Haptics from "expo-haptics";
 
 type RSVP = {
@@ -47,6 +49,7 @@ export default function ProfileScreen() {
   const { user, userProfile, loading, signOut } = useAuth();
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [rsvpsLoading, setRsvpsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Fetch user's RSVPs
   const fetchRSVPs = useCallback(async () => {
@@ -70,13 +73,26 @@ export default function ProfileScreen() {
     }, [user, fetchRSVPs])
   );
 
+  // Pull to refresh handler
+  const onRefresh = useCallback(async () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setRefreshing(true);
+    await fetchRSVPs();
+    if (Platform.OS !== "web") {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+    setRefreshing(false);
+  }, [fetchRSVPs]);
+
   // Show loading state while user data is being fetched
   if (loading || !user) {
     return (
       <View style={styles.wrapper}>
         <GradientBackground />
         <View style={[styles.container, styles.centerContent]}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <ActivityIndicator size="large" color={theme.colors.primaryLight} />
           <Text style={styles.loadingText}>Loading profile...</Text>
         </View>
       </View>
@@ -131,7 +147,18 @@ export default function ProfileScreen() {
 
   return (
     <GradientBackground>
-      <ScrollView style={styles.container}>
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[theme.colors.primaryLight]}
+            tintColor={theme.colors.primaryLight}
+            progressBackgroundColor={theme.colors.surface}
+          />
+        }
+      >
         <View style={styles.content}>
           <Text style={styles.pageTitle}>My Profile</Text>
 
@@ -171,16 +198,57 @@ export default function ProfileScreen() {
             <Text style={styles.sectionTitle}>My Events ({rsvps.length})</Text>
 
             {rsvpsLoading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color={theme.colors.primary} />
-                <Text style={styles.loadingSmallText}>Loading events...</Text>
+              <View>
+                {[1, 2].map((i) => (
+                  <View key={i} style={styles.eventCard}>
+                    <SkeletonLoader
+                      width={80}
+                      height={120}
+                      style={{ marginRight: theme.spacing.md }}
+                    />
+                    <View style={{ flex: 1 }}>
+                      <SkeletonLoader
+                        width="80%"
+                        height={18}
+                        style={{ marginBottom: 8 }}
+                      />
+                      <SkeletonLoader
+                        width="60%"
+                        height={14}
+                        style={{ marginBottom: 6 }}
+                      />
+                      <SkeletonLoader
+                        width="70%"
+                        height={14}
+                        style={{ marginBottom: 8 }}
+                      />
+                      <SkeletonLoader
+                        width={80}
+                        height={24}
+                        borderRadius={theme.borderRadius.sm}
+                      />
+                    </View>
+                  </View>
+                ))}
               </View>
             ) : rsvps.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <FilmIcon size={48} color={theme.colors.text.tertiary} />
-                <Text style={styles.placeholder}>
-                  No RSVPs yet. Browse events to get started!
+                <View style={styles.emptyIconWrapper}>
+                  <FilmIcon size={64} color={theme.colors.primary} />
+                </View>
+                <Text style={styles.emptyTitle}>No Events Yet</Text>
+                <Text style={styles.emptySubtitle}>
+                  Start exploring and RSVP to events you're interested in!
                 </Text>
+                <TouchableOpacity
+                  style={styles.emptyActionButton}
+                  onPress={() => {
+                    // Navigate to Events tab
+                    navigation.navigate("EventsTab", { screen: "EventsList" });
+                  }}
+                >
+                  <Text style={styles.emptyActionText}>Browse Events</Text>
+                </TouchableOpacity>
               </View>
             ) : (
               <View>
@@ -343,7 +411,55 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     alignItems: "center",
-    paddingVertical: theme.spacing.lg,
+    paddingVertical: theme.spacing.xxxl,
+    paddingHorizontal: theme.spacing.lg,
+  },
+  emptyIconWrapper: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: `${theme.colors.primary}15`,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: theme.spacing.base,
+  },
+  emptyTitle: {
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xs,
+  },
+  emptySubtitle: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text.secondary,
+    textAlign: "center",
+    marginBottom: theme.spacing.lg,
+    lineHeight: 22,
+  },
+  emptyActionButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.xl,
+    borderRadius: theme.borderRadius.lg,
+    ...Platform.select({
+      ios: {
+        shadowColor: theme.colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: "0 4px 12px rgba(70, 212, 175, 0.3)",
+      },
+    }),
+  },
+  emptyActionText: {
+    color: theme.colors.text.inverse,
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   placeholder: {
     fontSize: theme.typography.fontSize.sm,
