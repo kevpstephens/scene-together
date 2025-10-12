@@ -12,7 +12,11 @@ import {
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { EventsStackParamList } from "../navigation/types";
+import {
+  EventsStackParamList,
+  ProfileStackParamList,
+} from "../navigation/types";
+import { PencilSquareIcon } from "react-native-heroicons/solid";
 import { useAuth } from "../contexts/AuthContext";
 import { theme } from "../theme";
 import { api } from "../services/api";
@@ -24,10 +28,12 @@ type RSVP = {
   event: Event;
 };
 
-type NavigationProp = NativeStackNavigationProp<EventsStackParamList>;
+type EventsNavigationProp = NativeStackNavigationProp<EventsStackParamList>;
+type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 
 export default function ProfileScreen() {
-  const navigation = useNavigation<NavigationProp>();
+  const eventsNavigation = useNavigation<EventsNavigationProp>();
+  const navigation = useNavigation<ProfileNavigationProp>();
   const { user, userProfile, loading, signOut } = useAuth();
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [rsvpsLoading, setRsvpsLoading] = useState(true);
@@ -129,6 +135,14 @@ export default function ProfileScreen() {
         <Text style={styles.name}>{userProfile?.name || "User"}</Text>
         <Text style={styles.email}>{user?.email}</Text>
 
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => navigation.navigate("ProfileEdit")}
+        >
+          <PencilSquareIcon size={20} color={theme.colors.primary} />
+          <Text style={styles.editButtonText}>Edit Profile</Text>
+        </TouchableOpacity>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>My Events ({rsvps.length})</Text>
 
@@ -148,7 +162,7 @@ export default function ProfileScreen() {
                   key={rsvp.id}
                   style={styles.eventCard}
                   onPress={() =>
-                    navigation.navigate("EventDetail", {
+                    eventsNavigation.navigate("EventDetail", {
                       eventId: rsvp.event.id,
                     })
                   }
@@ -238,7 +252,25 @@ const styles = StyleSheet.create({
   email: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.base,
+  },
+  editButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+    backgroundColor: theme.colors.surface,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.base,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    alignSelf: "center",
     marginBottom: theme.spacing.xl,
+  },
+  editButtonText: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.primary,
   },
   section: {
     width: "100%",
@@ -246,7 +278,9 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.base,
     marginBottom: theme.spacing.base,
-    ...theme.shadows.sm,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)" }
+      : theme.shadows.sm),
   },
   sectionTitle: {
     fontSize: theme.typography.fontSize.lg,
@@ -296,7 +330,9 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     marginBottom: theme.spacing.md,
     overflow: "hidden",
-    ...theme.shadows.sm,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)" }
+      : theme.shadows.sm),
   },
   eventPoster: {
     width: 80,

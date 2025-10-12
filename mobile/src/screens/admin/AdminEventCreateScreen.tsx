@@ -18,7 +18,6 @@ import { AdminStackParamList } from "../../navigation/types";
 import { MagnifyingGlassIcon, XMarkIcon } from "react-native-heroicons/solid";
 import { theme } from "../../theme";
 import { api } from "../../services/api";
-import axios from "axios";
 import GradientBackground from "../../components/GradientBackground";
 
 type NavigationProp = NativeStackNavigationProp<
@@ -55,31 +54,16 @@ export default function AdminEventCreateScreen() {
   // Submission state
   const [submitting, setSubmitting] = useState(false);
 
-  const TMDB_API_KEY = ""; // You'll need to add this to your environment
-  const TMDB_BASE_URL = "https://api.themoviedb.org/3";
-
   const searchMovies = async (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
       return;
     }
 
-    if (!TMDB_API_KEY) {
-      Alert.alert(
-        "Setup Required",
-        "TMDB API key not configured. You can still create events without movie data."
-      );
-      return;
-    }
-
     setSearching(true);
     try {
-      const { data } = await axios.get(`${TMDB_BASE_URL}/search/movie`, {
-        params: {
-          api_key: TMDB_API_KEY,
-          query,
-          include_adult: false,
-        },
+      const { data } = await api.get("/movies/search", {
+        params: { query },
       });
       setSearchResults(data.results.slice(0, 5));
     } catch (error) {

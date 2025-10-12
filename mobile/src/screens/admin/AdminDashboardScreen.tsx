@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -200,7 +201,9 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.xl,
     alignItems: "center",
     justifyContent: "center",
-    ...theme.shadows.lg,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)" }
+      : theme.shadows.lg),
   },
   statValue: {
     fontSize: theme.typography.fontSize.xxxl,
@@ -232,7 +235,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: theme.spacing.base,
-    ...theme.shadows.md,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 6px 10px rgba(0, 0, 0, 0.1)" }
+      : theme.shadows.md),
   },
   actionIconContainer: {
     width: 48,

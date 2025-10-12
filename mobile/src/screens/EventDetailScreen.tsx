@@ -720,7 +720,9 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
     borderWidth: 1,
     borderColor: "rgba(70, 212, 175, 0.1)", // Subtle turquoise border
-    ...theme.shadows.lg,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)" }
+      : theme.shadows.lg),
   },
   infoRow: {
     flexDirection: "row",
@@ -753,7 +755,9 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
     borderWidth: 1,
     borderColor: "rgba(70, 212, 175, 0.1)", // Subtle turquoise border
-    ...theme.shadows.lg,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)" }
+      : theme.shadows.lg),
   },
   sectionTitle: {
     fontSize: theme.typography.fontSize.lg,
@@ -792,7 +796,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.full,
-    ...theme.shadows.sm,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)" }
+      : theme.shadows.sm),
   },
   metaChipText: {
     fontSize: theme.typography.fontSize.xs,
@@ -823,7 +829,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.full,
-    ...theme.shadows.md,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }
+      : theme.shadows.md),
   },
   genreChipText: {
     fontSize: theme.typography.fontSize.sm,
@@ -852,7 +860,9 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     overflow: "hidden",
     backgroundColor: "#000",
-    ...theme.shadows.md,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }
+      : theme.shadows.md),
   },
   video: {
     width: "100%",
@@ -888,7 +898,9 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.sm,
     borderRadius: theme.borderRadius.lg,
-    ...theme.shadows.sm,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)" }
+      : theme.shadows.sm),
   },
   rsvpOptionActive: {
     backgroundColor: theme.colors.primary,
@@ -937,7 +949,9 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.base,
     paddingHorizontal: theme.spacing.xl,
     borderRadius: theme.borderRadius.xl,
-    ...theme.shadows.sm,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)" }
+      : theme.shadows.sm),
   },
   imdbButtonText: {
     color: theme.colors.primary,

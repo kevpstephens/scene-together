@@ -10,4 +10,9 @@ router.get("/me", requireAuth, (req, res) =>
   authController.getCurrentUser(req, res)
 );
 
+// PATCH /auth/me - Update current user profile
+router.patch("/me", requireAuth, (req, res) =>
+  authController.updateProfile(req, res)
+);
+
 export default router;

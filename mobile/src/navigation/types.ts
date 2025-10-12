@@ -28,6 +28,7 @@ export type EventsStackParamList = {
 // Profile Stack Navigator
 export type ProfileStackParamList = {
   Profile: undefined;
+  ProfileEdit: undefined;
   Settings: undefined;
 };
 
