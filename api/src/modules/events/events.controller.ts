@@ -1,30 +1,52 @@
+/*===============================================
+ * Events Controller
+ * ==============================================
+ * Handles event CRUD operations and attendee management.
+ * Public routes: getAllEvents, getEventById
+ * Admin routes: createEvent, updateEvent, deleteEvent, getEventAttendees
+ * ==============================================
+ */
+
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../../utils/prisma.js";
 
 /**
- * Get all events with RSVP counts
- * Public route
+ * Standard RSVP count configuration
+ * Only counts users with "going" status
+ */
+const ATTENDEE_COUNT_INCLUDE = {
+  _count: {
+    select: {
+      rsvps: {
+        where: { status: "going" as const },
+      },
+    },
+  },
+} as const;
+
+/**
+ * Get all events
+ *
+ * GET /events
+ *
+ * Returns all events ordered by date (earliest first).
+ * Includes attendee count (users with "going" RSVP status).
+ * Public route - no authentication required.
+ *
+ * @returns Array of events with attendeeCount
  */
 export async function getAllEvents(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const events = await prisma.event.findMany({
       orderBy: { date: "asc" },
-      include: {
-        _count: {
-          select: {
-            rsvps: {
-              where: { status: "going" }, // Only count confirmed attendees
-            },
-          },
-        },
-      },
+      include: ATTENDEE_COUNT_INCLUDE,
     });
 
-    // Add attendeeCount to each event for easier access
+    // Transform _count.rsvps to top-level attendeeCount for easier client access
     const eventsWithCount = events.map((event) => ({
       ...event,
       attendeeCount: event._count.rsvps,
@@ -38,32 +60,33 @@ export async function getAllEvents(
 
 /**
  * Get single event by ID
- * Public route
+ *
+ * GET /events/:id
+ *
+ * Returns detailed information for a specific event.
+ * Includes attendee count (users with "going" RSVP status).
+ * Public route - no authentication required.
+ *
+ * @param req.params.id - Event UUID
+ * @returns Event object with attendeeCount
  */
 export async function getEventById(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const event = await prisma.event.findUnique({
       where: { id: req.params.id },
-      include: {
-        _count: {
-          select: {
-            rsvps: {
-              where: { status: "going" }, // Only count confirmed attendees
-            },
-          },
-        },
-      },
+      include: ATTENDEE_COUNT_INCLUDE,
     });
 
     if (!event) {
-      return res.status(404).json({ error: "Event not found" });
+      res.status(404).json({ error: "Event not found" });
+      return;
     }
 
-    // Add attendeeCount for easier access
+    // Transform _count.rsvps to top-level attendeeCount
     const eventWithCount = {
       ...event,
       attendeeCount: event._count.rsvps,
@@ -77,13 +100,20 @@ export async function getEventById(
 
 /**
  * Create new event
- * Staff only
+ *
+ * POST /events
+ *
+ * Creates a new event with movie metadata and pricing configuration.
+ * Requires ADMIN or SUPER_ADMIN role.
+ *
+ * @param req.body - Event data (validated by createEventSchema)
+ * @returns Created event object
  */
 export async function createEvent(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const {
       title,
@@ -109,9 +139,9 @@ export async function createEvent(
         movieId,
         movieData: movieData || null,
         maxCapacity,
-        price: price || null,
-        payWhatYouCan: payWhatYouCan || false,
-        minPrice: minPrice || null,
+        price: price ?? null,
+        payWhatYouCan: payWhatYouCan ?? false,
+        minPrice: minPrice ?? null,
         createdById: req.user!.id,
       },
     });
@@ -124,13 +154,21 @@ export async function createEvent(
 
 /**
  * Update existing event
- * Staff only
+ *
+ * PUT /events/:id
+ *
+ * Updates an existing event. Only provided fields are updated.
+ * Requires ADMIN or SUPER_ADMIN role.
+ *
+ * @param req.params.id - Event UUID
+ * @param req.body - Partial event data (validated by updateEventSchema)
+ * @returns Updated event object
  */
 export async function updateEvent(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const {
       title,
@@ -155,7 +193,7 @@ export async function updateEvent(
         location,
         onlineLink,
         movieId,
-        movieData: movieData || null,
+        movieData: movieData ?? null,
         maxCapacity,
         price: price !== undefined ? price : undefined,
         payWhatYouCan: payWhatYouCan !== undefined ? payWhatYouCan : undefined,
@@ -171,13 +209,20 @@ export async function updateEvent(
 
 /**
  * Delete event
- * Staff only
+ *
+ * DELETE /events/:id
+ *
+ * Permanently deletes an event and all associated RSVPs.
+ * Requires ADMIN or SUPER_ADMIN role.
+ *
+ * @param req.params.id - Event UUID
+ * @returns Success message
  */
 export async function deleteEvent(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     await prisma.event.delete({
       where: { id: req.params.id },
@@ -190,27 +235,36 @@ export async function deleteEvent(
 }
 
 /**
- * Get all attendees (RSVPs) for an event
- * Admin only
+ * Get all attendees for an event
+ *
+ * GET /events/:id/attendees
+ *
+ * Returns all RSVPs for an event with user information.
+ * Ordered by RSVP creation time (most recent first).
+ * Requires ADMIN or SUPER_ADMIN role.
+ *
+ * @param req.params.id - Event UUID
+ * @returns Array of RSVPs with user details
  */
 export async function getEventAttendees(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const { id } = req.params;
 
-    // Verify event exists
+    // Verify event exists before fetching attendees
     const event = await prisma.event.findUnique({
       where: { id },
     });
 
     if (!event) {
-      return res.status(404).json({ error: "Event not found" });
+      res.status(404).json({ error: "Event not found" });
+      return;
     }
 
-    // Get all RSVPs for this event with user information
+    // Get all RSVPs with user information
     const attendees = await prisma.rSVP.findMany({
       where: { eventId: id },
       include: {

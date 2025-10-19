@@ -1,16 +1,35 @@
+/*===============================================
+ * Payments Controller
+ * ==============================================
+ * Stripe payment integration for event tickets.
+ * Handles payment intents, webhooks, history, and refunds.
+ * ==============================================
+ */
+
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../../utils/prisma.js";
 import * as stripeService from "./stripe.service.js";
 
+// ==================== Public Endpoints ====================
+
 /**
  * Create a payment intent for an event
- * POST /api/payments/create-intent
+ *
+ * POST /payments/create-intent
+ *
+ * Creates a Stripe PaymentIntent and database payment record.
+ * Supports fixed-price and pay-what-you-can events.
+ * Requires authentication.
+ *
+ * @param req.body.eventId - Event UUID
+ * @param req.body.amount - Amount in cents (required for PWYC events)
+ * @returns Client secret for Stripe payment flow
  */
 export async function createPaymentIntent(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const { eventId, amount } = req.body;
     const userId = req.user!.id;
@@ -21,12 +40,14 @@ export async function createPaymentIntent(
     });
 
     if (!event) {
-      return res.status(404).json({ error: "Event not found" });
+      res.status(404).json({ error: "Event not found" });
+      return;
     }
 
-    // Check if event requires payment
+    // Validate event requires payment
     if (!event.price && !event.payWhatYouCan) {
-      return res.status(400).json({ error: "This event is free" });
+      res.status(400).json({ error: "This event is free" });
+      return;
     }
 
     // Determine amount to charge
@@ -34,20 +55,23 @@ export async function createPaymentIntent(
 
     if (event.payWhatYouCan) {
       // Pay what you can - validate amount meets minimum
-      if (!amount || amount < (event.minPrice || 0)) {
-        return res.status(400).json({
-          error: `Amount must be at least £${((event.minPrice || 0) / 100).toFixed(2)}`,
+      const minPrice = event.minPrice || 0;
+      if (!amount || amount < minPrice) {
+        res.status(400).json({
+          error: `Amount must be at least £${(minPrice / 100).toFixed(2)}`,
         });
+        return;
       }
       chargeAmount = amount;
     } else if (event.price) {
       // Fixed price event
       chargeAmount = event.price;
     } else {
-      return res.status(400).json({ error: "Event has no price configured" });
+      res.status(400).json({ error: "Event has no price configured" });
+      return;
     }
 
-    // Create payment intent
+    // Create Stripe PaymentIntent
     const paymentIntent = await stripeService.createPaymentIntent({
       amount: chargeAmount,
       currency: "gbp",
@@ -56,7 +80,7 @@ export async function createPaymentIntent(
       eventTitle: event.title,
     });
 
-    // Create payment record in database
+    // Create payment record in database (pending status)
     await prisma.payment.create({
       data: {
         userId,

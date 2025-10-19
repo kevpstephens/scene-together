@@ -1,10 +1,26 @@
+/*===============================================
+ * TMDb Service
+ * ==============================================
+ * The Movie Database (TMDb) API integration.
+ * Handles movie search, details fetching, and metadata extraction.
+ * API Documentation: https://developers.themoviedb.org/3
+ * ==============================================
+ */
+
 import axios from "axios";
-import type { MovieData } from "../../types";
+import type { MovieData } from "../../types/index.js";
+
+// ==================== Configuration ====================
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
 
+// ==================== Type Definitions ====================
+
+/**
+ * TMDb API response for movie search and popular movies
+ */
 interface TMDbMovie {
   id: number;
   title: string;
@@ -16,6 +32,10 @@ interface TMDbMovie {
   genre_ids: number[];
 }
 
+/**
+ * TMDb API response for detailed movie information
+ * Includes credits, videos, and external IDs when appended
+ */
 interface TMDbMovieDetails {
   id: number;
   title: string;
@@ -38,11 +58,20 @@ interface TMDbMovieDetails {
   };
 }
 
+// ==================== Service Functions ====================
+
 /**
  * Search for movies by title
+ *
+ * Searches TMDb for movies matching the query string.
+ * Returns simplified movie data with posters in w500 resolution.
+ *
+ * @param query - Search query string
+ * @param page - Page number for pagination (default: 1)
+ * @returns Paginated search results with movie metadata
+ * @throws Error if API key is missing or API call fails
  */
 export async function searchMovies(query: string, page = 1) {
-  // Check if API key is configured
   if (!TMDB_API_KEY) {
     console.error("TMDB_API_KEY is not configured in environment variables");
     throw new Error(
@@ -75,17 +104,22 @@ export async function searchMovies(query: string, page = 1) {
       totalPages: response.data.total_pages,
       totalResults: response.data.total_results,
     };
-  } catch (error: any) {
-    console.error("TMDb search error:", error.response?.data || error.message);
+  } catch (error: unknown) {
+    const err = error as any;
+    console.error("TMDb search error:", err.response?.data || err.message);
 
-    // Handle specific error cases
-    if (error.response?.status === 401) {
+    // Handle specific HTTP errors
+    if (err.response?.status === 401) {
       throw new Error("Movie search authentication failed. Invalid API key.");
-    } else if (error.response?.status === 429) {
+    }
+    if (err.response?.status === 429) {
       throw new Error(
         "Movie search rate limit exceeded. Please try again in a moment."
       );
-    } else if (error.code === "ENOTFOUND" || error.code === "ETIMEDOUT") {
+    }
+
+    // Handle network errors
+    if (err.code === "ENOTFOUND" || err.code === "ETIMEDOUT") {
       throw new Error(
         "Unable to connect to movie database. Please check your internet connection."
       );
@@ -97,9 +131,20 @@ export async function searchMovies(query: string, page = 1) {
 
 /**
  * Get detailed movie information by TMDb ID
+ *
+ * Fetches comprehensive movie metadata including:
+ * - Basic info (title, year, plot, runtime, genres)
+ * - Cast and crew (top 3 actors, director)
+ * - Media (poster, YouTube trailer)
+ * - External IDs (IMDb ID)
+ *
+ * Uses TMDb's append_to_response feature to fetch all data in one request.
+ *
+ * @param tmdbId - TMDb movie ID
+ * @returns MovieData object compatible with event.movieData schema
+ * @throws Error if API key is missing, movie not found, or API call fails
  */
 export async function getMovieDetails(tmdbId: string): Promise<MovieData> {
-  // Check if API key is configured
   if (!TMDB_API_KEY) {
     console.error("TMDB_API_KEY is not configured in environment variables");
     throw new Error(
@@ -108,7 +153,7 @@ export async function getMovieDetails(tmdbId: string): Promise<MovieData> {
   }
 
   try {
-    // Fetch movie details with credits, videos, and external IDs (IMDB)
+    // Fetch movie with appended credits, videos, and external IDs
     const response = await axios.get<TMDbMovieDetails>(
       `${TMDB_BASE_URL}/movie/${tmdbId}`,
       {
@@ -131,11 +176,12 @@ export async function getMovieDetails(tmdbId: string): Promise<MovieData> {
       .map((c) => c.name)
       .join(", ");
 
-    // Find YouTube trailer
+    // Find first YouTube trailer
     const trailer = movie.videos?.results.find(
       (v) => v.site === "YouTube" && v.type === "Trailer"
     );
 
+    // Transform TMDb data to our MovieData format
     return {
       title: movie.title,
       year: movie.release_date?.split("-")[0] || "",
@@ -153,19 +199,25 @@ export async function getMovieDetails(tmdbId: string): Promise<MovieData> {
         ? `https://www.youtube.com/watch?v=${trailer.key}`
         : undefined,
     };
-  } catch (error: any) {
-    console.error("TMDb details error:", error.response?.data || error.message);
+  } catch (error: unknown) {
+    const err = error as any;
+    console.error("TMDb details error:", err.response?.data || err.message);
 
-    // Handle specific error cases
-    if (error.response?.status === 401) {
+    // Handle specific HTTP errors
+    if (err.response?.status === 401) {
       throw new Error("Movie details authentication failed. Invalid API key.");
-    } else if (error.response?.status === 404) {
+    }
+    if (err.response?.status === 404) {
       throw new Error(
         "Movie not found. The movie may have been removed from the database."
       );
-    } else if (error.response?.status === 429) {
+    }
+    if (err.response?.status === 429) {
       throw new Error("Rate limit exceeded. Please try again in a moment.");
-    } else if (error.code === "ENOTFOUND" || error.code === "ETIMEDOUT") {
+    }
+
+    // Handle network errors
+    if (err.code === "ENOTFOUND" || err.code === "ETIMEDOUT") {
       throw new Error(
         "Unable to connect to movie database. Please check your internet connection."
       );
@@ -176,10 +228,17 @@ export async function getMovieDetails(tmdbId: string): Promise<MovieData> {
 }
 
 /**
- * Get popular movies (for suggestions)
+ * Get popular movies
+ *
+ * Fetches currently popular/trending movies from TMDb.
+ * Used to provide suggestions when admins create events.
+ * Returns simplified movie data with posters in w500 resolution.
+ *
+ * @param page - Page number for pagination (default: 1)
+ * @returns Paginated list of popular movies
+ * @throws Error if API key is missing or API call fails
  */
 export async function getPopularMovies(page = 1) {
-  // Check if API key is configured
   if (!TMDB_API_KEY) {
     console.error("TMDB_API_KEY is not configured in environment variables");
     throw new Error(
@@ -210,18 +269,23 @@ export async function getPopularMovies(page = 1) {
       page: response.data.page,
       totalPages: response.data.total_pages,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as any;
     console.error(
       "TMDb popular movies error:",
-      error.response?.data || error.message
+      err.response?.data || err.message
     );
 
-    // Handle specific error cases
-    if (error.response?.status === 401) {
+    // Handle specific HTTP errors
+    if (err.response?.status === 401) {
       throw new Error("Popular movies authentication failed. Invalid API key.");
-    } else if (error.response?.status === 429) {
+    }
+    if (err.response?.status === 429) {
       throw new Error("Rate limit exceeded. Please try again in a moment.");
-    } else if (error.code === "ENOTFOUND" || error.code === "ETIMEDOUT") {
+    }
+
+    // Handle network errors
+    if (err.code === "ENOTFOUND" || err.code === "ETIMEDOUT") {
       throw new Error(
         "Unable to connect to movie database. Please check your internet connection."
       );
