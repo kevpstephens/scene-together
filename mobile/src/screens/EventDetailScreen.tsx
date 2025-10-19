@@ -47,6 +47,7 @@ import type { Event, RSVPStatus } from "../types";
 import AnimatedButton from "../components/AnimatedButton";
 import GradientBackground from "../components/GradientBackground";
 import SuccessConfetti from "../components/SuccessConfetti";
+import PosterPlaceholder from "../components/PosterPlaceholder";
 import { useToast } from "../contexts/ToastContext";
 import * as Haptics from "expo-haptics";
 import { promptAddToCalendar } from "../services/calendarService";
@@ -94,6 +95,7 @@ export default function EventDetailScreen() {
   const [userRSVP, setUserRSVP] = useState<RSVPStatus | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [posterError, setPosterError] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.92)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -710,11 +712,20 @@ export default function EventDetailScreen() {
                   ]}
                 >
                   <View style={styles.posterWrapper}>
-                    <Image
-                      source={{ uri: event.movieData.poster }}
-                      style={styles.heroImage}
-                      resizeMode="contain"
-                    />
+                    {!posterError && event.movieData.poster ? (
+                      <Image
+                        source={{ uri: event.movieData.poster }}
+                        style={styles.heroImage}
+                        resizeMode="contain"
+                        onError={() => setPosterError(true)}
+                      />
+                    ) : (
+                      <PosterPlaceholder
+                        title={event.movieData?.title || event.title}
+                        style={styles.heroImage}
+                        iconSize={150}
+                      />
+                    )}
                     <LinearGradient
                       colors={[
                         "transparent",

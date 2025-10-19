@@ -47,6 +47,7 @@ import type { Event, RSVPStatus } from "../types";
 import EventCardSkeleton from "../components/EventCardSkeleton";
 import AnimatedButton from "../components/AnimatedButton";
 import GradientBackground from "../components/GradientBackground";
+import PosterPlaceholder from "../components/PosterPlaceholder";
 import { useToast } from "../contexts/ToastContext";
 import * as Haptics from "expo-haptics";
 
@@ -86,6 +87,9 @@ export default function EventsListScreen() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [userRSVPs, setUserRSVPs] = useState<Record<string, RSVPStatus>>({});
+  const [failedPosters, setFailedPosters] = useState<Record<string, boolean>>(
+    {}
+  );
   const navigation = useNavigation<NavigationProp>();
   const isFocused = useIsFocused();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -503,50 +507,59 @@ export default function EventsListScreen() {
         }}
         springConfig={{ damping: 15, stiffness: 100 }}
       >
-        {item.movieData?.poster && (
-          <View style={styles.posterContainer}>
+        <View style={styles.posterContainer}>
+          {item.movieData?.poster && !failedPosters[item.id] ? (
             <Image
               source={{ uri: item.movieData.poster }}
               style={styles.poster}
               resizeMode="cover"
+              onError={() => {
+                // Mark this poster as failed so placeholder shows
+                console.log("Poster failed to load for event:", item.id);
+                setFailedPosters((prev) => ({ ...prev, [item.id]: true }));
+              }}
             />
-            <LinearGradient
-              colors={["transparent", "rgba(0,0,0,0.7)"]}
-              style={styles.posterGradient}
+          ) : (
+            <PosterPlaceholder
+              title={item.movieData?.title || item.title}
+              style={styles.poster}
+              iconSize={120}
             />
+          )}
+          <LinearGradient
+            colors={["transparent", "rgba(0,0,0,0.7)"]}
+            style={styles.posterGradient}
+          />
 
-            {/* Price Badge on Poster with Gradient */}
-            {priceInfo && (
-              <View style={styles.priceBadgeOnPoster}>
-                <LinearGradient
-                  colors={
-                    priceInfo.label === "FREE"
-                      ? [`${priceInfo.color}F0`, `${priceInfo.color}D9`] // Solid for free
-                      : [
-                          `${priceInfo.color}F0`,
-                          `${priceInfo.color}CC`,
-                          `${priceInfo.color}E6`,
-                        ] // Gradient for paid
-                  }
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[
-                    styles.priceBadgeGradient,
-                    {
-                      borderColor: `${priceInfo.color}`,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[styles.priceTextOnPoster, { color: "#FFFFFF" }]}
-                  >
-                    {priceInfo.label}
-                  </Text>
-                </LinearGradient>
-              </View>
-            )}
-          </View>
-        )}
+          {/* Price Badge on Poster with Gradient */}
+          {priceInfo && (
+            <View style={styles.priceBadgeOnPoster}>
+              <LinearGradient
+                colors={
+                  priceInfo.label === "FREE"
+                    ? [`${priceInfo.color}F0`, `${priceInfo.color}D9`] // Solid for free
+                    : [
+                        `${priceInfo.color}F0`,
+                        `${priceInfo.color}CC`,
+                        `${priceInfo.color}E6`,
+                      ] // Gradient for paid
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[
+                  styles.priceBadgeGradient,
+                  {
+                    borderColor: `${priceInfo.color}`,
+                  },
+                ]}
+              >
+                <Text style={[styles.priceTextOnPoster, { color: "#FFFFFF" }]}>
+                  {priceInfo.label}
+                </Text>
+              </LinearGradient>
+            </View>
+          )}
+        </View>
         <View style={styles.cardContent}>
           {/* Date Badge and Action Buttons Row */}
           <View style={styles.dateActionsRow}>
