@@ -20,6 +20,7 @@ import {
   Animated,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -62,83 +63,91 @@ export default function LoginScreen() {
 
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
-        <View style={styles.content}>
-          {/* Logo */}
-          <Animated.View
-            style={[
-              styles.logoContainer,
-              {
-                transform: [{ scale: logoScale }],
-                opacity: logoOpacity,
-              },
-            ]}
-          >
-            <Image
-              source={require("../../../../assets/logo/logo-transparent.png")}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </Animated.View>
-
-          {/* Subtitle */}
-          <Animated.Text
-            style={[
-              styles.subtitle,
-              {
-                opacity: logoOpacity,
-              },
-            ]}
-          >
-            Welcome back!
-          </Animated.Text>
-
-          {/* Demo Credentials Banner */}
-          <DemoBanner
-            onDemoFill={handleDemoFill}
-            onShowInfo={toggleAdminInfo}
-            formTranslateY={formTranslateY}
-            formOpacity={formOpacity}
-          />
-
-          {/* Login Form */}
-          <LoginForm
-            email={email}
-            password={password}
-            loading={loading}
-            googleLoading={googleLoading}
-            showPassword={showPassword}
-            focusedInput={focusedInput}
-            formTranslateY={formTranslateY}
-            formOpacity={formOpacity}
-            onEmailChange={setEmail}
-            onPasswordChange={setPassword}
-            onEmailFocus={() => setFocusedInput("email")}
-            onPasswordFocus={() => setFocusedInput("password")}
-            onBlur={() => setFocusedInput(null)}
-            onTogglePassword={togglePasswordVisibility}
-            onLogin={handleLogin}
-            onGoogleSignIn={handleGoogleSignIn}
-          />
-
-          {/* Sign Up Link */}
-          <Animated.View
-            style={{
-              opacity: formOpacity,
-            }}
-          >
-            <TouchableOpacity
-              style={styles.linkButton}
-              onPress={() => navigation.navigate("SignUp")}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          bounces={false}
+        >
+          <View style={styles.content}>
+            {/* Logo */}
+            <Animated.View
+              style={[
+                styles.logoContainer,
+                {
+                  transform: [{ scale: logoScale }],
+                  opacity: logoOpacity,
+                },
+              ]}
             >
-              <Text style={styles.linkText}>
-                Don't have an account?{" "}
-                <Text style={styles.linkTextBold}>Sign Up</Text>
-              </Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </View>
+              <Image
+                source={require("../../../../assets/logo/logo-transparent.png")}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </Animated.View>
+
+            {/* Subtitle */}
+            <Animated.Text
+              style={[
+                styles.subtitle,
+                {
+                  opacity: logoOpacity,
+                },
+              ]}
+            >
+              Welcome back!
+            </Animated.Text>
+
+            {/* Demo Credentials Banner */}
+            <DemoBanner
+              onDemoFill={handleDemoFill}
+              onShowInfo={toggleAdminInfo}
+              formTranslateY={formTranslateY}
+              formOpacity={formOpacity}
+            />
+
+            {/* Login Form */}
+            <LoginForm
+              email={email}
+              password={password}
+              loading={loading}
+              googleLoading={googleLoading}
+              showPassword={showPassword}
+              focusedInput={focusedInput}
+              formTranslateY={formTranslateY}
+              formOpacity={formOpacity}
+              onEmailChange={setEmail}
+              onPasswordChange={setPassword}
+              onEmailFocus={() => setFocusedInput("email")}
+              onPasswordFocus={() => setFocusedInput("password")}
+              onBlur={() => setFocusedInput(null)}
+              onTogglePassword={togglePasswordVisibility}
+              onLogin={handleLogin}
+              onGoogleSignIn={handleGoogleSignIn}
+            />
+
+            {/* Sign Up Link */}
+            <Animated.View
+              style={{
+                opacity: formOpacity,
+              }}
+            >
+              <TouchableOpacity
+                style={styles.linkButton}
+                onPress={() => navigation.navigate("SignUp")}
+              >
+                <Text style={styles.linkText}>
+                  Don't have an account?{" "}
+                  <Text style={styles.linkTextBold}>Sign Up</Text>
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </GradientBackground>
   );

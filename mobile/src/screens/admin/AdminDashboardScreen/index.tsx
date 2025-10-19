@@ -10,7 +10,7 @@
  * ==============================================
  */
 
-import React from "react";
+import React, { useRef } from "react";
 import { View, Text, ScrollView, RefreshControl } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -21,6 +21,7 @@ import GradientBackground from "../../../components/GradientBackground";
 import { useAdminStats } from "./hooks";
 import { styles } from "./AdminDashboardScreen.styles";
 import { StatsCircles, QuickActionCard, LoadingSkeleton } from "./components";
+import { useScrollToTop } from "../../ProfileScreen/hooks";
 
 type NavigationProp = NativeStackNavigationProp<
   AdminStackParamList,
@@ -30,12 +31,17 @@ type NavigationProp = NativeStackNavigationProp<
 export default function AdminDashboardScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { stats, refreshing, onRefresh } = useAdminStats();
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Scroll to top when tab is pressed again
+  useScrollToTop({ scrollViewRef });
 
   if (stats.loading) {
     return (
       <View style={styles.container}>
         <GradientBackground />
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollView}
           contentContainerStyle={styles.content}
           refreshControl={
@@ -57,6 +63,7 @@ export default function AdminDashboardScreen() {
     <View style={styles.container}>
       <GradientBackground />
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         refreshControl={

@@ -11,7 +11,7 @@
  * ==============================================
  */
 
-import React from "react";
+import React, { useRef } from "react";
 import {
   View,
   ScrollView,
@@ -38,6 +38,7 @@ import { SettingSection } from "./components/SettingSection";
 import { styles } from "./SettingsScreen.styles";
 import { useAuth } from "../../contexts/auth";
 import * as Haptics from "expo-haptics";
+import { useScrollToTop } from "../ProfileScreen/hooks";
 
 type NavigationProp = NativeStackNavigationProp<
   SettingsStackParamList,
@@ -47,6 +48,10 @@ type NavigationProp = NativeStackNavigationProp<
 export default function SettingsScreen() {
   const { signOut } = useAuth();
   const navigation = useNavigation<NavigationProp>();
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Scroll to top when tab is pressed again
+  useScrollToTop({ scrollViewRef });
 
   const handleNavigateToProfile = () => {
     // Navigate to ProfileTab
@@ -88,6 +93,7 @@ export default function SettingsScreen() {
   return (
     <View style={styles.container}>
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}

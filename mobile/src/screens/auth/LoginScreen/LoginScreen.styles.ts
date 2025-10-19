@@ -8,11 +8,17 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+    minHeight: "100%",
+  },
   content: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: theme.spacing.lg,
+    paddingTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.xl,
   },
 
   //! ==============================================

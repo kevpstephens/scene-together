@@ -11,6 +11,7 @@
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import * as Crypto from "expo-crypto";
+import { Platform } from "react-native";
 import { supabase } from "../../lib/supabase";
 
 /**
@@ -57,20 +58,32 @@ export async function signInUser(
 
 /**
  * Sign in with Google OAuth
- * Opens browser for OAuth flow and handles token exchange
+ * Uses platform-specific OAuth flows:
+ * - Web: Standard redirect-based OAuth (handled automatically by Supabase)
+ * - Native: Opens browser and handles token exchange manually
  */
 export async function signInWithGoogleOAuth(): Promise<void> {
   try {
-    // Create a random state for PKCE
-    const state = Crypto.randomUUID();
+    // WEB: Use standard redirect-based OAuth
+    if (Platform.OS === "web") {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin, // Redirect back to current origin
+        },
+      });
 
-    // Get the redirect URL (where to return after OAuth)
+      if (error) throw error;
+      // Supabase handles the redirect automatically on web
+      return;
+    }
+
+    // NATIVE: Use WebBrowser flow
     const redirectUrl = AuthSession.makeRedirectUri({
       scheme: "scenetogether",
       path: "auth/callback",
     });
 
-    // Build the authorization URL
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

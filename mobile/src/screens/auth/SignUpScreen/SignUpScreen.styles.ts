@@ -7,12 +7,15 @@ export const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    minHeight: "100%",
   },
   content: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: theme.spacing.lg,
+    paddingTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.xl,
   },
   logoContainer: {
     backgroundColor: "rgba(255, 255, 255, 0.25)", // Bright frosted glass - makes logo pop
