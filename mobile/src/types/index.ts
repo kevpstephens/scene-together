@@ -7,6 +7,7 @@ export type EventCreator = {
   name: string | null;
   avatarUrl: string | null;
   role: Role;
+  createdAt?: string;
 };
 
 export type Event = {

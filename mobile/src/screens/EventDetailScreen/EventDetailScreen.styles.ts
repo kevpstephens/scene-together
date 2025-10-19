@@ -3,6 +3,9 @@ import { theme } from "../../theme";
 import { getPlatformGlow, getCardStyle } from "../../theme/styles";
 
 export const styles = StyleSheet.create({
+  //! ==============================================
+  //! Layout & Container Styles
+  //! ==============================================
   container: {
     flex: 1,
   },
@@ -24,6 +27,10 @@ export const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.lg,
     color: theme.colors.text.secondary,
   },
+
+  //! ==============================================
+  //! Hero Poster Section
+  //! ==============================================
   heroContainer: {
     width: "100%",
     alignItems: "center",
@@ -76,6 +83,10 @@ export const styles = StyleSheet.create({
     borderBottomLeftRadius: theme.components.radii.poster,
     borderBottomRightRadius: theme.components.radii.poster,
   },
+
+  //! ==============================================
+  //! Content & Typography
+  //! ==============================================
   content: {
     padding: theme.spacing.base,
   },
@@ -86,6 +97,10 @@ export const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
     lineHeight: theme.typography.fontSize.xxxl * 1.2,
   },
+
+  //! ==============================================
+  //! Info Cards & Event Details
+  //! ==============================================
   infoCard: {
     ...getCardStyle(),
     padding: theme.spacing.lg,
@@ -115,6 +130,10 @@ export const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontWeight: theme.typography.fontWeight.medium,
   },
+
+  //! ==============================================
+  //! Action Buttons
+  //! ==============================================
   actionButtonsRow: {
     flexDirection: Platform.OS === "web" ? "row" : "column",
     gap: theme.spacing.md,
@@ -144,6 +163,10 @@ export const styles = StyleSheet.create({
     color: theme.colors.primary,
     marginLeft: theme.spacing.sm,
   },
+
+  //! ==============================================
+  //! Generic Section Containers
+  //! ==============================================
   section: {
     ...getCardStyle(),
     padding: theme.spacing.lg,
@@ -160,6 +183,10 @@ export const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     lineHeight: theme.typography.fontSize.base * 1.5,
   },
+
+  //! ==============================================
+  //! Movie Metadata Section
+  //! ==============================================
   movieTitle: {
     fontSize: theme.typography.fontSize.xl,
     fontWeight: theme.typography.fontWeight.bold,
@@ -233,6 +260,10 @@ export const styles = StyleSheet.create({
     color: "#ffffff",
     letterSpacing: 0.5,
   },
+
+  //! ==============================================
+  //! Trailer Section
+  //! ==============================================
   trailerContainer: {
     marginTop: theme.spacing.lg,
     paddingTop: theme.spacing.lg,
@@ -269,6 +300,10 @@ export const styles = StyleSheet.create({
     width: "100%",
     aspectRatio: 16 / 9,
   },
+
+  //! ==============================================
+  //! RSVP Section
+  //! ==============================================
   rsvpSection: {
     marginTop: theme.spacing.md,
     paddingTop: theme.spacing.xl,
@@ -391,7 +426,10 @@ export const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     marginLeft: theme.spacing.sm,
   },
-  // Sticky Bottom Bar Styles
+
+  //! ==============================================
+  //! Sticky Bottom Bar
+  //! ==============================================
   stickyBottomBar: {
     position: "absolute",
     bottom: 0,
@@ -444,7 +482,10 @@ export const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.bold,
   },
-  // PWYC Modal styles
+
+  //! ==============================================
+  //! Pay What You Can (PWYC) Modal
+  //! ==============================================
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.85)",
@@ -553,6 +594,10 @@ export const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 12,
   },
+
+  //! ==============================================
+  //! Test Mode Components
+  //! ==============================================
   testCardsContainer: {
     ...getCardStyle(),
     padding: theme.spacing.lg,
@@ -594,7 +639,10 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 0.3,
   },
-  // EventOrganizer component styles
+
+  //! ==============================================
+  //! EventOrganizer component styles
+  //! ==============================================
   organizerContainer: {
     marginTop: 24,
     marginBottom: 8,

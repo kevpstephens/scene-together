@@ -13,18 +13,22 @@ import {
   FilmIcon,
   UserIcon,
   Cog6ToothIcon,
+  AdjustmentsHorizontalIcon,
 } from "react-native-heroicons/outline";
 import { FilmIcon as FilmIconSolid } from "react-native-heroicons/solid";
 import { UserIcon as UserIconSolid } from "react-native-heroicons/solid";
 import { Cog6ToothIcon as Cog6ToothIconSolid } from "react-native-heroicons/solid";
+import { AdjustmentsHorizontalIcon as AdjustmentsHorizontalIconSolid } from "react-native-heroicons/solid";
 import { MainTabParamList } from "./types";
 import EventsStackNavigator from "./EventsStackNavigator";
 import ProfileStackNavigator from "./ProfileStackNavigator";
 import AdminStackNavigator from "./AdminStackNavigator";
+import SettingsStackNavigator from "./SettingsStackNavigator";
 import { theme } from "../theme";
 import { useAuth } from "../contexts/auth";
 import * as Haptics from "expo-haptics";
-import { Platform, View, StyleSheet } from "react-native";
+import { Platform, View, Image } from "react-native";
+import { styles } from "./MainTabNavigator.styles";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -56,30 +60,50 @@ const TabIcon: React.FC<TabIconProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  iconContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    height: "100%",
-  },
-  activeIndicator: {
-    position: "absolute",
-    top: -12,
-    left: "10%",
-    right: "10%",
-    height: 4,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 2,
-  },
-});
+/**
+ * Profile Avatar Icon
+ * Shows user avatar if available, otherwise shows default user icon
+ */
+interface ProfileAvatarIconProps {
+  focused: boolean;
+  color: string;
+  avatarUrl: string | null | undefined;
+}
+
+const ProfileAvatarIcon: React.FC<ProfileAvatarIconProps> = ({
+  focused,
+  color,
+  avatarUrl,
+}) => {
+  return (
+    <View style={styles.iconContainer}>
+      {/* Active indicator line */}
+      {focused && <View style={styles.activeIndicator} />}
+      {avatarUrl ? (
+        <Image
+          source={{ uri: avatarUrl }}
+          style={[styles.profileAvatar, focused && styles.profileAvatarFocused]}
+          resizeMode="cover"
+        />
+      ) : (
+        <>
+          {focused ? (
+            <UserIconSolid size={24} color={color} />
+          ) : (
+            <UserIcon size={24} color={color} />
+          )}
+        </>
+      )}
+    </View>
+  );
+};
 
 /**
  * Main Tab Navigator
  * Conditionally shows Admin tab based on user role
  */
 export default function MainTabNavigator() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, userProfile } = useAuth();
 
   return (
     <Tab.Navigator
@@ -153,11 +177,25 @@ export default function MainTabNavigator() {
         options={{
           tabBarLabel: "Profile",
           tabBarIcon: ({ color, focused }) => (
+            <ProfileAvatarIcon
+              focused={focused}
+              color={color}
+              avatarUrl={userProfile?.avatarUrl}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="SettingsTab"
+        component={SettingsStackNavigator}
+        options={{
+          tabBarLabel: "Settings",
+          tabBarIcon: ({ color, focused }) => (
             <TabIcon
               focused={focused}
               color={color}
-              IconOutline={UserIcon}
-              IconSolid={UserIconSolid}
+              IconOutline={AdjustmentsHorizontalIcon}
+              IconSolid={AdjustmentsHorizontalIconSolid}
             />
           ),
         }}

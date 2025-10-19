@@ -2,6 +2,9 @@ import { StyleSheet, Platform } from "react-native";
 import { theme } from "../../../theme";
 
 export const styles = StyleSheet.create({
+  //! ==============================================
+  //! Layout & Container Styles
+  //! ==============================================
   container: {
     flex: 1,
   },
@@ -13,6 +16,10 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
+  //! ==============================================
+  //! Hint Banner
+  //! ==============================================
   hintBanner: {
     flexDirection: "row",
     alignItems: "center",
@@ -28,6 +35,10 @@ export const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontWeight: "600",
   },
+
+  //! ==============================================
+  //! Hero Poster Section
+  //! ==============================================
   heroContainer: {
     width: "100%",
     height: 400,
@@ -48,6 +59,10 @@ export const styles = StyleSheet.create({
     right: 0,
     height: "60%",
   },
+
+  //! ==============================================
+  //! Action Buttons
+  //! ==============================================
   cropButton: {
     position: "absolute",
     bottom: theme.spacing.lg,
@@ -204,6 +219,10 @@ export const styles = StyleSheet.create({
     fontWeight: "600",
     color: theme.colors.text.primary,
   },
+
+  //! ==============================================
+  //! Input Fields & Controls
+  //! ==============================================
   infoValueInput: {
     fontSize: theme.typography.fontSize.base,
     fontWeight: "600",

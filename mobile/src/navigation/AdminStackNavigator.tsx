@@ -42,7 +42,10 @@ export default function AdminStackNavigator() {
       <Stack.Screen
         name="AdminDashboard"
         component={AdminDashboardScreen}
-        options={{ title: "Admin Dashboard" }}
+        options={{
+          title: "Admin Dashboard",
+          headerTintColor: theme.colors.primary,
+        }}
       />
       <Stack.Screen
         name="AdminEvents"

@@ -3,6 +3,9 @@ import { theme } from "../../theme";
 import { getCardStyle } from "../../theme/styles";
 
 export const styles = StyleSheet.create({
+  //! ==============================================
+  //! Layout & Container Styles
+  //! ==============================================
   wrapper: {
     flex: 1,
   },
@@ -15,12 +18,10 @@ export const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "center",
   },
-  pageTitle: {
-    fontSize: theme.typography.fontSize.xxl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xl,
-  },
+
+  //! ==============================================
+  //! Profile Card & Avatar
+  //! ==============================================
   profileCard: {
     ...getCardStyle(),
     alignItems: "center",
@@ -75,6 +76,36 @@ export const styles = StyleSheet.create({
     color: theme.colors.primary,
     marginLeft: theme.spacing.sm,
   },
+  metaInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: theme.spacing.md,
+    gap: theme.spacing.md,
+  },
+  roleBadge: {
+    backgroundColor: `${theme.colors.primary}20`,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.full,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+  },
+  roleText: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.primary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  joinedText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+  },
+
+  //! ==============================================
+  //! Events Section
+  //! ==============================================
   eventsCard: {
     ...getCardStyle(),
     padding: theme.spacing.lg,
@@ -150,6 +181,10 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: theme.spacing.xs,
   },
+
+  //! ==============================================
+  //! Logout Button
+  //! ==============================================
   logoutButton: {
     backgroundColor: theme.colors.error,
     paddingVertical: theme.spacing.md,
@@ -163,6 +198,10 @@ export const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
   },
+
+  //! ==============================================
+  //! Loading States
+  //! ==============================================
   centerContent: {
     justifyContent: "center",
     alignItems: "center",
@@ -181,6 +220,10 @@ export const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.secondary,
   },
+
+  //! ==============================================
+  //! Event Card Display
+  //! ==============================================
   eventCard: {
     flexDirection: "row",
     backgroundColor: theme.components.surfaces.section,
@@ -234,7 +277,10 @@ export const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.inverse,
   },
-  // Stats Card Styles
+
+  //! ==============================================
+  //! Statistics Card
+  //! ==============================================
   statsCard: {
     ...getCardStyle(),
     padding: theme.spacing.lg,
@@ -298,6 +344,10 @@ export const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 12,
   },
+
+  //! ==============================================
+  //! Recent Activity Section
+  //! ==============================================
   recentActivity: {
     backgroundColor: theme.components.surfaces.section,
     padding: theme.spacing.base,
@@ -330,6 +380,10 @@ export const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.text.tertiary,
   },
+
+  //! ==============================================
+  //! Favorite Genres Section
+  //! ==============================================
   favoriteGenres: {
     paddingTop: theme.spacing.base,
     borderTopWidth: 1,
@@ -372,7 +426,10 @@ export const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.inverse,
   },
-  // Filter Buttons
+
+  //! ==============================================
+  //! Filter Buttons
+  //! ==============================================
   filterContainer: {
     flexDirection: "row",
     gap: theme.spacing.sm,
@@ -401,7 +458,10 @@ export const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontWeight: theme.typography.fontWeight.bold,
   },
-  // Payment History Styles
+
+  //! ==============================================
+  //! Payment History Section
+  //! ==============================================
   paymentHistoryCard: {
     ...getCardStyle(),
     padding: theme.spacing.lg,

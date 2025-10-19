@@ -193,10 +193,6 @@ export default function ProfileScreen() {
         }
       >
         <View style={styles.content}>
-          <Text style={styles.pageTitle}>
-            {isViewingOtherProfile ? `${displayName}'s Profile` : "My Profile"}
-          </Text>
-
           {/* User Info Card */}
           <ProfileHeader
             userProfile={
@@ -204,6 +200,8 @@ export default function ProfileScreen() {
                 ? {
                     name: otherUserProfile?.name,
                     avatarUrl: otherUserProfile?.avatarUrl,
+                    role: otherUserProfile?.role,
+                    createdAt: otherUserProfile?.createdAt,
                   }
                 : userProfile
             }

@@ -33,6 +33,12 @@ export type MainTabParamList = {
   EventsTab: NavigatorScreenParams<EventsStackParamList>;
   ProfileTab: NavigatorScreenParams<ProfileStackParamList>;
   AdminTab?: undefined; // Optional, only shown to admins
+  SettingsTab: NavigatorScreenParams<SettingsStackParamList>;
+};
+
+// Settings Stack Navigator
+export type SettingsStackParamList = {
+  SettingsMain: undefined;
 };
 
 // Profile Stack Navigator

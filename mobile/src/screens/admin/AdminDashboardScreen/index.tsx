@@ -11,9 +11,10 @@
  */
 
 import React from "react";
-import { View, Text, ScrollView, RefreshControl } from "react-native";
+import { View, Text, ScrollView, RefreshControl, Platform } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { BlurView } from "expo-blur";
 import { AdminStackParamList } from "../../../navigation/types";
 import { FilmIcon, PlusCircleIcon } from "react-native-heroicons/solid";
 import { theme } from "../../../theme";
@@ -68,11 +69,32 @@ export default function AdminDashboardScreen() {
           />
         }
       >
-        {/* Welcome Section */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Admin Dashboard</Text>
-          <Text style={styles.subtitle}>Manage your events platform</Text>
-        </View>
+        {/* Welcome Container */}
+        {Platform.OS === "web" ? (
+          <View style={styles.welcomeBox}>
+            <Text style={styles.welcomeTitle}>
+              Welcome to the Admin Dashboard!
+            </Text>
+            <Text style={styles.welcomeText}>
+              Manage, create, and edit your events. View attendee lists, track
+              RSVPs, and keep your community engaged with amazing film
+              screenings.
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.welcomeBox}>
+            <BlurView intensity={20} tint="light" style={styles.blurContainer}>
+              <Text style={styles.welcomeTitle}>
+                Welcome to the Admin Dashboard!
+              </Text>
+              <Text style={styles.welcomeText}>
+                Manage, create, and edit your events. View attendee lists, track
+                RSVPs, and keep your community engaged with amazing film
+                screenings.
+              </Text>
+            </BlurView>
+          </View>
+        )}
 
         {/* Stats Cards - Overlapping Circles */}
         <StatsCircles

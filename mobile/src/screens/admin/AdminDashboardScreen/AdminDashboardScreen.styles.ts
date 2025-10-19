@@ -17,21 +17,48 @@ export const styles = StyleSheet.create({
     padding: theme.spacing.base,
     alignItems: "center",
   },
-  header: {
+  welcomeBox: {
     width: "100%",
     maxWidth: theme.layout.maxWidth,
+    backgroundColor: "rgba(255, 255, 255, 0.08)", // Slightly transparent
+    borderRadius: theme.borderRadius.xl,
     marginBottom: theme.spacing.xl,
-    paddingTop: theme.spacing.lg,
+    marginTop: theme.spacing.lg,
+    borderWidth: 1.5,
+    borderColor: `${theme.colors.primary}40`, // Teal outline with transparency
+    overflow: "hidden", // Important for blur effect
+    ...Platform.select({
+      ios: {
+        shadowColor: theme.colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 6,
+      },
+      web: {
+        padding: theme.spacing.xl,
+        boxShadow: `0 4px 16px ${theme.colors.primary}20, 0 2px 8px rgba(0, 0, 0, 0.1)`,
+        backdropFilter: "blur(10px)",
+      },
+    }),
   },
-  title: {
-    fontSize: theme.typography.fontSize.xxxl,
+  blurContainer: {
+    padding: theme.spacing.xl,
+  },
+  welcomeTitle: {
+    fontSize: theme.typography.fontSize.xl,
     fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
+    color: theme.colors.primary,
+    marginBottom: theme.spacing.sm,
+    textAlign: "center",
   },
-  subtitle: {
+  welcomeText: {
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.text.secondary,
+    textAlign: "center",
+    lineHeight: 22,
   },
   statsContainer: {
     width: "100%",

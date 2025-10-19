@@ -3,6 +3,9 @@ import { theme } from "../../theme";
 import { getPlatformGlow, getCardStyle } from "../../theme/styles";
 
 export const styles = StyleSheet.create({
+  //! ==============================================
+  //! Layout & Container Styles
+  //! ==============================================
   container: {
     flex: 1,
     alignItems: "center",
@@ -12,6 +15,10 @@ export const styles = StyleSheet.create({
     width: "100%",
     maxWidth: theme.layout.maxWidth,
   },
+
+  //! ==============================================
+  //! Search & Filter Components
+  //! ==============================================
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -59,6 +66,10 @@ export const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontWeight: theme.typography.fontWeight.semibold,
   },
+
+  //! ==============================================
+  //! Loading & List States
+  //! ==============================================
   centered: {
     flex: 1,
     justifyContent: "center",
@@ -72,8 +83,12 @@ export const styles = StyleSheet.create({
   },
   list: {
     padding: theme.spacing.base,
-    paddingTop: 0, // Header is now part of the list, no extra padding needed
+    paddingTop: 0,
   },
+
+  //! ==============================================
+  //! Empty State Components
+  //! ==============================================
   emptyContainer: {
     flexGrow: 1,
     paddingTop: 0, // Header is now part of the list, no extra padding needed
@@ -157,6 +172,10 @@ export const styles = StyleSheet.create({
     marginLeft: Platform.OS === "web" ? theme.spacing.lg : theme.spacing.md,
     flex: 1,
   },
+
+  //! ==============================================
+  //! Event Card - Main Container
+  //! ==============================================
   card: {
     ...getCardStyle(),
     marginBottom: theme.spacing.lg,
@@ -180,6 +199,10 @@ export const styles = StyleSheet.create({
       },
     }),
   },
+
+  //! ==============================================
+  //! Event Card - Poster Section
+  //! ==============================================
   posterContainer: {
     position: "relative",
     width: "100%",
@@ -241,6 +264,10 @@ export const styles = StyleSheet.create({
     letterSpacing: 0.5,
     textTransform: "uppercase",
   },
+
+  //! ==============================================
+  //! Event Card - Status Badges
+  //! ==============================================
   statusBadge: {
     position: "absolute",
     top: theme.spacing.md,
@@ -287,6 +314,10 @@ export const styles = StyleSheet.create({
     textTransform: "uppercase",
     marginLeft: theme.spacing.xs,
   },
+
+  //! ==============================================
+  //! Event Card - Content & Layout
+  //! ==============================================
   cardContent: {
     paddingTop: theme.spacing.md, // Reduced to bring date badge closer to poster
     paddingHorizontal: theme.spacing.lg,
@@ -322,6 +353,10 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     gap: theme.spacing.xs,
   },
+
+  //! ==============================================
+  //! Event Card - Action Buttons
+  //! ==============================================
   iconButton: {
     padding: theme.spacing.md,
     borderRadius: theme.borderRadius.full,
@@ -358,6 +393,10 @@ export const styles = StyleSheet.create({
       },
     }),
   },
+
+  //! ==============================================
+  //! Event Card - Date & Time Display
+  //! ==============================================
   timeLocationRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -405,6 +444,10 @@ export const styles = StyleSheet.create({
       },
     }),
   },
+
+  //! ==============================================
+  //! Event Card - Title & Details
+  //! ==============================================
   title: {
     fontSize: theme.typography.fontSize.xxl, // Increased from xl to xxl
     fontWeight: "800" as any, // Extra bold (800 weight)
@@ -431,6 +474,10 @@ export const styles = StyleSheet.create({
     flexShrink: 1,
     marginLeft: theme.spacing.xs,
   },
+
+  //! ==============================================
+  //! Event Card - Movie Info & Genres
+  //! ==============================================
   movieInfo: {
     marginTop: theme.spacing.sm,
     marginBottom: theme.spacing.md,
@@ -480,6 +527,10 @@ export const styles = StyleSheet.create({
     color: "#ffffff",
     letterSpacing: 0.3,
   },
+
+  //! ==============================================
+  //! Event Card - Capacity & Progress
+  //! ==============================================
   capacityContainer: {
     marginTop: theme.spacing.lg, // Reduced for tighter spacing
   },
@@ -549,6 +600,10 @@ export const styles = StyleSheet.create({
       },
     }),
   },
+
+  //! ==============================================
+  //! Event Card - Pricing
+  //! ==============================================
   priceBadge: {
     paddingHorizontal: theme.spacing.base,
     paddingVertical: theme.spacing.xs,
@@ -574,7 +629,10 @@ export const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     letterSpacing: 0.5,
   },
-  // EventCardOrganizer styles
+
+  //! ==============================================
+  //! Event Card - Organizer Component
+  //! ==============================================
   organizerContainer: {
     flexDirection: "row",
     alignItems: "center",

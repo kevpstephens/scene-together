@@ -82,7 +82,6 @@ export default function EventsStackNavigator() {
         component={EventDetailScreen}
         options={{
           title: "Event Details",
-          // Fade animation for smooth transition with custom scale animation
           animation: "fade",
           presentation: "card",
           headerShown: true,
@@ -101,6 +100,7 @@ export default function EventsStackNavigator() {
           presentation: "card",
           headerShown: true,
           gestureEnabled: true,
+          fullScreenGestureEnabled: false,
         }}
       />
     </Stack.Navigator>

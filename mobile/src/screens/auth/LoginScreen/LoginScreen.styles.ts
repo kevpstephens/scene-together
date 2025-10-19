@@ -2,6 +2,9 @@ import { StyleSheet, Platform } from "react-native";
 import { theme } from "../../../theme";
 
 export const styles = StyleSheet.create({
+  //! ==============================================
+  //! Layout & Container Styles
+  //! ==============================================
   container: {
     flex: 1,
   },
@@ -11,6 +14,10 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     padding: theme.spacing.lg,
   },
+
+  //! ==============================================
+  //! Logo & Branding
+  //! ==============================================
   logoContainer: {
     backgroundColor: "rgba(255, 255, 255, 0.25)", // Bright frosted glass - makes logo pop
     borderRadius: theme.borderRadius.lg,
@@ -51,6 +58,10 @@ export const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     marginBottom: theme.spacing.lg, // More breathing room
   },
+
+  //! ==============================================
+  //! Form Inputs
+  //! ==============================================
   form: {
     width: "100%",
     maxWidth: 400,
@@ -109,6 +120,10 @@ export const styles = StyleSheet.create({
   passwordToggle: {
     padding: theme.spacing.xs,
   },
+
+  //! ==============================================
+  //! Buttons & Actions
+  //! ==============================================
   button: {
     backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.md, // Comfortable size
@@ -136,6 +151,10 @@ export const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontWeight: theme.typography.fontWeight.semibold,
   },
+
+  //! ==============================================
+  //! Divider & OAuth Section
+  //! ==============================================
   divider: {
     flexDirection: "row",
     alignItems: "center",
