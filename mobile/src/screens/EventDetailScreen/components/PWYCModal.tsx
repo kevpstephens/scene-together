@@ -35,9 +35,16 @@ export const PWYCModal: React.FC<PWYCModalProps> = ({
 }) => {
   const [pwycAmount, setPwycAmount] = useState("");
 
+  // Clear amount when modal closes
+  React.useEffect(() => {
+    if (!visible) {
+      setPwycAmount("");
+    }
+  }, [visible]);
+
   const handleClose = () => {
-    onClose();
     setPwycAmount("");
+    onClose();
   };
 
   const handleConfirm = () => {
@@ -58,6 +65,8 @@ export const PWYCModal: React.FC<PWYCModalProps> = ({
       return;
     }
 
+    // Clear amount and proceed with payment
+    setPwycAmount("");
     onConfirm(amountInCents);
   };
 

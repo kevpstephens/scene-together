@@ -1,5 +1,12 @@
 import React, { useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Animated, Platform } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  Platform,
+  Modal,
+} from "react-native";
 import {
   CheckCircleIcon,
   XCircleIcon,
@@ -102,26 +109,44 @@ export default function Toast({
     }
   };
 
+  // Wrap in Modal to ensure it renders above all other modals
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          backgroundColor: getBackgroundColor(),
-          transform: [{ translateY }],
-          opacity,
-        },
-      ]}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      statusBarTranslucent
+      onRequestClose={() => {}}
+      supportedOrientations={["portrait", "landscape"]}
+      pointerEvents="box-none"
     >
-      {getIcon()}
-      <Text style={styles.message} numberOfLines={2}>
-        {message}
-      </Text>
-    </Animated.View>
+      <View style={styles.modalContainer} pointerEvents="box-none">
+        <Animated.View
+          style={[
+            styles.container,
+            {
+              backgroundColor: getBackgroundColor(),
+              transform: [{ translateY }],
+              opacity,
+            },
+          ]}
+        >
+          {getIcon()}
+          <Text style={styles.message} numberOfLines={2}>
+            {message}
+          </Text>
+        </Animated.View>
+      </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "stretch",
+  },
   container: {
     position: "absolute",
     top: 60,
@@ -133,7 +158,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.xl,
-    zIndex: 9999,
+    zIndex: 999999, // Extremely high z-index to appear above modals
+    elevation: 999999, // Android elevation to appear above modals
     // Web-compatible shadow
     ...(Platform.OS === "web"
       ? {

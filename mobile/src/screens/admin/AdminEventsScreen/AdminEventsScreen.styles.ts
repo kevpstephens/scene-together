@@ -235,6 +235,12 @@ export const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
     lineHeight: 22,
   },
+  modalWarning: {
+    color: theme.colors.warning,
+    fontWeight: theme.typography.fontWeight.semibold,
+    fontSize: theme.typography.fontSize.sm,
+    marginTop: -theme.spacing.md,
+  },
   modalButtons: {
     flexDirection: "row",
     justifyContent: "space-between",

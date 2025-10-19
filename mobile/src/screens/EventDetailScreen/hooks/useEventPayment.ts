@@ -8,9 +8,10 @@
  */
 
 import { useState } from "react";
-import { Platform } from "react-native";
+import { Platform, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
+import Constants from "expo-constants";
 import { useStripe } from "../../../hooks/useStripe";
 import { useToast } from "../../../contexts/toast";
 import {
@@ -52,6 +53,7 @@ export const useEventPayment = ({
   const [showTestNotice, setShowTestNotice] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [pendingAmount, setPendingAmount] = useState<number | null>(null);
+  const [pendingPWYC, setPendingPWYC] = useState(false); // Track if we need to show PWYC after demo modal
 
   const isTestMode =
     typeof STRIPE_PUBLISHABLE_KEY === "string" &&
@@ -89,7 +91,7 @@ export const useEventPayment = ({
 
     // If we get here, webhook may still be processing - reload one final time
     await Promise.all([loadEvent(), loadUserRSVP()]);
-    console.warn("⚠️ Webhook polling timed out, RSVP may still be processing");
+    console.warn("Webhook polling timed out, RSVP may still be processing");
   };
 
   /**
@@ -98,6 +100,18 @@ export const useEventPayment = ({
   const handlePayment = async (amount: number) => {
     try {
       setRsvpLoading(true);
+      setShowPWYCModal(false); // Close modal immediately when payment starts
+
+      // Check if running in Expo Go (native only)
+      if (Platform.OS !== "web" && Constants.appOwnership === "expo") {
+        Alert.alert(
+          "Payment Not Available",
+          "Stripe payments require a development build and don't work in Expo Go.\n\nPlease build and run locally:\nnpx expo run:ios (iOS)\nnpx expo run:android (Android)",
+          [{ text: "OK" }]
+        );
+        setRsvpLoading(false);
+        return;
+      }
 
       // Create payment intent on backend
       const {
@@ -210,39 +224,88 @@ export const useEventPayment = ({
           // Notify user that payment has been fully processed
           showToast("Payment confirmed! You're all set 🎉", "success");
         } catch (syncError) {
-          console.error("❌ Background payment sync error:", syncError);
+          console.error("Background payment sync error:", syncError);
         }
       })();
     } catch (error: any) {
       console.error("Payment error:", error);
       showToast(error.message || "Payment failed", "error");
+      // Don't reopen modal - user can retry by clicking RSVP button again
     } finally {
       setRsvpLoading(false);
-      setShowPWYCModal(false);
-      setPwycAmount("");
     }
   };
 
   /**
-   * Wrapper that optionally shows a one-time test notice before running payment
+   * Initiate Pay What You Can flow
+   * Shows demo payment notice first (in test mode), then opens PWYC modal
    */
-  const requestPayment = async (amountCents: number) => {
-    if (isTestMode && !demoNoticeSeen) {
+  const requestPWYC = () => {
+    if (Platform.OS !== "web" && Constants.appOwnership === "expo") {
+      Alert.alert(
+        "Payment Not Available",
+        "Stripe payments require a development build and don't work in Expo Go.\n\nPlease build and run locally:\nnpx expo run:ios (iOS)\nnpx expo run:android (Android)",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    const shouldShowNotice = isTestMode && (__DEV__ || !demoNoticeSeen);
+
+    if (shouldShowNotice) {
+      setPendingPWYC(true);
+      setShowTestNotice(true);
+      return;
+    }
+
+    setShowPWYCModal(true);
+  };
+
+  /**
+   * Initiate payment flow for fixed-price or PWYC events
+   * Shows demo notice in test mode (unless skipped), then processes payment
+   * @param amountCents - Amount to charge in cents
+   * @param skipNotice - Skip demo notice (used when already shown in PWYC flow)
+   */
+  const requestPayment = async (amountCents: number, skipNotice = false) => {
+    if (Platform.OS !== "web" && Constants.appOwnership === "expo") {
+      Alert.alert(
+        "Payment Not Available",
+        "Stripe payments require a development build and don't work in Expo Go.\n\nPlease build and run locally:\nnpx expo run:ios (iOS)\nnpx expo run:android (Android)",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    const shouldShowNotice =
+      !skipNotice && isTestMode && (__DEV__ || !demoNoticeSeen);
+
+    if (shouldShowNotice) {
       setPendingAmount(amountCents);
       setShowTestNotice(true);
       return;
     }
+
     await handlePayment(amountCents);
   };
 
   /**
    * Handle dismissing the test notice modal
+   * Proceeds to either PWYC modal or direct payment based on pending action
    */
   const handleDismissTestNotice = async () => {
     setShowTestNotice(false);
+
     if (dontShowAgain) {
       await AsyncStorage.setItem("demo_payment_notice_dismissed", "1");
     }
+
+    if (pendingPWYC) {
+      setPendingPWYC(false);
+      setShowPWYCModal(true);
+      return;
+    }
+
     if (pendingAmount !== null) {
       await handlePayment(pendingAmount);
       setPendingAmount(null);
@@ -264,6 +327,7 @@ export const useEventPayment = ({
     setShowTestNotice,
     // Actions
     requestPayment,
+    requestPWYC,
     handlePayment,
     handleDismissTestNotice,
   };

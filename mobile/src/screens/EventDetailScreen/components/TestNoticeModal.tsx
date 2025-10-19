@@ -77,38 +77,41 @@ export const TestNoticeModal: React.FC<TestNoticeModalProps> = ({
             </View>
           </View>
 
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 12,
-            }}
-          >
-            <TouchableOpacity
-              onPress={() => onDontShowAgainChange(!dontShowAgain)}
+          {/* Only show "Don't show again" in production builds */}
+          {!__DEV__ && (
+            <View
               style={{
-                width: 22,
-                height: 22,
-                borderRadius: 4,
-                borderWidth: 2,
-                borderColor: theme.colors.primary,
+                flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "center",
-                marginRight: 8,
+                marginBottom: 12,
               }}
             >
-              {dontShowAgain && (
-                <View
-                  style={{
-                    width: 12,
-                    height: 12,
-                    backgroundColor: theme.colors.primary,
-                  }}
-                />
-              )}
-            </TouchableOpacity>
-            <Text style={styles.description}>Don't show again</Text>
-          </View>
+              <TouchableOpacity
+                onPress={() => onDontShowAgainChange(!dontShowAgain)}
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 4,
+                  borderWidth: 2,
+                  borderColor: theme.colors.primary,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: 8,
+                }}
+              >
+                {dontShowAgain && (
+                  <View
+                    style={{
+                      width: 12,
+                      height: 12,
+                      backgroundColor: theme.colors.primary,
+                    }}
+                  />
+                )}
+              </TouchableOpacity>
+              <Text style={styles.description}>Don't show again</Text>
+            </View>
+          )}
 
           <View style={styles.modalButtons}>
             <TouchableOpacity

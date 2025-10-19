@@ -94,6 +94,7 @@ export default function EventDetailScreen() {
     setDontShowAgain,
     isTestMode,
     requestPayment,
+    requestPWYC,
     handleDismissTestNotice,
   } = useEventPayment({
     eventId,
@@ -111,7 +112,7 @@ export default function EventDetailScreen() {
     setUserRSVP,
     loadEvent,
     requestPayment,
-    setShowPWYCModal,
+    requestPWYC,
     onRSVPSuccess: () => setShowConfetti(true),
   });
 
@@ -246,7 +247,7 @@ export default function EventDetailScreen() {
           event={event}
           rsvpLoading={rsvpLoading}
           onClose={() => setShowPWYCModal(false)}
-          onConfirm={requestPayment}
+          onConfirm={(amount) => requestPayment(amount, true)} // Skip demo notice, already shown
           showToast={showToast}
         />
       )}

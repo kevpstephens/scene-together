@@ -1,6 +1,10 @@
 import React from "react";
 import { View, Text, ActivityIndicator, TouchableOpacity } from "react-native";
-import { CheckCircleIcon, TicketIcon, InformationCircleIcon } from "react-native-heroicons/outline";
+import {
+  CheckCircleIcon,
+  TicketIcon,
+  InformationCircleIcon,
+} from "react-native-heroicons/outline";
 import AnimatedButton from "../../../components/AnimatedButton";
 import { theme } from "../../../theme";
 import { styles } from "../EventDetailScreen.styles";
@@ -36,22 +40,28 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
         <View style={styles.priceInfo}>
           {event.payWhatYouCan ? (
             <>
-              <Text style={styles.priceLabel}>PWYC</Text>
-              <Text style={styles.priceSubtext}>
+              <Text style={styles.priceLabel} numberOfLines={1}>
+                PWYC
+              </Text>
+              <Text style={styles.priceSubtext} numberOfLines={1}>
                 Min £{((event.minPrice || 0) / 100).toFixed(2)}
               </Text>
             </>
           ) : event.price && event.price > 0 ? (
             <>
-              <Text style={styles.priceLabel}>
+              <Text style={styles.priceLabel} numberOfLines={1}>
                 £{(event.price / 100).toFixed(2)}
               </Text>
-              <Text style={styles.priceSubtext}>per person</Text>
+              <Text style={styles.priceSubtext} numberOfLines={1}>
+                per person
+              </Text>
             </>
           ) : (
             <>
-              <Text style={styles.priceLabel}>Free</Text>
-              <Text style={styles.priceSubtext}>
+              <Text style={styles.priceLabel} numberOfLines={1}>
+                Free
+              </Text>
+              <Text style={styles.priceSubtext} numberOfLines={1}>
                 {event.attendeeCount || 0}/{event.maxCapacity} attending
               </Text>
             </>
@@ -64,16 +74,11 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
             styles.stickyRsvpButton,
             userRSVP === "going" && styles.stickyRsvpButtonActive,
           ]}
-          onPress={() =>
-            onRSVP(userRSVP === "going" ? "not_going" : "going")
-          }
+          onPress={() => onRSVP(userRSVP === "going" ? "not_going" : "going")}
           disabled={rsvpLoading}
         >
           {rsvpLoading ? (
-            <ActivityIndicator
-              size="small"
-              color={theme.colors.text.inverse}
-            />
+            <ActivityIndicator size="small" color={theme.colors.text.inverse} />
           ) : (
             <>
               {userRSVP === "going" ? (
@@ -82,9 +87,7 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
                     size={20}
                     color={theme.colors.text.inverse}
                   />
-                  <Text style={styles.stickyButtonText}>
-                    You're Going!
-                  </Text>
+                  <Text style={styles.stickyButtonText}>You're Going!</Text>
                 </>
               ) : (
                 <View
@@ -94,10 +97,7 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
                     gap: 8,
                   }}
                 >
-                  <TicketIcon
-                    size={20}
-                    color={theme.colors.text.inverse}
-                  />
+                  <TicketIcon size={20} color={theme.colors.text.inverse} />
                   <Text style={styles.stickyButtonText}>
                     {event.price && event.price > 0
                       ? event.payWhatYouCan
@@ -125,4 +125,3 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
     </View>
   );
 };
-

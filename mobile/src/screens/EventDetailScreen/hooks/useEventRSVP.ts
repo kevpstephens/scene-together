@@ -10,6 +10,7 @@
 import { useState } from "react";
 import { Alert, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 import * as Haptics from "expo-haptics";
 import { api } from "../../../services/api";
 import { promptAddToCalendar } from "../../../services/calendar";
@@ -22,8 +23,8 @@ interface UseEventRSVPProps {
   userRSVP: RSVPStatus | null;
   setUserRSVP: (status: RSVPStatus | null) => void;
   loadEvent: () => Promise<void>;
-  requestPayment: (amountCents: number) => Promise<void>;
-  setShowPWYCModal: (show: boolean) => void;
+  requestPayment: (amountCents: number, skipNotice?: boolean) => Promise<void>;
+  requestPWYC: () => void;
   onRSVPSuccess: () => void;
 }
 
@@ -38,7 +39,7 @@ export const useEventRSVP = ({
   setUserRSVP,
   loadEvent,
   requestPayment,
-  setShowPWYCModal,
+  requestPWYC,
   onRSVPSuccess,
 }: UseEventRSVPProps) => {
   const { showToast } = useToast();
@@ -61,16 +62,27 @@ export const useEventRSVP = ({
       // If going to a paid event, handle payment flow
       if (status === "going" && event) {
         const requiresPayment = event.price && event.price > 0;
-        const isPWYC = event.payWhatYouCan;
+        const isPWYC = event.payWhatYouCan === true;
 
-        if (requiresPayment || isPWYC) {
-          // If Pay What You Can, show amount input modal
-          if (isPWYC) {
-            setShowPWYCModal(true);
+        // Only handle payment flow if payment is required
+        if (requiresPayment) {
+          // Check for Expo Go before any payment flow
+          if (Platform.OS !== "web" && Constants.appOwnership === "expo") {
+            Alert.alert(
+              "Payment Not Available",
+              "Stripe payments require a development build and don't work in Expo Go.\n\nPlease build and run locally:\nnpx expo run:ios (iOS)\nnpx expo run:android (Android)",
+              [{ text: "OK" }]
+            );
             return;
           }
 
-          // Fixed price event - process payment
+          // Pay What You Can: show demo modal first, then PWYC modal
+          if (isPWYC) {
+            requestPWYC();
+            return;
+          }
+
+          // Fixed price event: process payment directly
           if (event.price) {
             await requestPayment(event.price);
             return;
@@ -124,37 +136,22 @@ export const useEventRSVP = ({
 
         // If user is going, prompt to add to calendar
         if (status === "going" && event) {
-          // Add small delay for better UX flow
           setTimeout(async () => {
             try {
-              console.log("🗓️ Starting calendar add process...");
-              console.log("Event data:", {
-                date: event.date,
-                title: event.title,
-                location: event.location,
-              });
-
-              // Parse the date safely (use 'date' property from Event type)
               const startDate = new Date(event.date);
 
               // Validate the date is valid
               if (isNaN(startDate.getTime())) {
-                console.error("❌ Invalid event date:", event.date);
+                console.error("Invalid event date:", event.date);
                 showToast("Invalid event date", "error");
                 return;
               }
-
-              console.log(
-                "✅ Date parsed successfully:",
-                startDate.toISOString()
-              );
 
               // Assume 3 hour duration (typical movie + socializing)
               const endDate = new Date(
                 startDate.getTime() + 3 * 60 * 60 * 1000
               );
 
-              console.log("📅 Calling promptAddToCalendar...");
               const added = await promptAddToCalendar({
                 title: event.title,
                 startDate,
@@ -169,18 +166,13 @@ export const useEventRSVP = ({
                   : undefined,
               });
 
-              if (added) {
-                // Success! Alert is shown by the calendar service
-                if (Platform.OS !== "web") {
-                  Haptics.notificationAsync(
-                    Haptics.NotificationFeedbackType.Success
-                  );
-                }
+              if (added && Platform.OS !== "web") {
+                Haptics.notificationAsync(
+                  Haptics.NotificationFeedbackType.Success
+                );
               }
             } catch (error) {
-              console.error("❌ Error adding to calendar:", error);
-              // Show the error to user so we can debug
-              showToast(`Calendar error: ${error}`, "error");
+              console.error("Error adding to calendar:", error);
             }
           }, 500);
         }
