@@ -1,3 +1,16 @@
+/*===============================================
+ * Admin Events Screen
+ * ==============================================
+ * Event management interface for admins.
+ * Features:
+ * - List all events with upcoming/past filtering
+ * - Event counts on filter badges
+ * - Edit, delete, and view attendees actions
+ * - Pull-to-refresh with haptic feedback
+ * - Delete confirmation dialog
+ * ==============================================
+ */
+
 import React from "react";
 import {
   View,

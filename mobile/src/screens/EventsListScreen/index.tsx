@@ -1,3 +1,16 @@
+/*===============================================
+ * Events List Screen
+ * ==============================================
+ * Main events browsing screen with search, filtering, and smart sorting.
+ * Features:
+ * - Debounced search functionality
+ * - Filter by status (all/upcoming/ongoing/past)
+ * - Animated header with scroll-to-top
+ * - Pull-to-refresh with haptic feedback
+ * - Skeleton loading states
+ * ==============================================
+ */
+
 import React, { useRef, useMemo, useLayoutEffect, useCallback } from "react";
 import {
   View,

@@ -1,3 +1,16 @@
+/*===============================================
+ * Sign Up Screen
+ * ==============================================
+ * New user registration with email/password or Google OAuth.
+ * Features:
+ * - Name, email, and password collection
+ * - Form validation
+ * - Password visibility toggle
+ * - Google OAuth registration
+ * - Navigate to login if account exists
+ * ==============================================
+ */
+
 import React from "react";
 import {
   View,

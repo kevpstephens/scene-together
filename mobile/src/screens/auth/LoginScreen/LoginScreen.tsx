@@ -1,3 +1,16 @@
+/*===============================================
+ * Login Screen
+ * ==============================================
+ * Authentication entry point with email/password and Google OAuth.
+ * Features:
+ * - Animated logo and form entrance
+ * - Email/password authentication
+ * - Google OAuth sign-in
+ * - Demo admin credentials display
+ * - Password visibility toggle
+ * ==============================================
+ */
+
 import React from "react";
 import {
   View,

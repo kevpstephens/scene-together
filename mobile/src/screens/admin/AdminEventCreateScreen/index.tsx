@@ -1,3 +1,17 @@
+/*===============================================
+ * Admin Event Create Screen
+ * ==============================================
+ * Create new events with TMDB movie integration.
+ * Features:
+ * - Movie search via TMDB API
+ * - Auto-populate poster, trailer, metadata
+ * - Date/time picker
+ * - Pricing options (free, fixed, pay-what-you-can)
+ * - Form validation
+ * - Location and capacity settings
+ * ==============================================
+ */
+
 import React from "react";
 import { View, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";

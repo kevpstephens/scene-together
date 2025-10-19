@@ -1,3 +1,16 @@
+/*===============================================
+ * Admin Event Attendees Screen
+ * ==============================================
+ * View all RSVPs and payment statuses for a specific event.
+ * Features:
+ * - List all attendees with user info
+ * - Payment status indicators (confirmed, pending, cancelled)
+ * - RSVP timestamps
+ * - Pull-to-refresh
+ * - Empty state handling
+ * ==============================================
+ */
+
 import React from "react";
 import {
   View,

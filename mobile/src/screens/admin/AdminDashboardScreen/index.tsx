@@ -1,3 +1,15 @@
+/*===============================================
+ * Admin Dashboard Screen
+ * ==============================================
+ * Overview dashboard for admin users with key metrics.
+ * Features:
+ * - Total/upcoming event counts
+ * - Total attendee statistics
+ * - Quick navigation to manage events and create new
+ * - Pull-to-refresh with haptic feedback
+ * ==============================================
+ */
+
 import React from "react";
 import { View, Text, ScrollView, RefreshControl } from "react-native";
 import { useNavigation } from "@react-navigation/native";

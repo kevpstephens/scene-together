@@ -1,3 +1,17 @@
+/*===============================================
+ * Admin Event Edit Screen
+ * ==============================================
+ * Edit existing events with full CRUD capabilities.
+ * Features:
+ * - Load existing event data
+ * - Update movie via TMDB search
+ * - Modify date, time, location, capacity
+ * - Update pricing (free, fixed, PWYC)
+ * - Form validation
+ * - Save changes with loading states
+ * ==============================================
+ */
+
 import React from "react";
 import { View, Text, ActivityIndicator, ScrollView } from "react-native";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";

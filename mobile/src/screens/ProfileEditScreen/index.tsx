@@ -1,3 +1,11 @@
+/*===============================================
+ * Profile Edit Screen
+ * ==============================================
+ * User profile editing interface with form validation.
+ * Allows users to update their name and email.
+ * ==============================================
+ */
+
 import React, { useState } from "react";
 import {
   View,

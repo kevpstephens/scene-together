@@ -1,3 +1,17 @@
+/*===============================================
+ * Profile Screen
+ * ==============================================
+ * User profile with RSVPs, payment history, and account management.
+ * Features:
+ * - Upcoming and past RSVPs display
+ * - Payment history with status indicators
+ * - Profile editing navigation
+ * - Logout with confirmation
+ * - Pull-to-refresh functionality
+ * - Scroll-to-top on tab press
+ * ==============================================
+ */
+
 import React, { useCallback, useRef } from "react";
 import {
   View,

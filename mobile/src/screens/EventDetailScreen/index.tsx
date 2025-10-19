@@ -1,3 +1,17 @@
+/*===============================================
+ * Event Detail Screen
+ * ==============================================
+ * Comprehensive event details with RSVP and payment functionality.
+ * Features:
+ * - Movie data integration (poster, trailer, metadata)
+ * - Stripe payment flow with pay-what-you-can option
+ * - RSVP management with calendar integration
+ * - AsyncStorage caching for optimistic UI
+ * - Client-side payment sync as webhook fallback
+ * - Share and external link actions
+ * ==============================================
+ */
+
 import React, { useState } from "react";
 import { View, Text, Animated, RefreshControl } from "react-native";
 import { useRoute, RouteProp } from "@react-navigation/native";
