@@ -1,8 +1,9 @@
-/**
- * Calendar Service
- * Handles device calendar integration for adding events
- *
- * This is the main export file that provides a clean API for calendar operations
+/*===============================================
+ * Calendar Service - Public API
+ * ==============================================
+ * Clean barrel export for calendar operations.
+ * Main functions: addEventToCalendar(), promptAddToCalendar()
+ * ==============================================
  */
 
 // Export types

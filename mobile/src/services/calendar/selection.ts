@@ -1,6 +1,10 @@
-/**
- * Calendar selection logic
- * Handles getting and creating calendars on iOS and Android
+/*===============================================
+ * Calendar Selection
+ * ==============================================
+ * Handles calendar discovery and selection across platforms.
+ * iOS: Prefers iCloud > Default > any writable calendar
+ * Android: Creates/uses a dedicated SceneTogether calendar
+ * ==============================================
  */
 
 import * as Calendar from "expo-calendar";
@@ -8,8 +12,7 @@ import { Platform } from "react-native";
 
 /**
  * Get the default calendar for the device
- * iOS: Returns the preferred writable calendar (iCloud > Default > any writable)
- * Android: Creates/returns a SceneTogether calendar
+ * Uses platform-specific logic to find the best calendar
  * @returns Calendar ID or null if unavailable
  */
 export async function getDefaultCalendar(): Promise<string | null> {
@@ -18,20 +21,13 @@ export async function getDefaultCalendar(): Promise<string | null> {
       Calendar.EntityTypes.EVENT
     );
 
-    console.log("📅 [getDefaultCalendar] Available calendars:");
-    calendars.forEach((cal) => {
-      console.log(
-        `  - "${cal.title}" (ID: ${cal.id}, Source: ${cal.source.name}, Type: ${cal.source.type}, Writable: ${cal.allowsModifications})`
-      );
-    });
-
     if (Platform.OS === "ios") {
       return getIOSDefaultCalendar(calendars);
     } else {
       return getAndroidDefaultCalendar(calendars);
     }
   } catch (error) {
-    console.error("❌ [getDefaultCalendar] Error:", error);
+    console.error("Error getting default calendar:", error);
     return null;
   }
 }
@@ -53,19 +49,16 @@ async function getIOSDefaultCalendar(
     calendars.find((cal) => cal.allowsModifications);
 
   if (defaultCalendar) {
-    console.log(
-      `✅ [getDefaultCalendar] Using iOS calendar: "${defaultCalendar.title}" (${defaultCalendar.source.name})`
-    );
     return defaultCalendar.id;
   }
 
-  console.error("❌ [getDefaultCalendar] No writable iOS calendar found");
+  console.error("No writable iOS calendar found");
   return null;
 }
 
 /**
  * Get or create default calendar on Android
- * Creates a SceneTogether calendar if it doesn't exist
+ * Creates a branded "SceneTogether" calendar if it doesn't exist
  */
 async function getAndroidDefaultCalendar(
   calendars: Calendar.Calendar[]
@@ -75,15 +68,12 @@ async function getAndroidDefaultCalendar(
     (cal) => cal.title === "SceneTogether"
   );
 
-  // If not found, create one
+  // If not found, create one with brand colors
   if (!sceneTogetherCalendar) {
-    console.log(
-      "📅 [getDefaultCalendar] Creating SceneTogether calendar for Android..."
-    );
     const defaultCalendar = await Calendar.getDefaultCalendarAsync();
     const newCalendarId = await Calendar.createCalendarAsync({
       title: "SceneTogether",
-      color: "#46D4AF",
+      color: "#46D4AF", // Brand primary color
       entityType: Calendar.EntityTypes.EVENT,
       sourceId: defaultCalendar.source.id,
       source: defaultCalendar.source,
@@ -91,15 +81,9 @@ async function getAndroidDefaultCalendar(
       ownerAccount: "personal",
       accessLevel: Calendar.CalendarAccessLevel.OWNER,
     });
-    console.log(
-      `✅ [getDefaultCalendar] Created Android calendar with ID: ${newCalendarId}`
-    );
     return newCalendarId;
   }
 
-  console.log(
-    `✅ [getDefaultCalendar] Using existing Android calendar: "${sceneTogetherCalendar.title}"`
-  );
   return sceneTogetherCalendar.id;
 }
 

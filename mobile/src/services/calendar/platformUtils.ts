@@ -1,13 +1,18 @@
-/**
- * Platform-specific utilities for calendar operations
- * Handles iOS and Android differences
+/*===============================================
+ * Calendar Platform Utilities
+ * ==============================================
+ * Platform-specific utilities for opening native calendar apps.
+ * iOS: Deep links to popular calendar apps (Fantastical, Google, Apple)
+ * Android: Uses content:// URI scheme
+ * ==============================================
  */
 
 import { Platform, Linking } from "react-native";
 
 /**
- * Open the native calendar app
- * Tries multiple calendar apps on iOS, uses default on Android
+ * Open the native calendar app on the user's device
+ * Attempts to open to a specific date if provided
+ * @param eventDate - Optional date to navigate to
  */
 export async function openCalendarApp(eventDate?: Date): Promise<void> {
   try {
@@ -23,12 +28,11 @@ export async function openCalendarApp(eventDate?: Date): Promise<void> {
 }
 
 /**
- * Open calendar app on iOS
- * Tries multiple popular calendar apps with deep links
+ * Open calendar app on iOS using deep links
+ * Tries multiple popular calendar apps in order of preference
  */
 async function openIOSCalendarApp(eventDate?: Date): Promise<void> {
   if (!eventDate) {
-    // Open without specific date
     await Linking.openURL("calshow://");
     return;
   }
@@ -62,19 +66,13 @@ async function openIOSCalendarApp(eventDate?: Date): Promise<void> {
     },
   ];
 
-  let opened = false;
+  // Try each app until one opens successfully
   for (const app of calendarApps) {
     const canOpen = await Linking.canOpenURL(app.url);
     if (canOpen) {
       await Linking.openURL(app.url);
-      opened = true;
-      console.log(`✅ Opened ${app.name} to date: ${dateString}`);
       break;
     }
-  }
-
-  if (!opened) {
-    console.log("⚠️ No calendar app could be opened");
   }
 }
 

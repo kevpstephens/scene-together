@@ -1,3 +1,13 @@
+/*===============================================
+ * Payment Service
+ * ==============================================
+ * Handles Stripe payment operations including:
+ * - Creating payment intents for event tickets
+ * - Fetching payment history
+ * - Manually syncing payment status (fallback for slow webhooks)
+ * ==============================================
+ */
+
 import { api } from "./api";
 
 export interface PaymentIntent {
@@ -20,7 +30,9 @@ export interface PaymentHistoryItem {
 }
 
 /**
- * Create a payment intent for an event
+ * Create a Stripe payment intent for an event ticket
+ * @param eventId - Event to purchase ticket for
+ * @param amount - Optional custom amount in cents (for pay-what-you-can)
  */
 export async function createPaymentIntent(
   eventId: string,
@@ -34,7 +46,7 @@ export async function createPaymentIntent(
 }
 
 /**
- * Get payment history for current user
+ * Fetch payment history for the current user
  */
 export async function getPaymentHistory(): Promise<PaymentHistoryItem[]> {
   const response = await api.get("/payments/history");
@@ -42,7 +54,8 @@ export async function getPaymentHistory(): Promise<PaymentHistoryItem[]> {
 }
 
 /**
- * Manually sync a PaymentIntent from Stripe (fallback when webhooks are slow)
+ * Manually sync payment status from Stripe
+ * Used as fallback when webhooks are delayed
  */
 export async function syncPaymentIntent(
   paymentIntentId: string

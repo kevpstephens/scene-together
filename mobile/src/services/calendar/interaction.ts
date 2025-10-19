@@ -1,6 +1,9 @@
-/**
- * User interaction for calendar operations
- * Handles alerts, prompts, and user feedback
+/*===============================================
+ * Calendar User Interaction
+ * ==============================================
+ * Handles user alerts, prompts, and feedback for calendar operations.
+ * Provides consistent messaging across all calendar flows.
+ * ==============================================
  */
 
 import { Alert, AlertButton } from "react-native";
@@ -38,7 +41,7 @@ export function showNoCalendarsAlert(): void {
 }
 
 /**
- * Show event added success alert with option to open calendar
+ * Show event added success alert with option to open calendar app
  * @param eventData - Event details
  * @param calendarName - Name of the calendar the event was added to
  */

@@ -1,6 +1,10 @@
-/**
- * Main calendar service
- * Orchestrates all calendar operations using the modular components
+/*===============================================
+ * Calendar Service
+ * ==============================================
+ * Orchestrates calendar operations across iOS, Android, and Web.
+ * Handles permissions, calendar selection, event creation, and user prompts.
+ * Modular design with platform-specific implementations.
+ * ==============================================
  */
 
 import type { CalendarEventData } from "./creation";
@@ -20,8 +24,8 @@ import {
 } from "./interaction";
 
 /**
- * Add an event to the device calendar
- * Uses the default calendar for the platform
+ * Add an event to the device's default calendar
+ * Automatically handles permissions and platform differences
  * @param eventData - Event details to add
  * @returns Event ID if successful, null otherwise
  */
@@ -29,56 +33,36 @@ export async function addEventToCalendar(
   eventData: CalendarEventData
 ): Promise<string | null> {
   try {
-    console.log("📅 [Calendar Service] Starting addEventToCalendar");
-    console.log("📅 [Calendar Service] Event data:", {
-      title: eventData.title,
-      startDate: eventData.startDate?.toISOString(),
-      endDate: eventData.endDate?.toISOString(),
-      location: eventData.location,
-    });
-
     // Validate dates
     if (!validateEventDates(eventData)) {
-      console.error("❌ [Calendar Service] Invalid dates:", {
-        startDate: eventData.startDate,
-        endDate: eventData.endDate,
-      });
       showInvalidDateAlert();
       return null;
     }
 
     // Request permissions
-    console.log("📅 [Calendar Service] Requesting permissions...");
     const hasPermission = await requestCalendarPermissions();
     if (!hasPermission) {
-      console.log("❌ [Calendar Service] Permissions denied");
       return null;
     }
-    console.log("✅ [Calendar Service] Permissions granted");
 
     // Get default calendar
-    console.log("📅 [Calendar Service] Getting default calendar...");
     const calendarId = await getDefaultCalendar();
     if (!calendarId) {
-      console.error("❌ [Calendar Service] No calendar ID found");
       showCalendarErrorAlert();
       return null;
     }
-    console.log("✅ [Calendar Service] Calendar ID:", calendarId);
 
     // Create event
-    console.log("📅 [Calendar Service] Creating event...");
     const eventId = await createCalendarEvent(calendarId, eventData);
     if (!eventId) {
       showCalendarErrorAlert("Failed to create calendar event.");
       return null;
     }
 
-    // Get calendar name and show success
+    // Show success message
     const calendarName = await getCalendarName(calendarId);
     showEventAddedAlert(eventData, calendarName);
 
-    console.log("✅ [Calendar Service] Success! Returning event ID");
     return eventId;
   } catch (error) {
     console.error("Error adding event to calendar:", error);
@@ -88,21 +72,18 @@ export async function addEventToCalendar(
 }
 
 /**
- * Prompt user to add event to calendar with calendar selection
- * Allows user to choose which calendar to use
+ * Prompt user to select a calendar and add event
+ * Shows picker with all writable calendars on the device
  * @param eventData - Event details to add
  * @returns true if event was added, false otherwise
  */
 export async function promptAddToCalendar(
   eventData: CalendarEventData
 ): Promise<boolean> {
-  console.log("📅 [promptAddToCalendar] Called with:", eventData.title);
-
   return new Promise(async (resolve) => {
     try {
       // Validate dates
       if (!validateEventDates(eventData)) {
-        console.error("❌ Invalid dates:", eventData);
         showInvalidDateAlert();
         resolve(false);
         return;
@@ -117,7 +98,6 @@ export async function promptAddToCalendar(
 
       // Get available calendars
       const writableCalendars = await getWritableCalendars();
-      console.log(`📅 Found ${writableCalendars.length} writable calendars`);
 
       if (writableCalendars.length === 0) {
         showNoCalendarsAlert();
@@ -146,7 +126,7 @@ export async function promptAddToCalendar(
         resolve(false)
       );
     } catch (error) {
-      console.error("❌ Error in promptAddToCalendar:", error);
+      console.error("Error in promptAddToCalendar:", error);
       showCalendarErrorAlert("Failed to add event to calendar.");
       resolve(false);
     }

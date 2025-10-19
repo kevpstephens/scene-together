@@ -1,6 +1,9 @@
-/**
- * Calendar permissions management
- * Handles requesting and checking calendar access
+/*===============================================
+ * Calendar Permissions
+ * ==============================================
+ * Handles requesting and checking calendar access permissions.
+ * Shows appropriate alerts when permissions are denied.
+ * ==============================================
  */
 
 import * as Calendar from "expo-calendar";

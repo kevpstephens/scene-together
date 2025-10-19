@@ -1,6 +1,9 @@
-/**
- * Event creation logic
- * Handles creating calendar events with proper validation
+/*===============================================
+ * Calendar Event Creation
+ * ==============================================
+ * Handles creating calendar events with validation and default reminders.
+ * Sets up 1-hour and 1-day advance notifications.
+ * ==============================================
  */
 
 import * as Calendar from "expo-calendar";
@@ -14,7 +17,7 @@ export interface CalendarEventData {
 }
 
 /**
- * Validate event dates
+ * Validate that event dates are valid Date objects
  * @returns true if dates are valid, false otherwise
  */
 export function validateEventDates(eventData: CalendarEventData): boolean {
@@ -27,7 +30,7 @@ export function validateEventDates(eventData: CalendarEventData): boolean {
 }
 
 /**
- * Create a calendar event programmatically
+ * Create a calendar event with automatic reminders
  * @param calendarId - ID of the calendar to add the event to
  * @param eventData - Event details
  * @returns Event ID if successful, null otherwise
@@ -37,8 +40,6 @@ export async function createCalendarEvent(
   eventData: CalendarEventData
 ): Promise<string | null> {
   try {
-    console.log(`📅 Creating event in calendar ID: ${calendarId}`);
-
     const eventId = await Calendar.createEventAsync(calendarId, {
       title: eventData.title,
       startDate: eventData.startDate,
@@ -52,10 +53,9 @@ export async function createCalendarEvent(
       ],
     });
 
-    console.log("✅ Event created with ID:", eventId);
     return eventId;
   } catch (error) {
-    console.error("❌ Error creating event:", error);
+    console.error("Error creating calendar event:", error);
     return null;
   }
 }
