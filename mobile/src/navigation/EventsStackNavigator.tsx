@@ -75,6 +75,11 @@ export default function EventsStackNavigator() {
           presentation: "card",
           headerShown: true,
           animationDuration: 300,
+          // Use native edge-pan for consistent behavior (works over WebViews)
+          gestureEnabled: true,
+          fullScreenGestureEnabled: false,
+          // Use fade animation during swipe-back gesture
+          animationMatchesGesture: true,
         }}
       />
     </Stack.Navigator>

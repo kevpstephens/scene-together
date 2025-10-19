@@ -52,6 +52,11 @@ export default function ProfileStackNavigator() {
           animation: "fade",
           presentation: "card",
           animationDuration: 300,
+          // Use native edge-pan for consistent behavior (works over WebViews)
+          gestureEnabled: true,
+          fullScreenGestureEnabled: false,
+          // Use fade animation during swipe-back gesture
+          animationMatchesGesture: true,
         }}
       />
     </Stack.Navigator>
