@@ -1,5 +1,9 @@
-/**
- * Authentication type definitions
+/*===============================================
+ * Authentication Types
+ * ==============================================
+ * TypeScript definitions for authentication state and actions.
+ * Defines user roles, profile structure, and context interface.
+ * ==============================================
  */
 
 import { Session, User } from "@supabase/supabase-js";

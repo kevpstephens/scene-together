@@ -1,6 +1,9 @@
-/**
- * Session management logic
- * Handles user profile fetching and role management
+/*===============================================
+ * Session Manager
+ * ==============================================
+ * Handles user profile fetching and role management.
+ * Fetches user data from the backend API using authenticated requests.
+ * ==============================================
  */
 
 import { supabase } from "../../lib/supabase";
@@ -9,7 +12,7 @@ import type { UserProfile, UserRole } from "./types";
 
 /**
  * Fetch user profile and role from the API
- * @param accessToken - Optional access token to use
+ * @param accessToken - Optional access token to use (avoids refetching session)
  * @returns User profile and role, or null if not authenticated
  */
 export async function fetchUserRole(
@@ -27,7 +30,6 @@ export async function fetchUserRole(
     }
 
     if (!token) {
-      console.log("🔐 AuthContext: No session token available");
       return { profile: null, role: null };
     }
 
@@ -41,12 +43,10 @@ export async function fetchUserRole(
 
     // Only clear role if it's an auth error
     if (error?.response?.status === 401) {
-      console.log("🔐 AuthContext: Unauthorized - clearing role");
       return { profile: null, role: null };
     }
 
-    // Default to USER role for other errors (network, etc)
-    console.log("🔐 AuthContext: Error fetching role, defaulting to USER");
+    // Default to USER role for other errors (network issues, etc.)
     return { profile: null, role: "USER" };
   }
 }

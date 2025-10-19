@@ -1,6 +1,10 @@
-/**
+/*===============================================
  * Authentication Context
- * Provides authentication state and actions throughout the app
+ * ==============================================
+ * Provides global authentication state and actions.
+ * Manages Supabase session, user profile, and role-based access.
+ * Automatically syncs auth state changes across the app.
+ * ==============================================
  */
 
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -21,6 +25,10 @@ WebBrowser.maybeCompleteAuthSession();
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * Authentication Provider Component
+ * Wraps the app to provide auth state and actions
+ */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -41,11 +49,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * Initialize auth state and listen for changes
    */
   useEffect(() => {
-    console.log("🔐 AuthContext: Initializing...");
-
     // Safety timeout - ensure loading doesn't hang forever
     const timeoutId = setTimeout(() => {
-      console.log("⏰ AuthContext: Timeout reached, forcing loading to false");
       setLoading(false);
     }, 5000);
 
@@ -53,10 +58,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth
       .getSession()
       .then(async ({ data: { session } }) => {
-        console.log(
-          "🔐 AuthContext: Session check complete",
-          session ? "✅ Authenticated" : "❌ Not authenticated"
-        );
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -68,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       })
       .catch((error) => {
-        console.error("❌ AuthContext: Error getting session:", error);
+        console.error("Error getting session:", error);
         clearTimeout(timeoutId);
         setLoading(false);
       });
@@ -77,11 +78,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log(
-        "🔐 AuthContext: Auth state changed",
-        _event,
-        session ? "✅ Authenticated" : "❌ Not authenticated"
-      );
       setSession(session);
       setUser(session?.user ?? null);
 
@@ -102,12 +98,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /**
-   * Sign up a new user
+   * Sign up a new user with email and password
    */
   const signUp = async (email: string, password: string, name?: string) => {
     await signUpUser(email, password, name);
-    // User profile will be created automatically by Supabase database trigger
-    // Fetch user role after successful sign up
+    // User profile created automatically by Supabase database trigger
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -121,7 +116,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const signIn = async (email: string, password: string) => {
     await signInUser(email, password);
-    // Fetch user role after successful sign in
     await refreshUserRole();
   };
 
@@ -136,7 +130,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * Sign out the current user
    */
   const signOut = async () => {
-    console.log("🔐 [AuthContext] Clearing local session state...");
     // Clear local state immediately for instant feedback
     setSession(null);
     setUser(null);
@@ -171,8 +164,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Hook to access auth context
- * Must be used within an AuthProvider
+ * Hook to access authentication context
+ * @throws Error if used outside AuthProvider
  */
 export function useAuth() {
   const context = useContext(AuthContext);

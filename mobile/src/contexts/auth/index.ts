@@ -1,6 +1,9 @@
-/**
- * Auth module exports
- * Clean barrel export for authentication functionality
+/*===============================================
+ * Auth Module - Public API
+ * ==============================================
+ * Barrel export for all authentication functionality.
+ * Exports: AuthProvider, useAuth, types, and auth actions.
+ * ==============================================
  */
 
 export type { UserRole, UserProfile, AuthContextType } from "./types";

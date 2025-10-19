@@ -1,6 +1,11 @@
-/**
- * Authentication actions
- * Handles sign up, sign in, OAuth, and sign out
+/*===============================================
+ * Authentication Actions
+ * ==============================================
+ * Core authentication operations including:
+ * - Email/password sign up and sign in
+ * - Google OAuth flow
+ * - Sign out with timeout protection
+ * ==============================================
  */
 
 import * as WebBrowser from "expo-web-browser";
@@ -10,6 +15,9 @@ import { supabase } from "../../lib/supabase";
 
 /**
  * Sign up a new user with email and password
+ * @param email - User email
+ * @param password - User password
+ * @param name - Optional display name
  */
 export async function signUpUser(
   email: string,
@@ -32,6 +40,8 @@ export async function signUpUser(
 
 /**
  * Sign in an existing user with email and password
+ * @param email - User email
+ * @param password - User password
  */
 export async function signInUser(
   email: string,
@@ -47,7 +57,7 @@ export async function signInUser(
 
 /**
  * Sign in with Google OAuth
- * Opens browser for OAuth flow
+ * Opens browser for OAuth flow and handles token exchange
  */
 export async function signInWithGoogleOAuth(): Promise<void> {
   try {
@@ -99,11 +109,9 @@ export async function signInWithGoogleOAuth(): Promise<void> {
 
 /**
  * Sign out the current user
- * Clears session with timeout protection
+ * Includes timeout protection to prevent hanging on slow connections
  */
 export async function signOutUser(): Promise<void> {
-  console.log("🔐 [AuthContext] Signing out...");
-
   // Try to sign out from Supabase with a short timeout
   try {
     const timeoutPromise = new Promise((_, reject) => {
@@ -116,16 +124,9 @@ export async function signOutUser(): Promise<void> {
     ])) as { error: any };
 
     if (error) {
-      console.warn("⚠️ [AuthContext] Supabase sign out error:", error);
-    } else {
-      console.log("✅ [AuthContext] Supabase sign out successful");
+      console.warn("Supabase sign out error:", error);
     }
   } catch (error: any) {
-    console.warn(
-      "⚠️ [AuthContext] Supabase sign out timeout:",
-      error?.message || error
-    );
+    console.warn("Supabase sign out timeout:", error?.message || error);
   }
-
-  console.log("✅ [AuthContext] Sign out complete");
 }

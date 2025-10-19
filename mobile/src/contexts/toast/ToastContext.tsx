@@ -1,3 +1,11 @@
+/*===============================================
+ * Toast Context
+ * ==============================================
+ * Provides global toast notification functionality.
+ * Manages display of success, error, info, and warning messages.
+ * ==============================================
+ */
+
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import Toast from "../../components/Toast";
 
@@ -9,12 +17,22 @@ type ToastContextType = {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
+/**
+ * Toast Provider Component
+ * Wraps the app to provide toast notification functionality
+ */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState("");
   const [type, setType] = useState<ToastType>("info");
   const [duration, setDuration] = useState(3000);
 
+  /**
+   * Show a toast notification
+   * @param msg - Message to display
+   * @param toastType - Type of toast (success, error, info, warning)
+   * @param toastDuration - Duration in milliseconds
+   */
   const showToast = (
     msg: string,
     toastType: ToastType = "info",
@@ -44,6 +62,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Hook to access toast notification functionality
+ * @throws Error if used outside ToastProvider
+ */
 export function useToast() {
   const context = useContext(ToastContext);
   if (context === undefined) {
