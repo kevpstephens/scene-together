@@ -660,12 +660,6 @@ NODE_ENV=production
 
 ---
 
-## 📄 License
-
-This is a portfolio project built for and commissioned by Tech Returners.
-
----
-
 ## 🆘 Need Help?
 
 - Full deployment guide: `../DEPLOYMENT.md`
@@ -675,8 +669,8 @@ This is a portfolio project built for and commissioned by Tech Returners.
 
 ---
 
-<div align="center">
+## 📄 License
 
-**Built with Express + copious amounts of Postman testing**
+This is a portfolio project built for and commissioned by Tech Returners.
 
-</div>
+---

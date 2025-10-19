@@ -420,17 +420,17 @@ If you're building on this:
 
 ---
 
-## 📄 License
-
-This is a portfolio project built for and commissioned by Tech Returners.
-
----
-
 ## 🆘 Need Help?
 
 - Deployment issues? Check `../DEPLOYMENT.md`
 - Expo docs: https://docs.expo.dev/
 - React Navigation: https://reactnavigation.org/
 - Supabase: https://supabase.com/docs
+
+---
+
+## 📄 License
+
+This is a portfolio project built for and commissioned by Tech Returners.
 
 ---

@@ -211,8 +211,6 @@ Or use Prisma Studio: `npx prisma studio`
 | **iOS**     | ✅ Expo Go / Simulator | ⚠️ App Store needed  |
 | **Android** | ✅ Expo Go / Emulator  | ⚠️ Play Store needed |
 
-> For this bootcamp project, web deployment is the target. Native builds are optional.
-
 ---
 
 ## 📚 More Info
@@ -318,7 +316,7 @@ Full API docs in `api/README.md`.
 
 ## ✅ Project Goals Met
 
-This project was built to meet the Tech Returners bootcamp requirements:
+This project was built as a portfolio piece commissioned by Tech Returners:
 
 **Functional:**
 
@@ -350,7 +348,7 @@ This project was built to meet the Tech Returners bootcamp requirements:
 **On Web:**
 
 - Calendar integration downloads `.ics` files (browser limitation)
-- No haptic feedback (obviously)
+- No haptic feedback
 - OAuth popups might be blocked by some browsers
 
 **On Mobile:**
@@ -366,3 +364,5 @@ This project was built to meet the Tech Returners bootcamp requirements:
 This is a portfolio project built for and commissioned by Tech Returners.
 
 </div>
+
+---
