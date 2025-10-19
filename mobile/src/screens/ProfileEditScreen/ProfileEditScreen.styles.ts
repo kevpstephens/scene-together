@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 import { theme } from "../../theme";
 import { getCardStyle } from "../../theme/styles";
 
@@ -25,6 +25,11 @@ export const styles = StyleSheet.create({
   form: {
     ...getCardStyle(),
     padding: theme.spacing.lg,
+    ...Platform.select({
+      web: {
+        backdropFilter: "blur(20px)",
+      },
+    }),
   },
   inputGroup: {
     marginBottom: theme.spacing.lg,
@@ -43,6 +48,11 @@ export const styles = StyleSheet.create({
     padding: theme.spacing.base,
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.text.primary,
+    ...Platform.select({
+      web: {
+        backdropFilter: "blur(20px)",
+      },
+    }),
   },
   hint: {
     fontSize: theme.typography.fontSize.sm,

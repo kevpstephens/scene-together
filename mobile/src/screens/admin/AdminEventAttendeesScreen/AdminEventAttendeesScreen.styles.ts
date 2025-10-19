@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 import { theme } from "../../../theme";
 import { getCardStyle } from "../../../theme/styles";
 
@@ -98,6 +98,11 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: theme.spacing.base,
+    ...Platform.select({
+      web: {
+        backdropFilter: "blur(20px)",
+      },
+    }),
   },
   attendeeIcon: {
     width: 48,

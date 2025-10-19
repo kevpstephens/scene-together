@@ -9,11 +9,9 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import SettingsScreen from "../screens/SettingsScreen";
+import AboutScreen from "../screens/AboutScreen";
+import { SettingsStackParamList } from "./types";
 import { theme } from "../theme";
-
-export type SettingsStackParamList = {
-  SettingsMain: undefined;
-};
 
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
 
@@ -41,6 +39,14 @@ export default function SettingsStackNavigator() {
         component={SettingsScreen}
         options={{
           title: "Settings",
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="About"
+        component={AboutScreen}
+        options={{
+          title: "About",
           headerShown: true,
         }}
       />

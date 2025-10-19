@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 import { theme } from "../../theme";
 
 export const styles = StyleSheet.create({
@@ -56,6 +56,11 @@ export const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderBottomWidth: 1,
     borderColor: theme.colors.borderLight,
+    ...Platform.select({
+      web: {
+        backdropFilter: "blur(20px)",
+      },
+    }),
   },
 
   //! ==============================================
@@ -69,6 +74,9 @@ export const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.borderLight,
   },
+  settingItemDisabled: {
+    opacity: 0.5,
+  },
   iconContainer: {
     width: 40,
     height: 40,
@@ -81,14 +89,40 @@ export const styles = StyleSheet.create({
   textContainer: {
     flex: 1,
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+    marginBottom: 2,
+  },
   settingTitle: {
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.primary,
-    marginBottom: 2,
+  },
+  settingTitleDisabled: {
+    color: theme.colors.text.tertiary,
   },
   settingSubtitle: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.secondary,
+  },
+  settingSubtitleDisabled: {
+    color: theme.colors.text.tertiary,
+  },
+  badge: {
+    backgroundColor: `${theme.colors.primaryLight}20`,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 2,
+    borderRadius: theme.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: `${theme.colors.primaryLight}40`,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.primaryLight,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });

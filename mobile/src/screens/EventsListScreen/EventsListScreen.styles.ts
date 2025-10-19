@@ -196,6 +196,7 @@ export const styles = StyleSheet.create({
       },
       web: {
         boxShadow: `0 4px 16px rgba(70, 212, 175, 0.1), 0 0 0 1px ${theme.colors.primary}20`,
+        backdropFilter: "blur(20px)",
       },
     }),
   },

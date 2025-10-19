@@ -105,6 +105,11 @@ export const styles = StyleSheet.create({
     ...getCardStyle(),
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
+    ...Platform.select({
+      web: {
+        backdropFilter: "blur(20px)",
+      },
+    }),
   },
   infoRow: {
     flexDirection: "row",
@@ -171,6 +176,11 @@ export const styles = StyleSheet.create({
     ...getCardStyle(),
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
+    ...Platform.select({
+      web: {
+        backdropFilter: "blur(20px)",
+      },
+    }),
   },
   sectionTitle: {
     fontSize: theme.typography.fontSize.lg,

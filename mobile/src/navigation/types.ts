@@ -39,6 +39,7 @@ export type MainTabParamList = {
 // Settings Stack Navigator
 export type SettingsStackParamList = {
   SettingsMain: undefined;
+  About: undefined;
 };
 
 // Profile Stack Navigator

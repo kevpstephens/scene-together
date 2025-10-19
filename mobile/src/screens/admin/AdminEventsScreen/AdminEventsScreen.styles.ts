@@ -87,6 +87,11 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.components.borders.default,
     marginBottom: theme.spacing.base,
+    ...Platform.select({
+      web: {
+        backdropFilter: "blur(20px)",
+      },
+    }),
   },
   cardPast: {
     opacity: 0.6,

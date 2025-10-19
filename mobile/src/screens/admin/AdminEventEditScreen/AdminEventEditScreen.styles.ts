@@ -184,6 +184,11 @@ export const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
     borderWidth: 1,
     borderColor: theme.components.borders.default,
+    ...Platform.select({
+      web: {
+        backdropFilter: "blur(20px)",
+      },
+    }),
   },
   infoRow: {
     flexDirection: "row",
@@ -283,6 +288,11 @@ export const styles = StyleSheet.create({
     minHeight: 120,
     borderWidth: 1,
     borderColor: theme.components.borders.default,
+    ...Platform.select({
+      web: {
+        backdropFilter: "blur(20px)",
+      },
+    }),
   },
   movieSection: {
     backgroundColor: theme.components.surfaces.card,
@@ -291,6 +301,11 @@ export const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
     borderWidth: 1,
     borderColor: theme.components.borders.default,
+    ...Platform.select({
+      web: {
+        backdropFilter: "blur(20px)",
+      },
+    }),
   },
   sectionHeader: {
     flexDirection: "row",

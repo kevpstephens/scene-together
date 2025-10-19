@@ -143,6 +143,11 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: theme.spacing.base,
+    ...Platform.select({
+      web: {
+        backdropFilter: "blur(20px)",
+      },
+    }),
   },
   actionIconContainer: {
     width: 48,

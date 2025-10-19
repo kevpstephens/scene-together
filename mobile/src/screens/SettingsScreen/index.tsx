@@ -20,6 +20,9 @@ import {
   Alert,
   Platform,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { SettingsStackParamList } from "../../navigation/types";
 import {
   BellIcon,
   CalendarIcon,
@@ -36,8 +39,19 @@ import { styles } from "./SettingsScreen.styles";
 import { useAuth } from "../../contexts/auth";
 import * as Haptics from "expo-haptics";
 
+type NavigationProp = NativeStackNavigationProp<
+  SettingsStackParamList,
+  "SettingsMain"
+>;
+
 export default function SettingsScreen() {
   const { signOut } = useAuth();
+  const navigation = useNavigation<NavigationProp>();
+
+  const handleNavigateToProfile = () => {
+    // Navigate to ProfileTab
+    navigation.getParent()?.navigate("ProfileTab" as never);
+  };
 
   const handleSignOut = async () => {
     if (Platform.OS !== "web") {
@@ -83,28 +97,25 @@ export default function SettingsScreen() {
             icon={BellIcon}
             title="Notifications"
             subtitle="Manage push notifications and alerts"
-            onPress={() => {
-              // TODO: Navigate to notifications settings
-              console.log("Notifications pressed");
-            }}
+            badge="Coming Soon"
+            disabled={true}
+            onPress={() => {}}
           />
           <SettingItem
             icon={CalendarIcon}
             title="Calendar"
             subtitle="Calendar sync and reminders"
-            onPress={() => {
-              // TODO: Navigate to calendar settings
-              console.log("Calendar pressed");
-            }}
+            badge="Coming Soon"
+            disabled={true}
+            onPress={() => {}}
           />
           <SettingItem
             icon={SunIcon}
             title="Display"
             subtitle="Theme and appearance"
-            onPress={() => {
-              // TODO: Navigate to display settings
-              console.log("Display pressed");
-            }}
+            badge="Coming Soon"
+            disabled={true}
+            onPress={() => {}}
           />
         </SettingSection>
 
@@ -113,19 +124,15 @@ export default function SettingsScreen() {
             icon={LockClosedIcon}
             title="Privacy"
             subtitle="Data and privacy controls"
-            onPress={() => {
-              // TODO: Navigate to privacy settings
-              console.log("Privacy pressed");
-            }}
+            badge="Coming Soon"
+            disabled={true}
+            onPress={() => {}}
           />
           <SettingItem
             icon={UserCircleIcon}
             title="Account"
-            subtitle="Manage your account"
-            onPress={() => {
-              // TODO: Navigate to account settings
-              console.log("Account pressed");
-            }}
+            subtitle="View and edit your profile"
+            onPress={handleNavigateToProfile}
           />
         </SettingSection>
 
@@ -134,10 +141,9 @@ export default function SettingsScreen() {
             icon={CreditCardIcon}
             title="Payment Methods"
             subtitle="Manage cards and payment options"
-            onPress={() => {
-              // TODO: Navigate to payment settings
-              console.log("Payment pressed");
-            }}
+            badge="Coming Soon"
+            disabled={true}
+            onPress={() => {}}
           />
         </SettingSection>
 
@@ -146,10 +152,7 @@ export default function SettingsScreen() {
             icon={InformationCircleIcon}
             title="About"
             subtitle="Version, terms, and support"
-            onPress={() => {
-              // TODO: Navigate to about page
-              console.log("About pressed");
-            }}
+            onPress={() => navigation.navigate("About")}
           />
         </SettingSection>
 

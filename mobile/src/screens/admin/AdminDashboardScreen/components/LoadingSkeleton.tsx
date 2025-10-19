@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import { theme } from "../../../../theme";
 import SkeletonLoader from "../../../../components/SkeletonLoader";
 import { styles } from "../AdminDashboardScreen.styles";
@@ -7,10 +7,24 @@ import { styles } from "../AdminDashboardScreen.styles";
 export const LoadingSkeleton: React.FC = () => {
   return (
     <>
-      {/* Welcome Section */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Admin Dashboard</Text>
-        <Text style={styles.subtitle}>Manage your events platform</Text>
+      {/* Welcome Box Skeleton */}
+      <View style={styles.welcomeBox}>
+        <SkeletonLoader
+          width="80%"
+          height={24}
+          style={{ marginBottom: theme.spacing.md }}
+        />
+        <SkeletonLoader
+          width="100%"
+          height={16}
+          style={{ marginBottom: theme.spacing.sm }}
+        />
+        <SkeletonLoader
+          width="95%"
+          height={16}
+          style={{ marginBottom: theme.spacing.sm }}
+        />
+        <SkeletonLoader width="70%" height={16} />
       </View>
 
       {/* Stats Skeleton */}
