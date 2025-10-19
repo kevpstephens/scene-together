@@ -5,7 +5,7 @@ import {
   StyleSheet,
   Animated,
   Platform,
-  Modal,
+  PanResponder,
 } from "react-native";
 import {
   CheckCircleIcon,
@@ -34,6 +34,39 @@ export default function Toast({
 }: ToastProps) {
   const translateY = useRef(new Animated.Value(-100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+
+  // Pan responder for swipe-to-dismiss (upwards)
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (_evt, gesture) => {
+        // Only allow dragging upwards
+        if (gesture.dy < 0) {
+          translateY.setValue(gesture.dy);
+        }
+      },
+      onPanResponderRelease: (_evt, gesture) => {
+        const swipeUpEnough = gesture.dy < -40 || gesture.vy < -0.7;
+        if (swipeUpEnough) {
+          // Dismiss upwards
+          Animated.timing(translateY, {
+            toValue: -120,
+            duration: 180,
+            useNativeDriver: true,
+          }).start(() => onHide());
+        } else {
+          // Snap back to visible
+          Animated.spring(translateY, {
+            toValue: 0,
+            useNativeDriver: true,
+            damping: 15,
+            stiffness: 150,
+          }).start();
+        }
+      },
+    })
+  ).current;
 
   useEffect(() => {
     if (visible) {
@@ -109,17 +142,9 @@ export default function Toast({
     }
   };
 
-  // Wrap in Modal to ensure it renders above all other modals
+  // Wrap in overlay View (not Modal) so interactions pass through to content beneath
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="none"
-      statusBarTranslucent
-      onRequestClose={() => {}}
-      supportedOrientations={["portrait", "landscape"]}
-      pointerEvents="box-none"
-    >
+    <View style={styles.overlay} pointerEvents="box-none">
       <View style={styles.modalContainer} pointerEvents="box-none">
         <Animated.View
           style={[
@@ -130,6 +155,8 @@ export default function Toast({
               opacity,
             },
           ]}
+          pointerEvents="auto"
+          {...panResponder.panHandlers}
         >
           {getIcon()}
           <Text style={styles.message} numberOfLines={2}>
@@ -137,21 +164,31 @@ export default function Toast({
           </Text>
         </Animated.View>
       </View>
-    </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 999998,
+  },
   modalContainer: {
     flex: 1,
     justifyContent: "flex-start",
-    alignItems: "stretch",
+    alignItems: "center",
+    paddingHorizontal: Platform.OS === "web" ? theme.spacing.base : 0,
   },
   container: {
     position: "absolute",
     top: 60,
-    left: theme.spacing.base,
-    right: theme.spacing.base,
+    alignSelf: "center",
+    maxWidth: Platform.OS === "web" ? 600 : "90%",
+    minWidth: Platform.OS === "web" ? 300 : undefined,
     flexDirection: "row",
     alignItems: "center",
     gap: theme.spacing.md,

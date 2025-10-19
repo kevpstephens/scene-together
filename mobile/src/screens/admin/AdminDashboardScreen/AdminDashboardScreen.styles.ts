@@ -29,12 +29,14 @@ export const styles = StyleSheet.create({
     overflow: "hidden", // Important for blur effect
     ...Platform.select({
       ios: {
+        padding: theme.spacing.xl,
         shadowColor: theme.colors.primary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.15,
         shadowRadius: 8,
       },
       android: {
+        padding: theme.spacing.xl,
         elevation: 6,
       },
       web: {
@@ -43,9 +45,6 @@ export const styles = StyleSheet.create({
         backdropFilter: "blur(10px)",
       },
     }),
-  },
-  blurContainer: {
-    padding: theme.spacing.xl,
   },
   welcomeTitle: {
     fontSize: theme.typography.fontSize.xl,
