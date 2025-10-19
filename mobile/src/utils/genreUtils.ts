@@ -1,6 +1,8 @@
 /**
  * Maps genre names to their corresponding color codes
  * Used for genre chips/badges throughout the app
+ *
+ * SHARED UTILITY - used by both EventsListScreen and EventDetailScreen
  */
 export const getGenreColor = (genre: string): string => {
   const genreLower = genre.toLowerCase();
