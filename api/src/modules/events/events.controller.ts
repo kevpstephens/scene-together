@@ -188,3 +188,45 @@ export async function deleteEvent(
     next(error);
   }
 }
+
+/**
+ * Get all attendees (RSVPs) for an event
+ * Admin only
+ */
+export async function getEventAttendees(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { id } = req.params;
+
+    // Verify event exists
+    const event = await prisma.event.findUnique({
+      where: { id },
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    // Get all RSVPs for this event with user information
+    const attendees = await prisma.rSVP.findMany({
+      where: { eventId: id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.json(attendees);
+  } catch (error) {
+    next(error);
+  }
+}

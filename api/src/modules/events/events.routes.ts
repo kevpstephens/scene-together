@@ -12,9 +12,18 @@ const router = Router();
 
 // Public routes
 router.get("/", eventsController.getAllEvents);
-router.get("/:id", validate(getEventByIdSchema), eventsController.getEventById);
 
-// Admin-only routes
+// Admin-only routes (must come before /:id to avoid matching "attendees" as an ID)
+router.get(
+  "/:id/attendees",
+  requireAuth,
+  requireAdmin,
+  validate(getEventByIdSchema),
+  eventsController.getEventAttendees
+);
+
+// Public route for single event (must come after specific routes)
+router.get("/:id", validate(getEventByIdSchema), eventsController.getEventById);
 router.post(
   "/",
   requireAuth,
