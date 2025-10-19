@@ -5,7 +5,7 @@
   
   **A community platform for movie lovers to discover and attend local film screenings**
   
-  _Tech Returners Software Engineering Bootcamp - Final Project_
+  _Tech Returners - Commissioned Project_
   
   [![Live Demo](#)](#) • [![GitHub](#)](#)
   
@@ -354,33 +354,6 @@ This project was built to meet the Tech Returners bootcamp requirements:
 
 ## 📝 License
 
-This is a portfolio project built for the Tech Returners Software Engineering Bootcamp. Feel free to explore the code!
-
----
-
-## 🙏 Thanks To
-
-- **Tech Returners** for an amazing bootcamp experience
-- **TMDB** for the fantastic movie database
-- **Supabase** for making backend setup painless
-- **The Expo Team** for universal React Native
-- **Stripe** for payment processing
-
----
-
-## 📬 Contact
-
-**Kevin Stephenson**  
-Tech Returners Software Engineering Bootcamp 2024/2025
-
-[GitHub](#) • [LinkedIn](#) • [Email](#)
-
----
-
-<div align="center">
-  
-**Built with ☕ and a lot of debugging**
-
-_Submitted as part of the Tech Returners Software Engineering Bootcamp_
+This is a portfolio project built for and commissioned by Tech Returners.
 
 </div>

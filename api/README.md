@@ -650,7 +650,7 @@ NODE_ENV=production
 
 ## 📄 License
 
-Educational project - Tech Returners Bootcamp
+This is a portfolio project built for and commissioned by Tech Returners.
 
 ---
 

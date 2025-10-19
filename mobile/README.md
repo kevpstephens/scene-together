@@ -412,7 +412,7 @@ If you're building on this:
 
 ## 📄 License
 
-Educational project - Tech Returners Bootcamp
+This is a portfolio project built for and commissioned by Tech Returners.
 
 ---
 
@@ -424,9 +424,3 @@ Educational project - Tech Returners Bootcamp
 - Supabase: https://supabase.com/docs
 
 ---
-
-<div align="center">
-
-**Built with Expo + a lot of Stack Overflow**
-
-</div>
