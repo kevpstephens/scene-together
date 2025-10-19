@@ -4,6 +4,8 @@ import React, {
   useRef,
   useMemo,
   useLayoutEffect,
+  useCallback,
+  memo,
 } from "react";
 import {
   View,
@@ -79,6 +81,136 @@ const getGenreColor = (genre: string): string => {
 
 type FilterStatus = "all" | "upcoming" | "ongoing" | "past";
 
+// Memoized search and filter header to prevent unnecessary re-renders
+interface SearchFilterHeaderProps {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  filterStatus: FilterStatus;
+  onFilterChange: (status: FilterStatus) => void;
+}
+
+const SearchFilterHeader = memo<SearchFilterHeaderProps>(
+  ({ searchQuery, onSearchChange, filterStatus, onFilterChange }) => {
+    return (
+      <View>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <MagnifyingGlassIcon size={20} color={theme.colors.text.tertiary} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search events, movies, locations..."
+            placeholderTextColor={theme.colors.text.tertiary}
+            value={searchQuery}
+            onChangeText={onSearchChange}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => {
+                if (Platform.OS !== "web") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+                onSearchChange("");
+              }}
+            >
+              <XMarkIcon size={20} color={theme.colors.text.secondary} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Filter Chips */}
+        <View style={styles.filterContainer}>
+          <TouchableOpacity
+            style={[
+              styles.filterChip,
+              filterStatus === "all" && styles.filterChipActive,
+            ]}
+            onPress={() => {
+              if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              onFilterChange("all");
+            }}
+          >
+            <Text
+              style={[
+                styles.filterChipText,
+                filterStatus === "all" && styles.filterChipTextActive,
+              ]}
+            >
+              All
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.filterChip,
+              filterStatus === "upcoming" && styles.filterChipActive,
+            ]}
+            onPress={() => {
+              if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              onFilterChange("upcoming");
+            }}
+          >
+            <Text
+              style={[
+                styles.filterChipText,
+                filterStatus === "upcoming" && styles.filterChipTextActive,
+              ]}
+            >
+              Upcoming
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.filterChip,
+              filterStatus === "ongoing" && styles.filterChipActive,
+            ]}
+            onPress={() => {
+              if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              onFilterChange("ongoing");
+            }}
+          >
+            <Text
+              style={[
+                styles.filterChipText,
+                filterStatus === "ongoing" && styles.filterChipTextActive,
+              ]}
+            >
+              Today
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.filterChip,
+              filterStatus === "past" && styles.filterChipActive,
+            ]}
+            onPress={() => {
+              if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              onFilterChange("past");
+            }}
+          >
+            <Text
+              style={[
+                styles.filterChipText,
+                filterStatus === "past" && styles.filterChipTextActive,
+              ]}
+            >
+              Past
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+);
+
+SearchFilterHeader.displayName = "SearchFilterHeader";
+
 export default function EventsListScreen() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,6 +228,16 @@ export default function EventsListScreen() {
   const flatListRef = useRef<FlatList>(null);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const { showToast } = useToast();
+
+  // Memoize callbacks to prevent unnecessary re-renders of SearchFilterHeader
+  // MUST be at the top before any conditional returns (Rules of Hooks)
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
+  const handleFilterChange = useCallback((status: FilterStatus) => {
+    setFilterStatus(status);
+  }, []);
 
   useEffect(() => {
     loadEvents();
@@ -463,6 +605,19 @@ export default function EventsListScreen() {
     return filtered;
   }, [events, debouncedSearchQuery, filterStatus]);
 
+  // Memoized list header component - MUST be before any conditional returns
+  const listHeaderComponent = useMemo(
+    () => (
+      <SearchFilterHeader
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        filterStatus={filterStatus}
+        onFilterChange={handleFilterChange}
+      />
+    ),
+    [searchQuery, filterStatus, handleSearchChange, handleFilterChange]
+  );
+
   // Format price for display
   const formatPrice = (
     event: Event
@@ -751,123 +906,6 @@ export default function EventsListScreen() {
     );
   }
 
-  // Search and filters that scroll with the list
-  const renderListHeader = () => (
-    <View>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <MagnifyingGlassIcon size={20} color={theme.colors.text.tertiary} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search events, movies, locations..."
-          placeholderTextColor={theme.colors.text.tertiary}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity
-            onPress={() => {
-              if (Platform.OS !== "web") {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              }
-              setSearchQuery("");
-            }}
-          >
-            <XMarkIcon size={20} color={theme.colors.text.secondary} />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Filter Chips */}
-      <View style={styles.filterContainer}>
-        <TouchableOpacity
-          style={[
-            styles.filterChip,
-            filterStatus === "all" && styles.filterChipActive,
-          ]}
-          onPress={() => {
-            if (Platform.OS !== "web") {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            }
-            setFilterStatus("all");
-          }}
-        >
-          <Text
-            style={[
-              styles.filterChipText,
-              filterStatus === "all" && styles.filterChipTextActive,
-            ]}
-          >
-            All
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterChip,
-            filterStatus === "upcoming" && styles.filterChipActive,
-          ]}
-          onPress={() => {
-            if (Platform.OS !== "web") {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            }
-            setFilterStatus("upcoming");
-          }}
-        >
-          <Text
-            style={[
-              styles.filterChipText,
-              filterStatus === "upcoming" && styles.filterChipTextActive,
-            ]}
-          >
-            Upcoming
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterChip,
-            filterStatus === "ongoing" && styles.filterChipActive,
-          ]}
-          onPress={() => {
-            if (Platform.OS !== "web") {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            }
-            setFilterStatus("ongoing");
-          }}
-        >
-          <Text
-            style={[
-              styles.filterChipText,
-              filterStatus === "ongoing" && styles.filterChipTextActive,
-            ]}
-          >
-            Today
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterChip,
-            filterStatus === "past" && styles.filterChipActive,
-          ]}
-          onPress={() => {
-            if (Platform.OS !== "web") {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            }
-            setFilterStatus("past");
-          }}
-        >
-          <Text
-            style={[
-              styles.filterChipText,
-              filterStatus === "past" && styles.filterChipTextActive,
-            ]}
-          >
-            Past
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       <GradientBackground />
@@ -878,7 +916,7 @@ export default function EventsListScreen() {
             data={filteredEvents}
             keyExtractor={(item) => item.id}
             renderItem={renderEventCard}
-            ListHeaderComponent={renderListHeader}
+            ListHeaderComponent={listHeaderComponent}
             contentContainerStyle={
               filteredEvents.length === 0 ? styles.emptyContainer : styles.list
             }
