@@ -7,9 +7,18 @@
   
   _Tech Returners - Commissioned Project_
   
-  [![Live Demo](#)](#) • [![GitHub](#)](#)
+  [🌐 **Live Demo**](https://scenetogether.netlify.app) • [📡 **API Docs**](https://api-production-c815.up.railway.app/health) • [💻 **GitHub**](https://github.com/kevpstephens/scene-together)
   
 </div>
+
+---
+
+## 🚀 Live Deployment
+
+**Frontend:** https://scenetogether.netlify.app  
+**Backend API:** https://api-production-c815.up.railway.app
+
+The app is fully deployed and ready to use! Sign up with email or Google OAuth to get started.
 
 ---
 

@@ -5,7 +5,19 @@
   
   **Express.js REST API powering SceneTogether**
   
+  [📡 **Live API**](https://api-production-c815.up.railway.app)
+  
 </div>
+
+---
+
+## 🚀 Live Deployment
+
+The API is deployed and running at: **https://api-production-c815.up.railway.app**
+
+Health check endpoint: https://api-production-c815.up.railway.app/health
+
+The production API is hosted on Railway with PostgreSQL database, full Stripe webhook integration, and automatic deployments from the `main` branch.
 
 ---
 

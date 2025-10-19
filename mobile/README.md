@@ -5,7 +5,17 @@
   
   **Universal React Native app powering SceneTogether on iOS, Android, and Web**
   
+  [🌐 **Live Web App**](https://scenetogether.netlify.app)
+  
 </div>
+
+---
+
+## 🚀 Live Deployment
+
+The app is deployed and accessible at: **https://scenetogether.netlify.app**
+
+This Expo Web build is fully functional with all features including authentication, payments, calendar integration, and real-time updates.
 
 ---
 
