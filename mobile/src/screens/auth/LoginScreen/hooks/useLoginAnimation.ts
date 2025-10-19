@@ -1,3 +1,11 @@
+/*===============================================
+ * useLoginAnimation Hook
+ * ==============================================
+ * Manages entrance animations for the login screen.
+ * Provides smooth logo and form fade-in effects.
+ * ==============================================
+ */
+
 import { useEffect, useRef } from "react";
 import { Animated } from "react-native";
 

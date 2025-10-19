@@ -1,3 +1,11 @@
+/*===============================================
+ * useEventData Hook
+ * ==============================================
+ * Manages event data fetching, caching, and refresh logic.
+ * Implements optimistic rendering with AsyncStorage caching.
+ * ==============================================
+ */
+
 import { useState, useEffect } from "react";
 import { Alert, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";

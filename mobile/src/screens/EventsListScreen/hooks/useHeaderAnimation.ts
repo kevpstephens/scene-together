@@ -1,3 +1,11 @@
+/*===============================================
+ * useHeaderAnimation Hook
+ * ==============================================
+ * Manages header show/hide animation on scroll.
+ * Includes scroll-to-top functionality and haptic feedback.
+ * ==============================================
+ */
+
 import { useState, useEffect, RefObject } from "react";
 import { FlatList, Platform } from "react-native";
 import { useNavigation, useIsFocused } from "@react-navigation/native";

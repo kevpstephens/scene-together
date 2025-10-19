@@ -1,3 +1,12 @@
+/*===============================================
+ * useEventPayment Hook
+ * ==============================================
+ * Manages Stripe payment flow for event tickets.
+ * Handles pay-what-you-can, client-side payment sync,
+ * and calendar integration on successful payment.
+ * ==============================================
+ */
+
 import { useState } from "react";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";

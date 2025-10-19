@@ -1,3 +1,11 @@
+/*===============================================
+ * useProfileActions Hook
+ * ==============================================
+ * Manages profile-related actions like logout and refresh.
+ * Includes haptic feedback and alert confirmations.
+ * ==============================================
+ */
+
 import { useCallback } from "react";
 import { Platform, Alert } from "react-native";
 import * as Haptics from "expo-haptics";

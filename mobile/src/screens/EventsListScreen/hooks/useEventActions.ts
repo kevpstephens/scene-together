@@ -1,3 +1,11 @@
+/*===============================================
+ * useEventActions Hook - EventsListScreen
+ * ==============================================
+ * Manages event actions like sharing and bookmarking.
+ * Handles platform-specific sharing and RSVP management.
+ * ==============================================
+ */
+
 import { Platform, Share } from "react-native";
 import * as Haptics from "expo-haptics";
 import { api } from "../../../services/api";

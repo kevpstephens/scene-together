@@ -1,3 +1,11 @@
+/*===============================================
+ * useLoginForm Hook
+ * ==============================================
+ * Manages login form state and authentication actions.
+ * Handles email/password and Google OAuth sign-in.
+ * ==============================================
+ */
+
 import { useState } from "react";
 import { useAuth } from "../../../../contexts/auth";
 import { useToast } from "../../../../contexts/toast";

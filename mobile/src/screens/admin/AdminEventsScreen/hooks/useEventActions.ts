@@ -1,3 +1,11 @@
+/*===============================================
+ * useEventActions Hook - AdminEventsScreen
+ * ==============================================
+ * Manages admin event actions like delete and error handling.
+ * Includes confirmation alerts and optimistic UI updates.
+ * ==============================================
+ */
+
 import { useState } from "react";
 import { Alert } from "react-native";
 import { api } from "../../../../services/api";

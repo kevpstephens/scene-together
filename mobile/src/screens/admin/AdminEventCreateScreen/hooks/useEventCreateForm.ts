@@ -1,3 +1,11 @@
+/*===============================================
+ * useEventCreateForm Hook
+ * ==============================================
+ * Manages event creation form state and submission.
+ * Handles validation, movie data, and API creation calls.
+ * ==============================================
+ */
+
 import { useState } from "react";
 import { Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";

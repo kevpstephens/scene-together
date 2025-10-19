@@ -1,3 +1,11 @@
+/*===============================================
+ * useEventForm Hook - AdminEventEditScreen
+ * ==============================================
+ * Manages event editing form state and submission.
+ * Handles validation, movie data updates, and API calls.
+ * ==============================================
+ */
+
 import { useState, useEffect } from "react";
 import { Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";

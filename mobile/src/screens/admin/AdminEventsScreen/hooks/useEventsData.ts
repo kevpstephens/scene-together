@@ -1,3 +1,11 @@
+/*===============================================
+ * useEventsData Hook - AdminEventsScreen
+ * ==============================================
+ * Manages admin event list data and filtering.
+ * Implements upcoming/past event filtering and pull-to-refresh.
+ * ==============================================
+ */
+
 import { useState, useEffect, useMemo } from "react";
 import { Alert, Platform } from "react-native";
 import * as Haptics from "expo-haptics";

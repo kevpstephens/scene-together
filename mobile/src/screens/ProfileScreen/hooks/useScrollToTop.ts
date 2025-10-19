@@ -1,3 +1,11 @@
+/*===============================================
+ * useScrollToTop Hook
+ * ==============================================
+ * Handles scroll-to-top behavior when tab is pressed again.
+ * Provides consistent UX across tabs with haptic feedback.
+ * ==============================================
+ */
+
 import { useEffect, RefObject } from "react";
 import { ScrollView, Platform } from "react-native";
 import { useNavigation, useIsFocused } from "@react-navigation/native";

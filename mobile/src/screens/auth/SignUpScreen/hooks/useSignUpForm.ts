@@ -1,3 +1,11 @@
+/*===============================================
+ * useSignUpForm Hook
+ * ==============================================
+ * Manages signup form state and registration actions.
+ * Handles email/password registration and Google OAuth.
+ * ==============================================
+ */
+
 import { useState } from "react";
 import { Alert } from "react-native";
 import { useAuth } from "../../../../contexts/auth";

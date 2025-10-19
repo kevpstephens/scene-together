@@ -1,3 +1,11 @@
+/*===============================================
+ * useProfileData Hook
+ * ==============================================
+ * Manages user profile data including RSVPs and payment history.
+ * Fetches and organizes upcoming/past RSVPs.
+ * ==============================================
+ */
+
 import { useState, useCallback, useMemo } from "react";
 import { api } from "../../../services/api";
 import type { Event } from "../../../types";

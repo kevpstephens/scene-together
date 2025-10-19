@@ -1,3 +1,11 @@
+/*===============================================
+ * useEventsData Hook
+ * ==============================================
+ * Manages event list data, filtering, search, and RSVP status.
+ * Implements debounced search and smart filtering logic.
+ * ==============================================
+ */
+
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Animated } from "react-native";
 import { api } from "../../../services/api";

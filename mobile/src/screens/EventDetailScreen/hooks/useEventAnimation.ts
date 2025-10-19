@@ -1,3 +1,11 @@
+/*===============================================
+ * useEventAnimation Hook
+ * ==============================================
+ * Manages scroll-based parallax and entrance animations.
+ * Provides smooth scale and fade effects on mount.
+ * ==============================================
+ */
+
 import { useEffect, useRef } from "react";
 import { Animated } from "react-native";
 

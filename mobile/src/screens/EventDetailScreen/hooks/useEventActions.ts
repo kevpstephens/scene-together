@@ -1,3 +1,11 @@
+/*===============================================
+ * useEventActions Hook
+ * ==============================================
+ * Manages event-related actions like sharing and external links.
+ * Handles platform-specific sharing (Web Share API vs native).
+ * ==============================================
+ */
+
 import { Alert, Platform, Linking, Share } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useToast } from "../../../contexts/toast";

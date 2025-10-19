@@ -1,3 +1,12 @@
+/*===============================================
+ * useEventRSVP Hook
+ * ==============================================
+ * Manages RSVP actions and calendar integration.
+ * Handles RSVP creation, updates, cancellation,
+ * and AsyncStorage caching for optimistic UI.
+ * ==============================================
+ */
+
 import { useState } from "react";
 import { Alert, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";

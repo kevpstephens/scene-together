@@ -1,3 +1,11 @@
+/*===============================================
+ * useAdminStats Hook
+ * ==============================================
+ * Fetches and manages admin dashboard statistics.
+ * Loads event counts, user totals, and revenue data with pull-to-refresh.
+ * ==============================================
+ */
+
 import { useState, useEffect } from "react";
 import { Platform } from "react-native";
 import * as Haptics from "expo-haptics";

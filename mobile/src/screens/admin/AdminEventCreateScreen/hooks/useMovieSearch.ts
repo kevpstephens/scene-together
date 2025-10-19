@@ -1,3 +1,11 @@
+/*===============================================
+ * useMovieSearch Hook - AdminEventCreateScreen
+ * ==============================================
+ * Handles TMDB movie search and selection for event creation.
+ * Fetches movie data including posters and trailers.
+ * ==============================================
+ */
+
 import { useState } from "react";
 import { Alert } from "react-native";
 import { api } from "../../../../services/api";

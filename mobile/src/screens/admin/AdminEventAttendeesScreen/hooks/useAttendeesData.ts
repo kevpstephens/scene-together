@@ -1,3 +1,11 @@
+/*===============================================
+ * useAttendeesData Hook
+ * ==============================================
+ * Fetches and manages event attendee data.
+ * Loads RSVPs and payment statuses for an event with pull-to-refresh.
+ * ==============================================
+ */
+
 import { useState, useEffect } from "react";
 import { Platform, Alert } from "react-native";
 import * as Haptics from "expo-haptics";
