@@ -14,7 +14,7 @@ import { EventsStackParamList } from "../../navigation/types";
 import type { Event } from "../../types";
 import EventCardSkeleton from "../../components/EventCardSkeleton";
 import GradientBackground from "../../components/GradientBackground";
-import { useToast } from "../../contexts/ToastContext";
+import { useToast } from "../../contexts/toast";
 import * as Haptics from "expo-haptics";
 import { styles } from "./EventsListScreen.styles";
 import { useEventsData, FilterStatus } from "./hooks/useEventsData";

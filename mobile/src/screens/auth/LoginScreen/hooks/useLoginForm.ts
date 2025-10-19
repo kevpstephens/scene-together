@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useAuth } from "../../../../contexts/AuthContext";
-import { useToast } from "../../../../contexts/ToastContext";
+import { useAuth } from "../../../../contexts/auth";
+import { useToast } from "../../../../contexts/toast";
 
 export const useLoginForm = () => {
   const { signIn, signInWithGoogle } = useAuth();

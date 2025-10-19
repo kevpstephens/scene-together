@@ -13,7 +13,7 @@ import EventsStackNavigator from "./EventsStackNavigator";
 import ProfileStackNavigator from "./ProfileStackNavigator";
 import AdminStackNavigator from "./AdminStackNavigator";
 import { theme } from "../theme";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/auth";
 import * as Haptics from "expo-haptics";
 import { Platform, View, StyleSheet } from "react-native";
 

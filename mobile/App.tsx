@@ -1,6 +1,6 @@
 import React from "react";
-import { AuthProvider } from "./src/contexts/AuthContext";
-import { ToastProvider } from "./src/contexts/ToastContext";
+import { AuthProvider } from "./src/contexts/auth";
+import { ToastProvider } from "./src/contexts/toast";
 import RootNavigator from "./src/navigation/RootNavigator";
 import { StripeProvider } from "./src/lib/stripe";
 

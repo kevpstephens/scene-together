@@ -6,7 +6,7 @@ import GradientBackground from "../../components/GradientBackground";
 import SuccessConfetti from "../../components/SuccessConfetti";
 import { theme } from "../../theme";
 import { styles } from "./EventDetailScreen.styles";
-import { useToast } from "../../contexts/ToastContext";
+import { useToast } from "../../contexts/toast";
 import {
   useEventAnimation,
   useEventData,

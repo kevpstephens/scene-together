@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { api } from "../../../services/api";
 import { promptAddToCalendar } from "../../../services/calendar";
-import { useToast } from "../../../contexts/ToastContext";
+import { useToast } from "../../../contexts/toast";
 import type { Event, RSVPStatus } from "../../../types";
 
 interface UseEventRSVPProps {

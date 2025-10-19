@@ -15,7 +15,7 @@ import {
   MainTabParamList,
   ProfileStackParamList,
 } from "../../navigation/types";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/auth";
 import { theme } from "../../theme";
 import { styles } from "./ProfileScreen.styles";
 import GradientBackground from "../../components/GradientBackground";
