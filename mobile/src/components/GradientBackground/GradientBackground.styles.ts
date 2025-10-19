@@ -42,4 +42,15 @@ export const styles = StyleSheet.create({
     top: "35%",
     right: -100,
   },
+  filmReelContainer: {
+    width: "100%",
+    height: "100%",
+    position: "relative",
+  },
+  sprocketHole: {
+    position: "absolute",
+    backgroundColor: "rgba(0, 0, 0, 0.25)", // Dark holes for depth
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)", // Subtle highlight
+  },
 });
