@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -20,7 +20,7 @@ import { theme } from "../../theme";
 import { styles } from "./ProfileScreen.styles";
 import GradientBackground from "../../components/GradientBackground";
 import SkeletonLoader from "../../components/SkeletonLoader";
-import { useProfileData, useProfileActions } from "./hooks";
+import { useProfileData, useProfileActions, useScrollToTop } from "./hooks";
 import {
   ProfileHeader,
   StatsCard,
@@ -38,6 +38,7 @@ type ProfileScreenNavigationProp = CompositeNavigationProp<
 export default function ProfileScreen() {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user, userProfile, loading, signOut } = useAuth();
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // Custom hooks
   const {
@@ -61,6 +62,9 @@ export default function ProfileScreen() {
     fetchPaymentHistory,
     setRefreshing,
   });
+
+  // Scroll to top when tab is tapped again (matching Events tab behavior)
+  useScrollToTop({ scrollViewRef });
 
   // Refetch data when screen comes into focus
   useFocusEffect(
@@ -88,6 +92,7 @@ export default function ProfileScreen() {
   return (
     <GradientBackground>
       <ScrollView
+        ref={scrollViewRef}
         style={styles.container}
         refreshControl={
           <RefreshControl
