@@ -1,30 +1,57 @@
+/*===============================================
+ * Stripe Service
+ * ==============================================
+ * Stripe API integration for payment processing.
+ * Handles payment intents, refunds, and webhook verification.
+ * API Documentation: https://stripe.com/docs/api
+ * ==============================================
+ */
+
 import Stripe from "stripe";
 
+// ==================== Configuration ====================
+
+// Validate Stripe secret key is configured
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error("STRIPE_SECRET_KEY is not set in environment variables");
 }
 
-// Initialize Stripe with your secret key
+/**
+ * Stripe client instance
+ * Configured with TypeScript support
+ */
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  // Use account default API version; set a fixed version here if desired
   typescript: true,
 });
 
-// Warn loudly if a live key is used outside production to prevent accidental charges
+// Warn if live key is used in non-production environments
 if (
-  process.env.STRIPE_SECRET_KEY?.startsWith("sk_live_") &&
+  process.env.STRIPE_SECRET_KEY.startsWith("sk_live_") &&
   process.env.NODE_ENV !== "production"
 ) {
   console.warn(
-    "⚠️ Using a LIVE Stripe secret key while NODE_ENV is not production. Switch to sk_test_... for demos."
+    "⚠️  WARNING: Using LIVE Stripe key in non-production environment!"
   );
+  console.warn("    Switch to sk_test_... to avoid real charges.");
 }
 
+// ==================== Service Functions ====================
+
 /**
- * Create a payment intent for an event RSVP
+ * Create a payment intent for an event ticket
+ *
+ * Creates a Stripe PaymentIntent with automatic payment methods enabled.
+ * Stores user/event metadata for webhook processing.
+ *
+ * @param params.amount - Amount in cents (e.g., 500 = £5.00)
+ * @param params.currency - Currency code (e.g., "gbp")
+ * @param params.userId - User UUID for metadata
+ * @param params.eventId - Event UUID for metadata
+ * @param params.eventTitle - Event title for metadata
+ * @returns Created PaymentIntent with client secret
  */
 export async function createPaymentIntent(params: {
-  amount: number; // Amount in cents
+  amount: number;
   currency: string;
   userId: string;
   eventId: string;
@@ -51,6 +78,11 @@ export async function createPaymentIntent(params: {
 
 /**
  * Retrieve a payment intent by ID
+ *
+ * Used for manual status syncing when webhooks are slow/failed.
+ *
+ * @param paymentIntentId - Stripe PaymentIntent ID
+ * @returns PaymentIntent object with current status
  */
 export async function getPaymentIntent(
   paymentIntentId: string
@@ -60,6 +92,13 @@ export async function getPaymentIntent(
 
 /**
  * Cancel a payment intent
+ *
+ * Cancels a pending payment intent.
+ * Can only cancel intents with status "requires_payment_method",
+ * "requires_capture", "requires_confirmation", or "requires_action".
+ *
+ * @param paymentIntentId - Stripe PaymentIntent ID
+ * @returns Cancelled PaymentIntent
  */
 export async function cancelPaymentIntent(
   paymentIntentId: string
@@ -69,23 +108,40 @@ export async function cancelPaymentIntent(
 
 /**
  * Create a refund for a payment
+ *
+ * Issues a full or partial refund for a successful payment.
+ * If amount is not specified, refunds the full payment amount.
+ *
+ * @param params.paymentIntentId - Stripe PaymentIntent ID
+ * @param params.amount - Optional partial refund amount in cents
+ * @param params.reason - Optional refund reason
+ * @returns Created Refund object
  */
 export async function createRefund(params: {
   paymentIntentId: string;
-  amount?: number; // Optional partial refund amount in cents
+  amount?: number;
   reason?: Stripe.RefundCreateParams.Reason;
 }): Promise<Stripe.Refund> {
   const { paymentIntentId, amount, reason } = params;
 
   return await stripe.refunds.create({
     payment_intent: paymentIntentId,
-    amount, // If undefined, refunds the full amount
+    amount, // If undefined, refunds full amount
     reason: reason || "requested_by_customer",
   });
 }
 
 /**
  * Verify Stripe webhook signature
+ *
+ * Validates webhook events are genuinely from Stripe.
+ * CRITICAL: Must use raw body (not parsed JSON) for verification.
+ *
+ * @param payload - Raw request body (string or Buffer)
+ * @param signature - Stripe-Signature header value
+ * @param secret - Webhook secret from Stripe dashboard
+ * @returns Verified Stripe Event object
+ * @throws Error if signature verification fails
  */
 export function constructWebhookEvent(
   payload: string | Buffer,

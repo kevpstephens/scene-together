@@ -1,3 +1,14 @@
+/*===============================================
+ * Payments Routes
+ * ==============================================
+ * Stripe payment endpoints for event tickets.
+ * Handles payment creation, sync, history, and refunds.
+ *
+ * Note: Webhook endpoint is mounted at server.ts level before express.json()
+ * middleware to preserve raw body for signature verification.
+ * ==============================================
+ */
+
 import { Router } from "express";
 import * as paymentsController from "./payments.controller.js";
 import { requireAuth, requireAdmin } from "../../middleware/auth.js";
@@ -7,14 +18,12 @@ import {
   createRefundSchema,
   syncPaymentIntentSchema,
 } from "./payments.validation.js";
-import express from "express";
 
 const router = Router();
 
 /**
- * Create a payment intent for an event
- * @route POST /api/payments/create-intent
- * @access Private (requires authentication)
+ * POST /payments/create-intent
+ * Create Stripe payment intent for event ticket
  */
 router.post(
   "/create-intent",
@@ -23,19 +32,26 @@ router.post(
   paymentsController.createPaymentIntent
 );
 
-// Webhook is mounted at app-level before express.json() to preserve raw body
-
 /**
+ * GET /payments/history
  * Get payment history for current user
- * @route GET /api/payments/history
- * @access Private (requires authentication)
  */
 router.get("/history", requireAuth, paymentsController.getPaymentHistory);
 
 /**
- * Create a refund (admin only)
- * @route POST /api/payments/:paymentId/refund
- * @access Private (admin only)
+ * POST /payments/sync-intent
+ * Manually sync payment status from Stripe (fallback for slow webhooks)
+ */
+router.post(
+  "/sync-intent",
+  requireAuth,
+  validate(syncPaymentIntentSchema),
+  paymentsController.syncPaymentIntent
+);
+
+/**
+ * POST /payments/:paymentId/refund
+ * Create refund (Admin only)
  */
 router.post(
   "/:paymentId/refund",
@@ -43,18 +59,6 @@ router.post(
   requireAdmin,
   validate(createRefundSchema),
   paymentsController.createRefund
-);
-
-/**
- * Manually sync a PaymentIntent from Stripe and update local records
- * @route POST /api/payments/sync-intent
- * @access Private (requires authentication)
- */
-router.post(
-  "/sync-intent",
-  requireAuth,
-  validate(syncPaymentIntentSchema),
-  paymentsController.syncPaymentIntent
 );
 
 export default router;

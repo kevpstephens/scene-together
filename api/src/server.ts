@@ -1,3 +1,23 @@
+/*===============================================
+ * SceneTogether API Server
+ * ==============================================
+ * Express server for SceneTogether film screening events platform.
+ *
+ * Features:
+ * - JWT authentication with Supabase
+ * - TMDB API integration for movie data
+ * - Stripe payment processing for event tickets
+ * - RSVP management with capacity checking
+ * - Role-based access control (USER, ADMIN, SUPER_ADMIN)
+ *
+ * Tech Stack:
+ * - Express + TypeScript
+ * - PostgreSQL with Prisma ORM
+ * - Supabase Auth
+ * - Stripe Payments
+ * ==============================================
+ */
+
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
@@ -9,38 +29,96 @@ import rsvpsRouter from "./modules/rsvps/rsvps.routes.js";
 import moviesRouter from "./modules/movies/movies.routes.js";
 import paymentsRouter from "./modules/payments/payments.routes.js";
 import * as paymentsController from "./modules/payments/payments.controller.js";
-import expressRaw from "express";
 
 const app = express();
 
-// Middleware
+// ==================== Global Middleware ====================
+
+// CORS - Allow cross-origin requests from frontend
 app.use(cors());
-// Mount Stripe webhook BEFORE express.json() so the body is raw
+
+// CRITICAL: Stripe webhook must come BEFORE express.json()
+// Webhook signature verification requires raw body, not parsed JSON
 app.post(
   "/payments/webhook",
-  expressRaw.raw({ type: "application/json" }),
+  express.raw({ type: "application/json" }),
   paymentsController.handleWebhook
 );
 
 // JSON parser for all other routes
 app.use(express.json());
-app.use(morgan("dev"));
 
-// ==================== ROUTES ====================
+// HTTP request logging (development only)
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("dev"));
+}
 
-// Health check
-app.get("/health", (_req, res) => res.json({ ok: true }));
+// ==================== Routes ====================
 
-// Feature modules
+/**
+ * Health check endpoint
+ * GET /health
+ */
+app.get("/health", (_req, res) => res.json({ ok: true, service: "api" }));
+
+/**
+ * Auth routes - User authentication and profile management
+ * GET  /auth/me       - Get current user
+ * PATCH /auth/me      - Update profile
+ */
 app.use("/auth", authRouter);
-app.use("/events", eventsRouter);
-app.use("/movies", moviesRouter);
-app.use("/payments", paymentsRouter);
-app.use("/", rsvpsRouter); // RSVPs routes include /events/:id/rsvp and /me/rsvps
 
-// Error handling (must be last)
+/**
+ * Events routes - Event CRUD and attendee management
+ * GET    /events             - List all events (public)
+ * GET    /events/:id         - Get event details (public)
+ * POST   /events             - Create event (admin)
+ * PUT    /events/:id         - Update event (admin)
+ * DELETE /events/:id         - Delete event (admin)
+ * GET    /events/:id/attendees - View attendees (admin)
+ */
+app.use("/events", eventsRouter);
+
+/**
+ * Movies routes - TMDB API integration
+ * GET /movies/search     - Search movies (admin)
+ * GET /movies/popular    - Get popular movies (admin)
+ * GET /movies/:id        - Get movie details (admin)
+ */
+app.use("/movies", moviesRouter);
+
+/**
+ * Payments routes - Stripe integration
+ * POST /payments/create-intent    - Create payment intent (authenticated)
+ * POST /payments/sync-intent      - Sync payment status (authenticated)
+ * GET  /payments/history          - Get payment history (authenticated)
+ * POST /payments/:id/refund       - Issue refund (admin)
+ * POST /payments/webhook          - Stripe webhook (public, verified)
+ */
+app.use("/payments", paymentsRouter);
+
+/**
+ * RSVPs routes - Event attendance management
+ * POST   /events/:id/rsvp    - Create/update RSVP (authenticated)
+ * DELETE /events/:id/rsvp    - Delete RSVP (authenticated)
+ * GET    /me/rsvps           - Get user's RSVPs (authenticated)
+ */
+app.use("/", rsvpsRouter);
+
+// ==================== Error Handling ====================
+
+// 404 handler - catches undefined routes
 app.use(notFoundHandler);
+
+// Global error handler - catches all errors
 app.use(errorHandler);
 
+// ==================== Server Startup ====================
+
 const port = process.env.PORT || 4000;
-app.listen(port, () => console.log(`🚀 API listening on :${port}`));
+
+app.listen(port, () => {
+  console.log(`🚀 SceneTogether API`);
+  console.log(`📍 http://localhost:${port}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
+});

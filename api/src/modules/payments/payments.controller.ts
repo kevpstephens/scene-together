@@ -104,41 +104,57 @@ export async function createPaymentIntent(
 
 /**
  * Handle Stripe webhook events
- * POST /api/payments/webhook
+ *
+ * POST /payments/webhook
+ *
+ * Receives and processes webhook events from Stripe.
+ * Verifies signature for security, then updates payment/RSVP status.
+ *
+ * Handled events:
+ * - payment_intent.succeeded: Updates payment to "succeeded", creates RSVP
+ * - payment_intent.payment_failed: Updates payment to "failed"
+ * - charge.refunded: Updates payment to "refunded", RSVP to "not_going"
+ *
+ * @param req.body - Raw webhook payload (must be raw for signature verification)
+ * @param req.headers.stripe-signature - Stripe signature header
+ * @returns Success acknowledgment
  */
 export async function handleWebhook(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const signature = req.headers["stripe-signature"];
 
     if (!signature || typeof signature !== "string") {
-      return res.status(400).json({ error: "No signature provided" });
+      res.status(400).json({ error: "No signature provided" });
+      return;
     }
 
     if (!process.env.STRIPE_WEBHOOK_SECRET) {
       console.error("STRIPE_WEBHOOK_SECRET not configured");
-      return res.status(500).json({ error: "Webhook not configured" });
+      res.status(500).json({ error: "Webhook not configured" });
+      return;
     }
 
-    // Verify webhook signature
+    // Verify webhook signature for security
     const event = stripeService.constructWebhookEvent(
       req.body,
-      signature as string,
+      signature,
       process.env.STRIPE_WEBHOOK_SECRET
     );
 
-    // Ignore unexpected live-mode events in test environments for safety
+    // Ignore live-mode events in non-production environments for safety
     if (event.livemode && process.env.NODE_ENV !== "production") {
       console.warn(
         `Ignoring live-mode webhook event ${event.id} in ${process.env.NODE_ENV}`
       );
-      return res.json({ ignored: true });
+      res.json({ ignored: true });
+      return;
     }
 
-    // Handle different event types
+    // Process event based on type
     switch (event.type) {
       case "payment_intent.succeeded": {
         const paymentIntent = event.data.object as any;
@@ -163,21 +179,30 @@ export async function handleWebhook(
     }
 
     res.json({ received: true });
-  } catch (error: any) {
-    console.error("Webhook error:", error.message);
-    return res.status(400).json({ error: error.message });
+  } catch (error: unknown) {
+    const err = error as any;
+    console.error("Webhook error:", err.message);
+    res.status(400).json({ error: err.message });
   }
 }
 
 /**
- * Get payment history for a user
- * GET /api/payments/history
+ * Get payment history for current user
+ *
+ * GET /payments/history
+ *
+ * Returns all payments for the authenticated user.
+ * Includes event details (title, date, movieData).
+ * Ordered by most recent first.
+ * Requires authentication.
+ *
+ * @returns Array of payments with event details
  */
 export async function getPaymentHistory(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const userId = req.user!.id;
 
@@ -204,22 +229,32 @@ export async function getPaymentHistory(
 }
 
 /**
- * Manually sync a PaymentIntent from Stripe and update local records
- * POST /api/payments/sync-intent
+ * Manually sync payment intent status from Stripe
+ *
+ * POST /payments/sync-intent
+ *
+ * Client-side fallback for slow/failed webhooks.
+ * Fetches current PaymentIntent status from Stripe and updates local records.
+ * If payment succeeded, creates/updates RSVP to "going".
+ * Requires authentication.
+ *
+ * @param req.body.paymentIntentId - Stripe PaymentIntent ID
+ * @returns Sync status and current payment status
  */
 export async function syncPaymentIntent(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const { paymentIntentId } = req.body as { paymentIntentId: string };
 
     if (!paymentIntentId) {
-      return res.status(400).json({ error: "paymentIntentId is required" });
+      res.status(400).json({ error: "paymentIntentId is required" });
+      return;
     }
 
-    // Fetch from Stripe
+    // Fetch current status from Stripe
     const intent = await stripeService.getPaymentIntent(paymentIntentId);
 
     // Update local payment record
@@ -231,7 +266,7 @@ export async function syncPaymentIntent(
       },
     });
 
-    // If succeeded, ensure RSVP is created/updated to going
+    // If payment succeeded, ensure RSVP is created/updated
     if (intent.status === "succeeded") {
       const { userId, eventId } = intent.metadata as any;
       if (userId && eventId) {
@@ -250,15 +285,27 @@ export async function syncPaymentIntent(
   }
 }
 
+// ==================== Admin Endpoints ====================
+
 /**
- * Create a refund (admin only)
- * POST /api/payments/:paymentId/refund
+ * Create a refund for a payment
+ *
+ * POST /payments/:paymentId/refund
+ *
+ * Issues a refund through Stripe and updates local records.
+ * Updates payment status to "refunded" and RSVP to "not_going".
+ * Requires ADMIN or SUPER_ADMIN role.
+ *
+ * @param req.params.paymentId - Payment UUID
+ * @param req.body.amount - Optional partial refund amount (in pounds, not cents)
+ * @param req.body.reason - Optional refund reason
+ * @returns Refund details
  */
 export async function createRefund(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const { paymentId } = req.params;
     const { amount, reason } = req.body;
@@ -270,31 +317,34 @@ export async function createRefund(
     });
 
     if (!payment) {
-      return res.status(404).json({ error: "Payment not found" });
+      res.status(404).json({ error: "Payment not found" });
+      return;
     }
 
     if (!payment.stripeId) {
-      return res.status(400).json({ error: "No Stripe payment ID found" });
+      res.status(400).json({ error: "No Stripe payment ID found" });
+      return;
     }
 
     if (payment.status === "refunded") {
-      return res.status(400).json({ error: "Payment already refunded" });
+      res.status(400).json({ error: "Payment already refunded" });
+      return;
     }
 
     // Create refund in Stripe
     const refund = await stripeService.createRefund({
       paymentIntentId: payment.stripeId,
-      amount: amount ? Math.round(amount * 100) : undefined, // Convert to cents if provided
+      amount: amount ? Math.round(amount * 100) : undefined, // Convert pounds to cents
       reason: reason || "requested_by_customer",
     });
 
-    // Update payment status
+    // Update payment status to refunded
     await prisma.payment.update({
       where: { id: paymentId },
       data: { status: "refunded" },
     });
 
-    // Update RSVP status to not_going
+    // Update RSVP to not_going
     await prisma.rSVP.updateMany({
       where: {
         userId: payment.userId,
@@ -317,28 +367,25 @@ export async function createRefund(
   }
 }
 
-// Helper functions
+// ==================== Webhook Helper Functions ====================
 
-async function handlePaymentSuccess(paymentIntent: any) {
+/**
+ * Handle successful payment from webhook
+ * Updates payment status to "succeeded" and creates/updates RSVP to "going"
+ */
+async function handlePaymentSuccess(paymentIntent: any): Promise<void> {
   const { userId, eventId } = paymentIntent.metadata;
 
   // Update payment status
   await prisma.payment.updateMany({
-    where: {
-      stripeId: paymentIntent.id,
-    },
-    data: {
-      status: "succeeded",
-    },
+    where: { stripeId: paymentIntent.id },
+    data: { status: "succeeded" },
   });
 
   // Create or update RSVP to "going"
   await prisma.rSVP.upsert({
     where: {
-      userId_eventId: {
-        userId,
-        eventId,
-      },
+      userId_eventId: { userId, eventId },
     },
     create: {
       userId,
@@ -353,34 +400,33 @@ async function handlePaymentSuccess(paymentIntent: any) {
   console.log(`Payment succeeded for user ${userId} and event ${eventId}`);
 }
 
-async function handlePaymentFailure(paymentIntent: any) {
-  // Update payment status
+/**
+ * Handle failed payment from webhook
+ * Updates payment status to "failed"
+ */
+async function handlePaymentFailure(paymentIntent: any): Promise<void> {
   await prisma.payment.updateMany({
-    where: {
-      stripeId: paymentIntent.id,
-    },
-    data: {
-      status: "failed",
-    },
+    where: { stripeId: paymentIntent.id },
+    data: { status: "failed" },
   });
 
   console.log(`Payment failed for payment intent ${paymentIntent.id}`);
 }
 
-async function handleRefund(charge: any) {
+/**
+ * Handle refund from webhook
+ * Updates payment status to "refunded" and RSVP to "not_going"
+ */
+async function handleRefund(charge: any): Promise<void> {
   const paymentIntentId = charge.payment_intent;
 
   // Update payment status
   await prisma.payment.updateMany({
-    where: {
-      stripeId: paymentIntentId,
-    },
-    data: {
-      status: "refunded",
-    },
+    where: { stripeId: paymentIntentId },
+    data: { status: "refunded" },
   });
 
-  // Get the payment to find user and event
+  // Get payment to find associated user and event
   const payment = await prisma.payment.findFirst({
     where: { stripeId: paymentIntentId },
   });
@@ -392,9 +438,7 @@ async function handleRefund(charge: any) {
         userId: payment.userId,
         eventId: payment.eventId,
       },
-      data: {
-        status: "not_going",
-      },
+      data: { status: "not_going" },
     });
   }
 

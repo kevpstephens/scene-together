@@ -1,7 +1,15 @@
+/*===============================================
+ * RSVPs Validation Schemas
+ * ==============================================
+ * Zod validation schemas for RSVP endpoints.
+ * ==============================================
+ */
+
 import { z } from "zod";
 
 /**
  * Validation schema for creating/updating an RSVP
+ * POST /events/:id/rsvp
  */
 export const createRSVPSchema = z.object({
   params: z.object({

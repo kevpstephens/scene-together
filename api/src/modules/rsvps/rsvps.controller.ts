@@ -1,21 +1,38 @@
+/*===============================================
+ * RSVPs Controller
+ * ==============================================
+ * Handles RSVP creation, updates, and deletion for events.
+ * All endpoints require authentication.
+ * ==============================================
+ */
+
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../../utils/prisma.js";
 
 /**
  * Create or update RSVP for an event
- * Authenticated users only
+ *
+ * POST /events/:id/rsvp
+ *
+ * Creates new RSVP or updates existing one (upsert).
+ * Validates event capacity before allowing "going" status.
+ * Requires authentication.
+ *
+ * @param req.params.id - Event UUID
+ * @param req.body.status - RSVP status: "going", "interested", or "not_going"
+ * @returns Created or updated RSVP
  */
 export async function createOrUpdateRSVP(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const { status } = req.body;
     const { id: eventId } = req.params;
     const userId = req.user!.id;
 
-    // Check if event exists and has capacity
+    // Check event exists and get current attendee count
     const event = await prisma.event.findUnique({
       where: { id: eventId },
       include: {
@@ -26,18 +43,21 @@ export async function createOrUpdateRSVP(
     });
 
     if (!event) {
-      return res.status(404).json({ error: "Event not found" });
+      res.status(404).json({ error: "Event not found" });
+      return;
     }
 
-    // Check capacity if user is RSVPing as "going"
+    // Validate capacity before allowing "going" status
     if (
       event.maxCapacity &&
       event._count.rsvps >= event.maxCapacity &&
       status === "going"
     ) {
-      return res.status(400).json({ error: "Event is at full capacity" });
+      res.status(400).json({ error: "Event is at full capacity" });
+      return;
     }
 
+    // Create or update RSVP
     const rsvp = await prisma.rSVP.upsert({
       where: { userId_eventId: { userId, eventId } },
       update: { status },
@@ -51,14 +71,21 @@ export async function createOrUpdateRSVP(
 }
 
 /**
- * Get all RSVPs for the authenticated user
- * Authenticated users only
+ * Get all RSVPs for current user
+ *
+ * GET /me/rsvps
+ *
+ * Returns all RSVPs for the authenticated user with event details.
+ * Ordered by event date (earliest first).
+ * Requires authentication.
+ *
+ * @returns Array of RSVPs with full event details
  */
 export async function getUserRSVPs(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const rsvps = await prisma.rSVP.findMany({
       where: { userId: req.user!.id },
@@ -80,32 +107,41 @@ export async function getUserRSVPs(
 
 /**
  * Delete an RSVP for an event
- * Authenticated users only
+ *
+ * DELETE /events/:id/rsvp
+ *
+ * Removes the user's RSVP for a specific event.
+ * Can only delete own RSVPs.
+ * Requires authentication.
+ *
+ * @param req.params.id - Event UUID
+ * @returns Success message
  */
 export async function deleteRSVP(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const { id: eventId } = req.params;
     const userId = req.user!.id;
 
-    // Check if RSVP exists
+    // Verify RSVP exists
     const rsvp = await prisma.rSVP.findUnique({
       where: { userId_eventId: { userId, eventId } },
     });
 
     if (!rsvp) {
-      return res.status(404).json({ error: "RSVP not found" });
+      res.status(404).json({ error: "RSVP not found" });
+      return;
     }
 
-    // Delete the RSVP
+    // Delete RSVP
     await prisma.rSVP.delete({
       where: { userId_eventId: { userId, eventId } },
     });
 
-    res.status(200).json({ message: "RSVP deleted successfully" });
+    res.json({ message: "RSVP deleted successfully" });
   } catch (error) {
     next(error);
   }
