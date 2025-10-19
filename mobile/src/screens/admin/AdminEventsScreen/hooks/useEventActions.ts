@@ -32,24 +32,17 @@ export const useEventActions = ({
   const [confirmDelete, setConfirmDelete] = useState<Event | null>(null);
 
   const handleDelete = (event: Event) => {
-    console.log("🗑️ Delete button pressed for event:", event.title);
     setConfirmDelete(event);
   };
 
   const confirmDeleteEvent = async () => {
     if (!confirmDelete) return;
 
-    console.log(
-      "🗑️ Confirmed deletion, starting delete for:",
-      confirmDelete.id
-    );
     setDeleting(confirmDelete.id);
     setConfirmDelete(null);
 
     try {
-      console.log("🗑️ Calling API to delete event:", confirmDelete.id);
       await api.delete(`/events/${confirmDelete.id}`);
-      console.log("✅ Event deleted successfully from API");
       setEvents(events.filter((e) => e.id !== confirmDelete.id));
       Alert.alert("Success", "Event deleted successfully");
     } catch (error: any) {
@@ -67,7 +60,6 @@ export const useEventActions = ({
   };
 
   const cancelDelete = () => {
-    console.log("Delete cancelled");
     setConfirmDelete(null);
   };
 

@@ -80,7 +80,6 @@ export const useEventPayment = ({
             (r: any) => r.eventId === eventId && r.status === "going"
           );
         if (hasGoing) {
-          console.log(`✅ Webhook processed after ${attempt + 1} attempts`);
           return; // Success!
         }
       } catch (_error) {
@@ -186,7 +185,6 @@ export const useEventPayment = ({
         try {
           // Step 1: Force sync from Stripe immediately (don't wait for webhook)
           if (paymentIntentId) {
-            console.log("🔄 Syncing payment intent from Stripe...");
             await syncPaymentIntent(paymentIntentId);
           }
 
@@ -200,7 +198,6 @@ export const useEventPayment = ({
 
           // Step 3: Create RSVP if it doesn't exist
           if (!hasGoing) {
-            console.log("📝 Creating RSVP after payment...");
             await api.post(`/events/${eventId}/rsvp`, { status: "going" });
           }
 
@@ -208,9 +205,7 @@ export const useEventPayment = ({
           await AsyncStorage.setItem(`rsvp_${eventId}`, "going");
 
           // Step 5: Refresh event and RSVP data to update UI
-          console.log("🔄 Refreshing event data...");
           await Promise.all([loadEvent(), loadUserRSVP()]);
-          console.log("✅ Payment sync complete!");
 
           // Notify user that payment has been fully processed
           showToast("Payment confirmed! You're all set 🎉", "success");

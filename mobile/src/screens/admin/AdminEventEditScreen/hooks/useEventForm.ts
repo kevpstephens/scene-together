@@ -86,7 +86,6 @@ export const useEventForm = ({
   const loadEvent = async () => {
     try {
       setLoading(true);
-      console.log("📝 Loading event with ID:", eventId);
       const { data } = await api.get(`/events/${eventId}`);
 
       setTitle(data.title);

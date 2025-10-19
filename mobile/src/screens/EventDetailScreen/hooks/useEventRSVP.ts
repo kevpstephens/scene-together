@@ -169,8 +169,6 @@ export const useEventRSVP = ({
                   : undefined,
               });
 
-              console.log("📅 Calendar result:", added);
-
               if (added) {
                 // Success! Alert is shown by the calendar service
                 if (Platform.OS !== "web") {
@@ -178,8 +176,6 @@ export const useEventRSVP = ({
                     Haptics.NotificationFeedbackType.Success
                   );
                 }
-              } else {
-                console.log("⚠️ User canceled or calendar failed");
               }
             } catch (error) {
               console.error("❌ Error adding to calendar:", error);

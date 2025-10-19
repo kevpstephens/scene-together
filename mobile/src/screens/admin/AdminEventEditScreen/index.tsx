@@ -30,8 +30,6 @@ export default function AdminEventEditScreen() {
   const route = useRoute<RouteParams>();
   const { eventId } = route.params;
 
-  console.log("🔍 AdminEventEditScreen - eventId:", eventId);
-
   // Event form hook (must be called before any conditional returns)
   const {
     loading,

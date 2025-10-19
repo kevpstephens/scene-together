@@ -31,7 +31,6 @@ export const EventCardPoster: React.FC<EventCardPosterProps> = ({
           style={styles.poster}
           resizeMode="cover"
           onError={() => {
-            console.log("Poster failed to load for event:", event.id);
             onPosterError(event.id);
           }}
         />

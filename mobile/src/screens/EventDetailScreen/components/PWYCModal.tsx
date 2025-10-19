@@ -105,7 +105,6 @@ export const PWYCModal: React.FC<PWYCModalProps> = ({
                   <TouchableOpacity
                     style={styles.modalCancelButton}
                     onPress={() => {
-                      console.log("Cancel pressed");
                       handleClose();
                     }}
                     activeOpacity={0.7}
@@ -120,7 +119,6 @@ export const PWYCModal: React.FC<PWYCModalProps> = ({
                       rsvpLoading && { opacity: 0.6 },
                     ]}
                     onPress={() => {
-                      console.log("Continue to payment pressed");
                       handleConfirm();
                     }}
                     disabled={rsvpLoading}
