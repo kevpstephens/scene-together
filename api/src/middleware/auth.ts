@@ -1,14 +1,39 @@
+/*===============================================
+ * Authentication Middleware
+ * ==============================================
+ * JWT verification and role-based access control.
+ * Uses Supabase for token validation and Prisma for role lookup.
+ * Extends Express Request with authenticated user context.
+ * ==============================================
+ */
+
 import { Request, Response, NextFunction } from "express";
 import { createClient } from "@supabase/supabase-js";
-import type { AuthUser } from "../types";
+import type { AuthUser } from "../types/index.js";
 import { prisma } from "../utils/prisma.js";
 
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!;
+// Validate required environment variables
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+  throw new Error(
+    "Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_KEY"
+  );
+}
 
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+
+/**
+ * Supabase client with service role key for token verification
+ * Service role bypasses RLS and allows full access for admin operations
+ */
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Extend Express Request to include user
+// ==================== Type Extensions ====================
+
+/**
+ * Extend Express Request to include authenticated user
+ * Available after requireAuth or optionalAuth middleware
+ */
 declare global {
   namespace Express {
     interface Request {
@@ -17,22 +42,30 @@ declare global {
   }
 }
 
+// ==================== Middleware Functions ====================
+
 /**
- * Middleware to verify Supabase JWT token
- * Extracts token from Authorization header and verifies with Supabase
+ * Require valid authentication
+ *
+ * Verifies JWT token from Authorization header and attaches user to request.
+ * Must be applied before routes that require authentication.
+ *
+ * @example
+ * router.get('/protected', requireAuth, handler);
  */
 export async function requireAuth(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res
+      res
         .status(401)
         .json({ error: "Missing or invalid authorization header" });
+      return;
     }
 
     const token = authHeader.split(" ")[1];
@@ -41,20 +74,22 @@ export async function requireAuth(
     const { data, error } = await supabase.auth.getUser(token);
 
     if (error || !data.user) {
-      return res.status(401).json({ error: "Invalid or expired token" });
+      res.status(401).json({ error: "Invalid or expired token" });
+      return;
     }
 
-    // Get user from database to get their role
+    // Get user from database with role
     const dbUser = await prisma.user.findUnique({
       where: { id: data.user.id },
       select: { id: true, email: true, role: true },
     });
 
     if (!dbUser) {
-      return res.status(401).json({ error: "User not found in database" });
+      res.status(401).json({ error: "User not found in database" });
+      return;
     }
 
-    // Attach user info to request
+    // Attach authenticated user to request
     req.user = {
       id: dbUser.id,
       email: dbUser.email,
@@ -64,67 +99,92 @@ export async function requireAuth(
     next();
   } catch (error) {
     console.error("Auth middleware error:", error);
-    return res.status(401).json({ error: "Authentication failed" });
+    res.status(401).json({ error: "Authentication failed" });
   }
 }
 
 /**
- * Middleware to require admin role (ADMIN or SUPER_ADMIN)
- * Must be used after requireAuth middleware
+ * Require admin role (ADMIN or SUPER_ADMIN)
+ *
+ * Must be chained after requireAuth middleware.
+ * Grants access to event management and user administration.
+ *
+ * @example
+ * router.post('/events', requireAuth, requireAdmin, handler);
  */
-export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+export function requireAdmin(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
   if (!req.user) {
-    return res.status(401).json({ error: "Authentication required" });
+    res.status(401).json({ error: "Authentication required" });
+    return;
   }
 
   if (req.user.role !== "ADMIN" && req.user.role !== "SUPER_ADMIN") {
-    return res.status(403).json({ error: "Admin access required" });
+    res.status(403).json({ error: "Admin access required" });
+    return;
   }
 
   next();
 }
 
 /**
- * Middleware to require super admin role
- * Must be used after requireAuth middleware
+ * Require super admin role
+ *
+ * Must be chained after requireAuth middleware.
+ * Grants full system access for critical operations.
+ *
+ * @example
+ * router.delete('/users/:id', requireAuth, requireSuperAdmin, handler);
  */
 export function requireSuperAdmin(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): void {
   if (!req.user) {
-    return res.status(401).json({ error: "Authentication required" });
+    res.status(401).json({ error: "Authentication required" });
+    return;
   }
 
   if (req.user.role !== "SUPER_ADMIN") {
-    return res.status(403).json({ error: "Super admin access required" });
+    res.status(403).json({ error: "Super admin access required" });
+    return;
   }
 
   next();
 }
 
 /**
- * Optional auth middleware - doesn't fail if no token provided
- * Useful for routes that work with or without auth
+ * Optional authentication
+ *
+ * Attaches user to request if valid token is provided, but doesn't fail otherwise.
+ * Useful for routes that provide enhanced features for authenticated users.
+ *
+ * @example
+ * router.get('/events', optionalAuth, handler); // Public with optional user context
  */
 export async function optionalAuth(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const authHeader = req.headers.authorization;
 
+    // No token provided - continue without user
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return next(); // No token, continue without user
+      next();
+      return;
     }
 
     const token = authHeader.split(" ")[1];
     const { data, error } = await supabase.auth.getUser(token);
 
+    // Valid token - attach user to request
     if (!error && data.user) {
-      // Get user from database to get their role
       const dbUser = await prisma.user.findUnique({
         where: { id: data.user.id },
         select: { id: true, email: true, role: true },
@@ -139,9 +199,10 @@ export async function optionalAuth(
       }
     }
 
+    // Continue regardless of token validity
     next();
   } catch (error) {
-    // Don't fail, just continue without user
+    // Silently continue without user on any error
     next();
   }
 }
