@@ -8,7 +8,7 @@ import {
   createPaymentIntent,
   syncPaymentIntent,
 } from "../../../services/payment";
-import { promptAddToCalendar } from "../../../services/calendarService";
+import { promptAddToCalendar } from "../../../services/calendar";
 import { STRIPE_PUBLISHABLE_KEY } from "../../../config/stripe";
 import { api } from "../../../services/api";
 import type { Event } from "../../../types";

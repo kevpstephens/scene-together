@@ -1,7 +1,7 @@
 import { Alert, Platform, Linking, Share } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useToast } from "../../../contexts/ToastContext";
-import { promptAddToCalendar } from "../../../services/calendarService";
+import { promptAddToCalendar } from "../../../services/calendar";
 import type { Event } from "../../../types";
 
 interface UseEventActionsProps {

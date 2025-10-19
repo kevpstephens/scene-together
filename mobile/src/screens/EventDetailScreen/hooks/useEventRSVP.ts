@@ -3,7 +3,7 @@ import { Alert, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { api } from "../../../services/api";
-import { promptAddToCalendar } from "../../../services/calendarService";
+import { promptAddToCalendar } from "../../../services/calendar";
 import { useToast } from "../../../contexts/ToastContext";
 import type { Event, RSVPStatus } from "../../../types";
 
