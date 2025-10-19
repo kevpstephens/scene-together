@@ -19,3 +19,8 @@ export const createRefundSchema = z.object({
   }),
 });
 
+export const syncPaymentIntentSchema = z.object({
+  body: z.object({
+    paymentIntentId: z.string().min(1, "paymentIntentId is required"),
+  }),
+});

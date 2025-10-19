@@ -41,3 +41,12 @@ export async function getPaymentHistory(): Promise<PaymentHistoryItem[]> {
   return response.data;
 }
 
+/**
+ * Manually sync a PaymentIntent from Stripe (fallback when webhooks are slow)
+ */
+export async function syncPaymentIntent(
+  paymentIntentId: string
+): Promise<{ synced: boolean; status: string }> {
+  const response = await api.post("/payments/sync-intent", { paymentIntentId });
+  return response.data;
+}

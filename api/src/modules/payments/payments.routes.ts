@@ -5,6 +5,7 @@ import { validate } from "../../middleware/validate.js";
 import {
   createPaymentIntentSchema,
   createRefundSchema,
+  syncPaymentIntentSchema,
 } from "./payments.validation.js";
 import express from "express";
 
@@ -42,6 +43,18 @@ router.post(
   requireAdmin,
   validate(createRefundSchema),
   paymentsController.createRefund
+);
+
+/**
+ * Manually sync a PaymentIntent from Stripe and update local records
+ * @route POST /api/payments/sync-intent
+ * @access Private (requires authentication)
+ */
+router.post(
+  "/sync-intent",
+  requireAuth,
+  validate(syncPaymentIntentSchema),
+  paymentsController.syncPaymentIntent
 );
 
 export default router;

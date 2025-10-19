@@ -180,6 +180,53 @@ export async function getPaymentHistory(
 }
 
 /**
+ * Manually sync a PaymentIntent from Stripe and update local records
+ * POST /api/payments/sync-intent
+ */
+export async function syncPaymentIntent(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { paymentIntentId } = req.body as { paymentIntentId: string };
+
+    if (!paymentIntentId) {
+      return res.status(400).json({ error: "paymentIntentId is required" });
+    }
+
+    // Fetch from Stripe
+    const intent = await stripeService.getPaymentIntent(paymentIntentId);
+
+    // Update local payment record
+    await prisma.payment.updateMany({
+      where: { stripeId: paymentIntentId },
+      data: {
+        status:
+          intent.status === "succeeded" ? "succeeded" : (intent.status as any),
+      },
+    });
+
+    // If succeeded, ensure RSVP is created/updated to going
+    if (intent.status === "succeeded") {
+      const { userId, eventId } = intent.metadata as any;
+      if (userId && eventId) {
+        await prisma.rSVP.upsert({
+          where: { userId_eventId: { userId, eventId } },
+          update: { status: "going" },
+          create: { userId, eventId, status: "going" },
+        });
+      }
+    }
+
+    res.json({ synced: true, status: intent.status });
+  } catch (error) {
+    console.error("Error syncing payment intent:", error);
+    next(error);
+  }
+}
+
+/**
  * Create a refund (admin only)
  * POST /api/payments/:paymentId/refund
  */
