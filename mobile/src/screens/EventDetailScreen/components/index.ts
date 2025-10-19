@@ -7,3 +7,4 @@ export { EventActionButtons } from "./EventActionButtons";
 export { EventRSVPSection } from "./EventRSVPSection";
 export { MovieDataSection } from "./MovieDataSection";
 export { StickyBottomBar } from "./StickyBottomBar";
+export { EventOrganizer } from "./EventOrganizer";

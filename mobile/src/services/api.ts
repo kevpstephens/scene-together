@@ -72,3 +72,25 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// ==================== User API Functions ====================
+
+/**
+ * Fetch user profile by ID (public)
+ * @param userId - User UUID
+ * @returns User profile data
+ */
+export const fetchUserProfile = async (userId: string) => {
+  const response = await api.get(`/users/${userId}`);
+  return response.data;
+};
+
+/**
+ * Fetch events created by a user (public)
+ * @param userId - User UUID
+ * @returns Array of events created by the user
+ */
+export const fetchUserEvents = async (userId: string) => {
+  const response = await api.get(`/users/${userId}/events`);
+  return response.data;
+};

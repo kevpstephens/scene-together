@@ -409,7 +409,7 @@ export const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.xxl, // Increased from xl to xxl
     fontWeight: "800" as any, // Extra bold (800 weight)
     color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md, // Increased for better separation
+    marginBottom: theme.spacing.xxs, // Increased for better separation
     lineHeight: theme.typography.fontSize.xxl * 1.25, // Tighter line height for xxl
     letterSpacing: -0.5, // Slightly tighter letter spacing for impact
   },
@@ -432,10 +432,11 @@ export const styles = StyleSheet.create({
     marginLeft: theme.spacing.xs,
   },
   movieInfo: {
-    marginTop: theme.spacing.sm, // Reduced for tighter spacing
-    paddingTop: theme.spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.borderLight,
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderColor: theme.colors.borderLight,
   },
   movieTitle: {
     fontSize: theme.typography.fontSize.sm,
@@ -572,5 +573,52 @@ export const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.bold,
     letterSpacing: 0.5,
+  },
+  // EventCardOrganizer styles
+  organizerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 12,
+    marginBottom: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 2,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: theme.colors.border + "40",
+  },
+  organizerAvatarContainer: {
+    marginRight: 10,
+  },
+  organizerAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: theme.colors.primaryLight,
+  },
+  organizerAvatarPlaceholder: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1.5,
+    borderColor: theme.colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  organizerTextContainer: {
+    flex: 1,
+  },
+  organizerLabel: {
+    fontSize: 10,
+    color: theme.colors.text.secondary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  organizerName: {
+    fontSize: 13,
+    color: theme.colors.text.primary,
+    fontWeight: "600",
   },
 });

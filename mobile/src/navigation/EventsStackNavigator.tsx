@@ -12,6 +12,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { EventsStackParamList } from "./types";
 import EventsListScreen from "../screens/EventsListScreen";
 import EventDetailScreen from "../screens/EventDetailScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 import { theme } from "../theme";
 import { Platform, Image, View } from "react-native";
 
@@ -89,6 +90,17 @@ export default function EventsStackNavigator() {
           gestureEnabled: true,
           fullScreenGestureEnabled: false,
           animationMatchesGesture: true,
+        }}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: "Profile",
+          animation: "slide_from_right",
+          presentation: "card",
+          headerShown: true,
+          gestureEnabled: true,
         }}
       />
     </Stack.Navigator>

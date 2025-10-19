@@ -14,7 +14,8 @@
 
 import React, { useState } from "react";
 import { View, Text, Animated, RefreshControl } from "react-native";
-import { useRoute, RouteProp } from "@react-navigation/native";
+import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { EventsStackParamList } from "../../navigation/types";
 import GradientBackground from "../../components/GradientBackground";
 import SuccessConfetti from "../../components/SuccessConfetti";
@@ -38,6 +39,7 @@ import {
   EventRSVPSection,
   MovieDataSection,
   StickyBottomBar,
+  EventOrganizer,
 } from "./components";
 
 // Declare iframe for React Native Web
@@ -50,9 +52,14 @@ declare global {
 }
 
 type RouteProps = RouteProp<EventsStackParamList, "EventDetail">;
+type NavigationProp = NativeStackNavigationProp<
+  EventsStackParamList,
+  "EventDetail"
+>;
 
 export default function EventDetailScreen() {
   const route = useRoute<RouteProps>();
+  const navigation = useNavigation<NavigationProp>();
   const { eventId } = route.params;
   const { showToast } = useToast();
   const [showConfetti, setShowConfetti] = useState(false);
@@ -172,6 +179,18 @@ export default function EventDetailScreen() {
 
                 {/* Description */}
                 <EventDescription description={event.description} />
+
+                {/* Organizer */}
+                <EventOrganizer
+                  creator={event.createdBy}
+                  onPress={() => {
+                    if (event.createdBy?.id) {
+                      navigation.navigate("Profile", {
+                        userId: event.createdBy.id,
+                      });
+                    }
+                  }}
+                />
 
                 {/* Date & Time */}
                 <EventInfoCard event={event}>

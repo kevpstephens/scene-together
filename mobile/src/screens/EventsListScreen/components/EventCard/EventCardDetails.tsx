@@ -22,6 +22,33 @@ export const EventCardDetails: React.FC<EventCardDetailsProps> = ({
         {event.title}
       </Text>
 
+      {/* Genre Tags */}
+      {event.movieData?.genre && (
+        <View style={styles.movieInfo}>
+          <View style={styles.genreContainer}>
+            {event.movieData.genre
+              .split(",")
+              .slice(0, 3)
+              .map((genre, index) => {
+                const trimmedGenre = genre.trim();
+                return (
+                  <View
+                    key={index}
+                    style={[
+                      styles.genreChip,
+                      { backgroundColor: getGenreColor(trimmedGenre) },
+                    ]}
+                  >
+                    <Text style={styles.genreChipText} numberOfLines={1}>
+                      {trimmedGenre}
+                    </Text>
+                  </View>
+                );
+              })}
+          </View>
+        </View>
+      )}
+
       {/* Time and Location Row */}
       <View style={styles.timeLocationRow}>
         <View style={styles.timeContainer}>
@@ -38,37 +65,6 @@ export const EventCardDetails: React.FC<EventCardDetailsProps> = ({
           </>
         )}
       </View>
-
-      {event.movieData && (
-        <View style={styles.movieInfo}>
-          <Text style={styles.movieTitle} numberOfLines={1}>
-            {event.movieData.title}
-          </Text>
-          {event.movieData.genre && (
-            <View style={styles.genreContainer}>
-              {event.movieData.genre
-                .split(",")
-                .slice(0, 3)
-                .map((genre, index) => {
-                  const trimmedGenre = genre.trim();
-                  return (
-                    <View
-                      key={index}
-                      style={[
-                        styles.genreChip,
-                        { backgroundColor: getGenreColor(trimmedGenre) },
-                      ]}
-                    >
-                      <Text style={styles.genreChipText} numberOfLines={1}>
-                        {trimmedGenre}
-                      </Text>
-                    </View>
-                  );
-                })}
-            </View>
-          )}
-        </View>
-      )}
     </>
   );
 };

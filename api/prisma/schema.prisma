@@ -8,15 +8,16 @@ datasource db {
 }
 
 model User {
-  id        String   @id // Supabase auth.users.id (UUID)
-  email     String   @unique
-  role      Role     @default(USER)
-  name      String?
-  avatarUrl String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  rsvps     RSVP[]
-  payments  Payment[]
+  id           String   @id // Supabase auth.users.id (UUID)
+  email        String   @unique
+  role         Role     @default(USER)
+  name         String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  rsvps        RSVP[]
+  payments     Payment[]
+  createdEvents Event[]  @relation("EventCreator")
 }
 
 enum Role {
@@ -37,6 +38,7 @@ model Event {
   posterCrop     Json?    // Crop settings for poster in cards (scale, translateX, translateY)
   maxCapacity    Int?     // Optional capacity limit
   createdById    String?  // Staff member who created it
+  createdBy      User?    @relation("EventCreator", fields: [createdById], references: [id], onDelete: SetNull)
   // Payment fields
   price          Int?     // Price in cents (null = free event)
   payWhatYouCan  Boolean  @default(false) // Allow flexible pricing

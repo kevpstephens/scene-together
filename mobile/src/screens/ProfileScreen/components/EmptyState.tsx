@@ -6,13 +6,13 @@ import { styles } from "../ProfileScreen.styles";
 import type { EventFilter } from "../hooks";
 
 interface EmptyStateProps {
-  type: "no-rsvps" | "no-filtered-results";
+  type: "no-rsvps" | "no-filtered-results" | "no-events-created";
   eventFilter?: EventFilter;
   onBrowseEvents?: () => void;
 }
 
 /**
- * Empty state component for when user has no RSVPs or filtered results
+ * Empty state component for when user has no RSVPs, filtered results, or created events
  */
 export const EmptyState: React.FC<EmptyStateProps> = ({
   type,
@@ -37,6 +37,20 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             <Text style={styles.emptyActionText}>Browse Events</Text>
           </TouchableOpacity>
         )}
+      </View>
+    );
+  }
+
+  if (type === "no-events-created") {
+    return (
+      <View style={styles.emptyContainer}>
+        <View style={styles.emptyIconWrapper}>
+          <CalendarIcon size={64} color={theme.colors.text.tertiary} />
+        </View>
+        <Text style={styles.emptyTitle}>No Events Created</Text>
+        <Text style={styles.emptySubtitle}>
+          This user hasn't created any events yet
+        </Text>
       </View>
     );
   }

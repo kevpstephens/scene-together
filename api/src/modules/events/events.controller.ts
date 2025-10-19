@@ -25,6 +25,22 @@ const ATTENDEE_COUNT_INCLUDE = {
 } as const;
 
 /**
+ * Standard event include configuration
+ * Includes attendee count and creator information
+ */
+const EVENT_STANDARD_INCLUDE = {
+  ...ATTENDEE_COUNT_INCLUDE,
+  createdBy: {
+    select: {
+      id: true,
+      name: true,
+      avatarUrl: true,
+      role: true,
+    },
+  },
+} as const;
+
+/**
  * Get all events
  *
  * GET /events
@@ -43,7 +59,7 @@ export async function getAllEvents(
   try {
     const events = await prisma.event.findMany({
       orderBy: { date: "asc" },
-      include: ATTENDEE_COUNT_INCLUDE,
+      include: EVENT_STANDARD_INCLUDE,
     });
 
     // Transform _count.rsvps to top-level attendeeCount for easier client access
@@ -78,7 +94,7 @@ export async function getEventById(
   try {
     const event = await prisma.event.findUnique({
       where: { id: req.params.id },
-      include: ATTENDEE_COUNT_INCLUDE,
+      include: EVENT_STANDARD_INCLUDE,
     });
 
     if (!event) {
@@ -273,6 +289,7 @@ export async function getEventAttendees(
             id: true,
             email: true,
             name: true,
+            avatarUrl: true,
           },
         },
       },

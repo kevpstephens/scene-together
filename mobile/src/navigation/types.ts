@@ -25,6 +25,7 @@ export type AuthStackParamList = {
 export type EventsStackParamList = {
   EventsList: undefined;
   EventDetail: { eventId: string };
+  Profile: { userId: string }; // For viewing event organizer profiles
 };
 
 // Main Tab Navigator
@@ -36,7 +37,7 @@ export type MainTabParamList = {
 
 // Profile Stack Navigator
 export type ProfileStackParamList = {
-  Profile: undefined;
+  Profile: { userId?: string }; // Optional userId for viewing other users' profiles
   ProfileEdit: undefined;
   EventDetail: { eventId: string };
   Settings: undefined;

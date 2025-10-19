@@ -108,6 +108,11 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: theme.spacing.base,
   },
+  attendeeAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
   attendeeInfo: {
     flex: 1,
   },

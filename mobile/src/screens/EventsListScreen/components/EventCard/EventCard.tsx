@@ -9,12 +9,14 @@ import { EventCardPoster } from "./EventCardPoster";
 import { EventCardHeader } from "./EventCardHeader";
 import { EventCardDetails } from "./EventCardDetails";
 import { EventCardCapacity } from "./EventCardCapacity";
+import { EventCardOrganizer } from "./EventCardOrganizer";
 
 interface EventCardProps {
   event: Event;
   userRSVPs: Record<string, RSVPStatus>;
   failedPosters: Record<string, boolean>;
   onNavigate: (eventId: string) => void;
+  onNavigateToProfile: (userId: string) => void;
   onShare: (event: Event) => void;
   onBookmark: (event: Event) => void;
   onPosterError: (eventId: string) => void;
@@ -28,6 +30,7 @@ export const EventCard: React.FC<EventCardProps> = ({
   userRSVPs,
   failedPosters,
   onNavigate,
+  onNavigateToProfile,
   onShare,
   onBookmark,
   onPosterError,
@@ -66,6 +69,15 @@ export const EventCard: React.FC<EventCardProps> = ({
         />
 
         <EventCardDetails event={event} />
+
+        <EventCardOrganizer
+          creator={event.createdBy}
+          onPress={() => {
+            if (event.createdBy?.id) {
+              onNavigateToProfile(event.createdBy.id);
+            }
+          }}
+        />
 
         <EventCardCapacity event={event} status={status} />
       </View>

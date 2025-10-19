@@ -12,7 +12,7 @@
  * ==============================================
  */
 
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -21,7 +21,12 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from "react-native";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+  RouteProp,
+} from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { CompositeNavigationProp } from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -43,16 +48,32 @@ import {
   EmptyState,
   PaymentHistory,
 } from "./components";
+import { fetchUserProfile, fetchUserEvents } from "../../services/api";
+import type { Event, EventCreator } from "../../types";
 
 type ProfileScreenNavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<ProfileStackParamList, "Profile">,
   BottomTabNavigationProp<MainTabParamList>
 >;
 
+type RouteProps = RouteProp<ProfileStackParamList, "Profile">;
+
 export default function ProfileScreen() {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const route = useRoute<RouteProps>();
   const { user, userProfile, loading, signOut } = useAuth();
   const scrollViewRef = useRef<ScrollView>(null);
+
+  // Check if viewing another user's profile
+  const viewingUserId = route.params?.userId;
+  const isViewingOtherProfile = !!viewingUserId && viewingUserId !== user?.id;
+
+  // State for other user's profile
+  const [otherUserProfile, setOtherUserProfile] = useState<EventCreator | null>(
+    null
+  );
+  const [otherUserEvents, setOtherUserEvents] = useState<Event[]>([]);
+  const [otherUserLoading, setOtherUserLoading] = useState(false);
 
   // Custom hooks
   const {
@@ -80,18 +101,52 @@ export default function ProfileScreen() {
   // Scroll to top when tab is tapped again (matching Events tab behavior)
   useScrollToTop({ scrollViewRef });
 
+  // Fetch other user's profile and events
+  const loadOtherUserProfile = useCallback(async () => {
+    if (!viewingUserId) return;
+
+    setOtherUserLoading(true);
+    try {
+      const [profile, events] = await Promise.all([
+        fetchUserProfile(viewingUserId),
+        fetchUserEvents(viewingUserId),
+      ]);
+      setOtherUserProfile(profile);
+      setOtherUserEvents(events);
+    } catch (error) {
+      console.error("Failed to load user profile:", error);
+    } finally {
+      setOtherUserLoading(false);
+    }
+  }, [viewingUserId]);
+
+  // Load data based on profile type
+  useEffect(() => {
+    if (isViewingOtherProfile) {
+      loadOtherUserProfile();
+    }
+  }, [isViewingOtherProfile, loadOtherUserProfile]);
+
   // Refetch data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      if (user) {
+      if (isViewingOtherProfile) {
+        loadOtherUserProfile();
+      } else if (user) {
         fetchRSVPs();
         fetchPaymentHistory();
       }
-    }, [user, fetchRSVPs, fetchPaymentHistory])
+    }, [
+      user,
+      isViewingOtherProfile,
+      fetchRSVPs,
+      fetchPaymentHistory,
+      loadOtherUserProfile,
+    ])
   );
 
   // Show loading state while user data is being fetched
-  if (loading || !user) {
+  if ((loading || !user) && !isViewingOtherProfile) {
     return (
       <View style={styles.wrapper}>
         <GradientBackground />
@@ -103,6 +158,25 @@ export default function ProfileScreen() {
     );
   }
 
+  // Show loading for other user's profile
+  if (isViewingOtherProfile && otherUserLoading) {
+    return (
+      <View style={styles.wrapper}>
+        <GradientBackground />
+        <View style={[styles.container, styles.centerContent]}>
+          <ActivityIndicator size="large" color={theme.colors.primaryLight} />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Display name and email for the profile being viewed
+  const displayName = isViewingOtherProfile
+    ? otherUserProfile?.name || "Anonymous"
+    : userProfile?.name || "User";
+  const displayEmail = isViewingOtherProfile ? null : user?.email;
+
   return (
     <GradientBackground>
       <ScrollView
@@ -110,8 +184,8 @@ export default function ProfileScreen() {
         style={styles.container}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
+            refreshing={isViewingOtherProfile ? otherUserLoading : refreshing}
+            onRefresh={isViewingOtherProfile ? loadOtherUserProfile : onRefresh}
             colors={[theme.colors.primaryLight]}
             tintColor={theme.colors.primaryLight}
             progressBackgroundColor={theme.colors.surface}
@@ -119,39 +193,110 @@ export default function ProfileScreen() {
         }
       >
         <View style={styles.content}>
-          <Text style={styles.pageTitle}>My Profile</Text>
+          <Text style={styles.pageTitle}>
+            {isViewingOtherProfile ? `${displayName}'s Profile` : "My Profile"}
+          </Text>
 
           {/* User Info Card */}
           <ProfileHeader
-            userProfile={userProfile}
-            userEmail={user?.email}
-            onEditPress={() => navigation.navigate("ProfileEdit")}
+            userProfile={
+              isViewingOtherProfile
+                ? {
+                    name: otherUserProfile?.name,
+                    avatarUrl: otherUserProfile?.avatarUrl,
+                  }
+                : userProfile
+            }
+            userEmail={displayEmail}
+            onEditPress={
+              isViewingOtherProfile
+                ? undefined
+                : () => navigation.navigate("ProfileEdit")
+            }
           />
 
-          {/* User Stats Section */}
-          <StatsCard
-            loading={rsvpsLoading}
-            rsvps={rsvps}
-            userStats={userStats}
-          />
+          {/* User Stats Section - Only for own profile */}
+          {!isViewingOtherProfile && (
+            <>
+              <StatsCard
+                loading={rsvpsLoading}
+                rsvps={rsvps}
+                userStats={userStats}
+              />
 
-          {/* Payment History Section */}
-          <PaymentHistory loading={paymentsLoading} payments={payments} />
+              {/* Payment History Section */}
+              <PaymentHistory loading={paymentsLoading} payments={payments} />
+            </>
+          )}
 
           {/* Events Section Card */}
           <View style={styles.eventsCard}>
             <Text style={styles.sectionTitle}>
-              My Events ({filteredRsvps.length})
+              {isViewingOtherProfile
+                ? `Events Created (${otherUserEvents.length})`
+                : `My Events (${filteredRsvps.length})`}
             </Text>
 
-            {/* Filter Buttons */}
-            <EventFilterTabs
-              activeFilter={eventFilter}
-              onFilterChange={setEventFilter}
-            />
+            {/* Filter Buttons - Only for own profile RSVPs */}
+            {!isViewingOtherProfile && (
+              <EventFilterTabs
+                activeFilter={eventFilter}
+                onFilterChange={setEventFilter}
+              />
+            )}
 
-            {/* RSVPs List */}
-            {rsvpsLoading ? (
+            {/* Events List */}
+            {isViewingOtherProfile ? (
+              // Other user's created events
+              otherUserLoading ? (
+                <View>
+                  {[1, 2].map((i) => (
+                    <View key={i} style={styles.eventCard}>
+                      <SkeletonLoader
+                        width={80}
+                        height={120}
+                        style={{ marginRight: theme.spacing.md }}
+                      />
+                      <View style={{ flex: 1 }}>
+                        <SkeletonLoader
+                          width="80%"
+                          height={18}
+                          style={{ marginBottom: 8 }}
+                        />
+                        <SkeletonLoader
+                          width="60%"
+                          height={14}
+                          style={{ marginBottom: 6 }}
+                        />
+                        <SkeletonLoader
+                          width="70%"
+                          height={14}
+                          style={{ marginBottom: 8 }}
+                        />
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              ) : otherUserEvents.length === 0 ? (
+                <EmptyState type="no-events-created" />
+              ) : (
+                <View>
+                  {otherUserEvents.map((event) => (
+                    <RSVPListItem
+                      key={event.id}
+                      rsvp={{
+                        id: event.id,
+                        status: "going",
+                        event: event,
+                      }}
+                      onPress={(eventId) =>
+                        navigation.navigate("EventDetail", { eventId })
+                      }
+                    />
+                  ))}
+                </View>
+              )
+            ) : rsvpsLoading ? (
               <View>
                 {[1, 2].map((i) => (
                   <View key={i} style={styles.eventCard}>
@@ -212,10 +357,15 @@ export default function ProfileScreen() {
             )}
           </View>
 
-          {/* Logout Button */}
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutButtonText}>Sign Out</Text>
-          </TouchableOpacity>
+          {/* Logout Button - Only for own profile */}
+          {!isViewingOtherProfile && (
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Text style={styles.logoutButtonText}>Sign Out</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </GradientBackground>

@@ -9,12 +9,12 @@ interface ProfileHeaderProps {
     name?: string | null;
     avatarUrl?: string | null;
   } | null;
-  userEmail?: string;
-  onEditPress: () => void;
+  userEmail?: string | null;
+  onEditPress?: () => void;
 }
 
 /**
- * Profile header component displaying user avatar, name, email, and edit button
+ * Profile header component displaying user avatar, name, email, and optional edit button
  */
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   userProfile,
@@ -41,12 +41,14 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         </View>
       )}
       <Text style={styles.name}>{userProfile?.name || "User"}</Text>
-      <Text style={styles.email}>{userEmail}</Text>
+      {userEmail && <Text style={styles.email}>{userEmail}</Text>}
 
-      <TouchableOpacity style={styles.editButton} onPress={onEditPress}>
-        <PencilSquareIcon size={20} color={theme.colors.primary} />
-        <Text style={styles.editButtonText}>Edit Profile</Text>
-      </TouchableOpacity>
+      {onEditPress && (
+        <TouchableOpacity style={styles.editButton} onPress={onEditPress}>
+          <PencilSquareIcon size={20} color={theme.colors.primary} />
+          <Text style={styles.editButtonText}>Edit Profile</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

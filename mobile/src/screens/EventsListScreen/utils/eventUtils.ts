@@ -13,9 +13,19 @@ import type { Event } from "../../../types";
  * @param event - Event object
  * @returns Status object or null if no capacity set
  */
-export const getEventStatus = (
-  event: Event
-): { type: string; label: string } | null => {
+export type EventStatus = {
+  type:
+    | "soldOut"
+    | "almostFull"
+    | "nearlyFull"
+    | "fillingUp"
+    | "available"
+    | "plentySpace"
+    | "past";
+  label: string;
+};
+
+export const getEventStatus = (event: Event): EventStatus | null => {
   // Check if event is in the past
   const eventDate = new Date(event.date);
   const now = new Date();

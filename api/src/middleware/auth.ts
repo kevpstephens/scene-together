@@ -79,14 +79,30 @@ export async function requireAuth(
     }
 
     // Get user from database with role
-    const dbUser = await prisma.user.findUnique({
+    let dbUser = await prisma.user.findUnique({
       where: { id: data.user.id },
       select: { id: true, email: true, role: true },
     });
 
+    // Auto-create user if they exist in Supabase Auth but not in our database
     if (!dbUser) {
-      res.status(401).json({ error: "User not found in database" });
-      return;
+      try {
+        dbUser = await prisma.user.create({
+          data: {
+            id: data.user.id,
+            email: data.user.email!,
+            role: "USER",
+            name: data.user.user_metadata?.name || null,
+            avatarUrl: data.user.user_metadata?.avatar_url || null,
+          },
+          select: { id: true, email: true, role: true },
+        });
+        console.log(`✨ Auto-created user: ${dbUser.email}`);
+      } catch (createError) {
+        console.error("Failed to auto-create user:", createError);
+        res.status(401).json({ error: "User not found in database" });
+        return;
+      }
     }
 
     // Attach authenticated user to request

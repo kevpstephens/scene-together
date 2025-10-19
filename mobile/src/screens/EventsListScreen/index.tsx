@@ -161,6 +161,9 @@ export default function EventsListScreen() {
       userRSVPs={userRSVPs}
       failedPosters={failedPosters}
       onNavigate={(eventId) => navigation.navigate("EventDetail", { eventId })}
+      onNavigateToProfile={(userId) =>
+        navigation.navigate("Profile", { userId })
+      }
       onShare={handleShare}
       onBookmark={handleBookmark}
       onPosterError={(eventId) =>

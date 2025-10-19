@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, Image } from "react-native";
 import { UserIcon } from "react-native-heroicons/solid";
 import { theme } from "../../../../theme";
 import { Attendee } from "../hooks";
@@ -14,7 +14,15 @@ export const AttendeeCard: React.FC<AttendeeCardProps> = ({ attendee }) => {
   return (
     <View style={styles.attendeeCard}>
       <View style={styles.attendeeIcon}>
-        <UserIcon size={24} color={theme.colors.primary} />
+        {attendee.user.avatarUrl ? (
+          <Image
+            source={{ uri: attendee.user.avatarUrl }}
+            style={styles.attendeeAvatar}
+            resizeMode="cover"
+          />
+        ) : (
+          <UserIcon size={24} color={theme.colors.primary} />
+        )}
       </View>
       <View style={styles.attendeeInfo}>
         <Text style={styles.attendeeName}>

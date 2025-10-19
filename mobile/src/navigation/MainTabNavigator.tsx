@@ -83,6 +83,7 @@ export default function MainTabNavigator() {
 
   return (
     <Tab.Navigator
+      initialRouteName="EventsTab"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: theme.colors.primary,

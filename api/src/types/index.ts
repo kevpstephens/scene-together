@@ -63,6 +63,17 @@ export type MovieData = {
 // ==================== Event Types ====================
 
 /**
+ * Event creator information
+ * Subset of User model for event display
+ */
+export type EventCreator = {
+  id: string;
+  name: string | null;
+  avatarUrl: string | null;
+  role: Role;
+};
+
+/**
  * Event entity
  * Represents a film screening or watch party
  */
@@ -81,7 +92,8 @@ export type Event = {
   payWhatYouCan: boolean;
   minPrice: number | null; // Minimum price for PWYC (in cents)
   // Meta
-  createdById: string;
+  createdById: string | null;
+  createdBy: EventCreator | null;
   createdAt: string;
   updatedAt: string;
 };

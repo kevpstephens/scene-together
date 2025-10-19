@@ -28,6 +28,7 @@ import eventsRouter from "./modules/events/events.routes.js";
 import rsvpsRouter from "./modules/rsvps/rsvps.routes.js";
 import moviesRouter from "./modules/movies/movies.routes.js";
 import paymentsRouter from "./modules/payments/payments.routes.js";
+import usersRouter from "./modules/users/users.routes.js";
 import * as paymentsController from "./modules/payments/payments.controller.js";
 
 const app = express();
@@ -104,6 +105,13 @@ app.use("/payments", paymentsRouter);
  * GET    /me/rsvps           - Get user's RSVPs (authenticated)
  */
 app.use("/", rsvpsRouter);
+
+/**
+ * Users routes - User profile and events
+ * GET /users/:id         - Get user profile (public)
+ * GET /users/:id/events  - Get user's created events (public)
+ */
+app.use("/users", usersRouter);
 
 // ==================== Error Handling ====================
 

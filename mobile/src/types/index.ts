@@ -1,6 +1,13 @@
 // Local types for mobile app (copied from shared to avoid React conflicts)
 
-export type Role = "member" | "staff";
+export type Role = "USER" | "ADMIN" | "SUPER_ADMIN";
+
+export type EventCreator = {
+  id: string;
+  name: string | null;
+  avatarUrl: string | null;
+  role: Role;
+};
 
 export type Event = {
   id: string;
@@ -13,7 +20,8 @@ export type Event = {
   movieData?: MovieData;
   maxCapacity?: number;
   attendeeCount?: number; // Real RSVP count from API
-  createdById?: string;
+  createdById?: string | null;
+  createdBy?: EventCreator | null;
   // Payment fields
   price?: number | null; // Price in cents
   payWhatYouCan?: boolean; // Allow flexible pricing
