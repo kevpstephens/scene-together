@@ -32,6 +32,10 @@ interface UseEventPaymentProps {
   onPaymentSuccess: () => void;
 }
 
+/** Utility: returns true if Stripe is supported in this runtime */
+export const isStripeSupported = () =>
+  !(Platform.OS !== "web" && Constants.appOwnership === "expo");
+
 /**
  * Custom hook for managing Stripe payment flow
  * Handles payment initialization, presentation, success, and test mode notices

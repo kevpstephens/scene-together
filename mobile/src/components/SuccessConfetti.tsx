@@ -15,6 +15,7 @@ interface ConfettiPiece {
   rotate: Animated.Value;
   opacity: Animated.Value;
   color: string;
+  initialX: number;
 }
 
 const colors = [
@@ -37,13 +38,17 @@ export default function SuccessConfetti({
   useEffect(() => {
     if (visible) {
       // Create 30 confetti pieces
-      confettiPieces.current = Array.from({ length: 30 }, () => ({
-        x: new Animated.Value(Math.random() * width),
-        y: new Animated.Value(-50),
-        rotate: new Animated.Value(0),
-        opacity: new Animated.Value(1),
-        color: colors[Math.floor(Math.random() * colors.length)],
-      }));
+      confettiPieces.current = Array.from({ length: 30 }, () => {
+        const initialX = Math.random() * width;
+        return {
+          x: new Animated.Value(initialX),
+          y: new Animated.Value(-50),
+          rotate: new Animated.Value(0),
+          opacity: new Animated.Value(1),
+          color: colors[Math.floor(Math.random() * colors.length)],
+          initialX,
+        };
+      });
 
       // Animate each piece
       const animations = confettiPieces.current.map((piece) => {
@@ -58,7 +63,7 @@ export default function SuccessConfetti({
             useNativeDriver: true,
           }),
           Animated.timing(piece.x, {
-            toValue: piece.x._value + randomX,
+            toValue: piece.initialX + randomX,
             duration: fallDuration,
             useNativeDriver: true,
           }),

@@ -13,7 +13,7 @@
  */
 
 import React, { useState } from "react";
-import { View, Text, Animated, RefreshControl } from "react-native";
+import { View, Text, Animated, RefreshControl, Platform } from "react-native";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { EventsStackParamList } from "../../navigation/types";
@@ -22,6 +22,7 @@ import SuccessConfetti from "../../components/SuccessConfetti";
 import { theme } from "../../theme";
 import { styles } from "./EventDetailScreen.styles";
 import { useToast } from "../../contexts/toast";
+import UnsupportedPaymentModal from "../../components/UnsupportedPaymentModal";
 import {
   useEventAnimation,
   useEventData,
@@ -41,6 +42,7 @@ import {
   StickyBottomBar,
   EventOrganizer,
 } from "./components";
+import { isStripeSupported } from "./hooks/useEventPayment";
 
 // Declare iframe for React Native Web
 declare global {
@@ -63,6 +65,7 @@ export default function EventDetailScreen() {
   const { eventId } = route.params;
   const { showToast } = useToast();
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showUnsupportedPayments, setShowUnsupportedPayments] = useState(false);
 
   // Custom hooks
   const { scrollY, scaleAnim, opacityAnim } = useEventAnimation();
@@ -120,6 +123,17 @@ export default function EventDetailScreen() {
     event,
     onSuccess: () => setShowConfetti(true),
   });
+
+  // Intercept RSVP press if payments are unsupported (web or Expo Go)
+  const handleRSVPIntercept = (status: any) => {
+    if (status === "going" && event && event.price && event.price > 0) {
+      if (!isStripeSupported() || Platform.OS === "web") {
+        setShowUnsupportedPayments(true);
+        return;
+      }
+    }
+    handleRSVP(status);
+  };
 
   // Parallax effect for hero image
   const heroTranslate = scrollY.interpolate({
@@ -207,7 +221,7 @@ export default function EventDetailScreen() {
                   eventHasStarted={eventHasStarted}
                   userRSVP={userRSVP}
                   rsvpLoading={rsvpLoading}
-                  onRSVP={handleRSVP}
+                  onRSVP={handleRSVPIntercept}
                 />
 
                 {/* Movie Details */}
@@ -228,7 +242,7 @@ export default function EventDetailScreen() {
             userRSVP={userRSVP}
             rsvpLoading={rsvpLoading}
             isTestMode={isTestMode}
-            onRSVP={handleRSVP}
+            onRSVP={handleRSVPIntercept}
             onShowTestNotice={() => setShowTestNotice(true)}
           />
         )}
@@ -261,6 +275,12 @@ export default function EventDetailScreen() {
         }}
         onConfirm={handleDismissTestNotice}
         showToast={showToast}
+      />
+
+      {/* Unsupported payments modal for web/Expo Go */}
+      <UnsupportedPaymentModal
+        visible={showUnsupportedPayments}
+        onClose={() => setShowUnsupportedPayments(false)}
       />
     </>
   );

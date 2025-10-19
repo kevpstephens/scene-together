@@ -2,7 +2,8 @@
  * useEventActions Hook
  * ==============================================
  * Manages event-related actions like sharing and external links.
- * Handles platform-specific sharing (Web Share API vs native).
+ * Handles platform-specific sharing (Web Share API vs native) and
+ * calendar actions (native Calendar vs web ICS/Google link).
  * ==============================================
  */
 
@@ -11,6 +12,12 @@ import * as Haptics from "expo-haptics";
 import { useToast } from "../../../contexts/toast";
 import { promptAddToCalendar } from "../../../services/calendar";
 import type { Event } from "../../../types";
+// Web calendar helpers (no-ops on native)
+import {
+  buildGoogleCalendarUrl,
+  createIcsFromEvent,
+  downloadIcs,
+} from "../../../services/calendar/webCalendar";
 
 interface UseEventActionsProps {
   event: Event | null;
@@ -134,7 +141,7 @@ export const useEventActions = ({ event, onSuccess }: UseEventActionsProps) => {
   };
 
   /**
-   * Add event to device calendar
+   * Add event to calendar (native) or provide web alternatives (Google/ICS)
    */
   const handleAddToCalendar = async () => {
     if (!event) return;
@@ -156,6 +163,29 @@ export const useEventActions = ({ event, onSuccess }: UseEventActionsProps) => {
       // Assume 3 hour duration (typical movie + socializing)
       const endDate = new Date(startDate.getTime() + 3 * 60 * 60 * 1000);
 
+      if (Platform.OS === "web") {
+        // Web: Offer Google Calendar link and ICS download
+        const webEvent = {
+          id: event.id,
+          title: event.title,
+          description: event.description || undefined,
+          location: event.location || undefined,
+          startUtcISO: startDate.toISOString(),
+          endUtcISO: endDate.toISOString(),
+        };
+
+        // Download ICS
+        const ics = createIcsFromEvent(webEvent);
+        downloadIcs(`${event.title}`.replace(/\s+/g, "-").toLowerCase(), ics);
+
+        // Open Google Calendar in a new tab
+        const gcalUrl = buildGoogleCalendarUrl(webEvent);
+        window.open(gcalUrl, "_blank");
+        showToast("ICS downloaded and Google Calendar opened", "success");
+        return;
+      }
+
+      // Native: use device calendar
       const added = await promptAddToCalendar({
         title: event.title,
         startDate,
@@ -169,9 +199,7 @@ export const useEventActions = ({ event, onSuccess }: UseEventActionsProps) => {
       });
 
       if (added) {
-        if (Platform.OS !== "web") {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        }
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         // Show confetti on successful calendar add
         onSuccess();
       }

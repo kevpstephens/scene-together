@@ -196,13 +196,12 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.xl,
     zIndex: 999999, // Extremely high z-index to appear above modals
-    elevation: 999999, // Android elevation to appear above modals
     // Web-compatible shadow
     ...(Platform.OS === "web"
       ? {
           boxShadow: "0px 8px 12px rgba(0, 0, 0, 0.16)",
         }
-      : theme.shadows.lg),
+      : { ...theme.shadows.lg, elevation: 999999 }),
   },
   message: {
     flex: 1,
