@@ -16,6 +16,25 @@ export const styles = StyleSheet.create({
     paddingTop: theme.spacing.lg,
     paddingBottom: theme.spacing.xxxl,
   },
+  signOutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: theme.spacing.xl,
+    marginTop: theme.spacing.xl,
+    paddingVertical: theme.spacing.base,
+    paddingHorizontal: theme.spacing.lg,
+    backgroundColor: "rgba(239, 68, 68, 0.1)", // Red-50 background
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: "#EF4444", // Red-500
+  },
+  signOutButtonText: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: "#EF4444", // Red-500
+    marginLeft: theme.spacing.sm,
+  },
 
   //! ==============================================
   //! Section Components

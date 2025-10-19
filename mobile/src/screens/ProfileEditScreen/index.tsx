@@ -94,8 +94,6 @@ export default function ProfileEditScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.content}>
-            <Text style={styles.title}>Edit Profile</Text>
-
             <View style={styles.form}>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Name</Text>

@@ -59,22 +59,17 @@ export const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     marginBottom: theme.spacing.base,
   },
-  editButton: {
-    flexDirection: "row",
+  editButtonTopRight: {
+    position: "absolute",
+    top: theme.spacing.md,
+    right: theme.spacing.md,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: `${theme.colors.primary}15`,
     alignItems: "center",
-    backgroundColor: theme.components.surfaces.section,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.base,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.primary,
-    marginTop: theme.spacing.base,
-  },
-  editButtonText: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.primary,
-    marginLeft: theme.spacing.sm,
+    justifyContent: "center",
+    zIndex: 10,
   },
   metaInfo: {
     flexDirection: "row",
@@ -84,17 +79,14 @@ export const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   roleBadge: {
-    backgroundColor: `${theme.colors.primary}20`,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.xs,
     borderRadius: theme.borderRadius.full,
     borderWidth: 1,
-    borderColor: theme.colors.primary,
   },
   roleText: {
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
@@ -180,23 +172,6 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: theme.spacing.xs,
-  },
-
-  //! ==============================================
-  //! Logout Button
-  //! ==============================================
-  logoutButton: {
-    backgroundColor: theme.colors.error,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.xl,
-    borderRadius: theme.borderRadius.lg,
-    alignSelf: "center",
-    marginTop: theme.spacing.base,
-  },
-  logoutButtonText: {
-    color: theme.colors.text.inverse,
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
   },
 
   //! ==============================================

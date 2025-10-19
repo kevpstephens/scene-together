@@ -70,6 +70,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.components.borders.default,
     borderRadius: theme.borderRadius.lg,
+    marginTop: theme.spacing.md,
   },
   cancelButtonText: {
     color: theme.colors.text.secondary,

@@ -91,7 +91,7 @@ export default function ProfileScreen() {
     setRefreshing,
   } = useProfileData();
 
-  const { handleLogout, onRefresh } = useProfileActions({
+  const { onRefresh } = useProfileActions({
     signOut,
     fetchRSVPs,
     fetchPaymentHistory,
@@ -354,16 +354,6 @@ export default function ProfileScreen() {
               </View>
             )}
           </View>
-
-          {/* Logout Button - Only for own profile */}
-          {!isViewingOtherProfile && (
-            <TouchableOpacity
-              style={styles.logoutButton}
-              onPress={handleLogout}
-            >
-              <Text style={styles.logoutButtonText}>Sign Out</Text>
-            </TouchableOpacity>
-          )}
         </View>
       </ScrollView>
     </GradientBackground>

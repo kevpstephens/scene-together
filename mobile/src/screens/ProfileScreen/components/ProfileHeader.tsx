@@ -26,6 +26,31 @@ const formatRole = (role?: string | null): string => {
 };
 
 /**
+ * Get role badge colors
+ */
+const getRoleBadgeStyle = (role?: string | null) => {
+  if (role === "SUPER_ADMIN") {
+    return {
+      backgroundColor: "#FFD70020",
+      borderColor: "#FFD700",
+      textColor: "#DAA520",
+    }; // Gold
+  }
+  if (role === "ADMIN") {
+    return {
+      backgroundColor: "#9B59B620",
+      borderColor: "#9B59B6",
+      textColor: "#8E44AD",
+    }; // Purple
+  }
+  return {
+    backgroundColor: `${theme.colors.primary}20`,
+    borderColor: theme.colors.primary,
+    textColor: theme.colors.primary,
+  }; // Teal for Member
+};
+
+/**
  * Format joined date
  */
 const formatJoinedDate = (dateString?: string | null): string => {
@@ -46,8 +71,20 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   userEmail,
   onEditPress,
 }) => {
+  const roleStyle = getRoleBadgeStyle(userProfile?.role);
+
   return (
     <View style={styles.profileCard}>
+      {/* Edit Button - Top Right */}
+      {onEditPress && (
+        <TouchableOpacity
+          style={styles.editButtonTopRight}
+          onPress={onEditPress}
+        >
+          <PencilSquareIcon size={18} color={theme.colors.primary} />
+        </TouchableOpacity>
+      )}
+
       {userProfile?.avatarUrl ? (
         <Image
           source={{ uri: userProfile.avatarUrl }}
@@ -70,20 +107,23 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
       {/* Role and Joined Date */}
       <View style={styles.metaInfo}>
-        <View style={styles.roleBadge}>
-          <Text style={styles.roleText}>{formatRole(userProfile?.role)}</Text>
+        <View
+          style={[
+            styles.roleBadge,
+            {
+              backgroundColor: roleStyle.backgroundColor,
+              borderColor: roleStyle.borderColor,
+            },
+          ]}
+        >
+          <Text style={[styles.roleText, { color: roleStyle.textColor }]}>
+            {formatRole(userProfile?.role)}
+          </Text>
         </View>
         <Text style={styles.joinedText}>
           Joined {formatJoinedDate(userProfile?.createdAt)}
         </Text>
       </View>
-
-      {onEditPress && (
-        <TouchableOpacity style={styles.editButton} onPress={onEditPress}>
-          <PencilSquareIcon size={20} color={theme.colors.primary} />
-          <Text style={styles.editButtonText}>Edit Profile</Text>
-        </TouchableOpacity>
-      )}
     </View>
   );
 };

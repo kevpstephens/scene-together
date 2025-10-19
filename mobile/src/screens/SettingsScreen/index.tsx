@@ -12,7 +12,14 @@
  */
 
 import React from "react";
-import { View, ScrollView } from "react-native";
+import {
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Text,
+  Alert,
+  Platform,
+} from "react-native";
 import {
   BellIcon,
   CalendarIcon,
@@ -21,12 +28,49 @@ import {
   UserCircleIcon,
   CreditCardIcon,
   InformationCircleIcon,
+  ArrowRightOnRectangleIcon,
 } from "react-native-heroicons/outline";
 import { SettingItem } from "./components/SettingItem";
 import { SettingSection } from "./components/SettingSection";
 import { styles } from "./SettingsScreen.styles";
+import { useAuth } from "../../contexts/auth";
+import * as Haptics from "expo-haptics";
 
 export default function SettingsScreen() {
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+
+    // On web, use native confirm dialog; on mobile, use Alert
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm("Are you sure you want to sign out?");
+      if (!confirmed) return;
+
+      try {
+        await signOut();
+      } catch (error: any) {
+        window.alert(error.message || "Failed to sign out");
+      }
+    } else {
+      Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Sign Out",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut();
+            } catch (error: any) {
+              Alert.alert("Error", error.message || "Failed to sign out");
+            }
+          },
+        },
+      ]);
+    }
+  };
   return (
     <View style={styles.container}>
       <ScrollView
@@ -108,6 +152,12 @@ export default function SettingsScreen() {
             }}
           />
         </SettingSection>
+
+        {/* Sign Out Button */}
+        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <ArrowRightOnRectangleIcon size={20} color="#EF4444" />
+          <Text style={styles.signOutButtonText}>Sign Out</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
