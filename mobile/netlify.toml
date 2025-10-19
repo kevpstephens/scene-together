@@ -1,10 +1,10 @@
 # Netlify deployment configuration for Expo Web
 [build]
   # The command to build your Expo web app
-  command = "npx expo export:web"
+  command = "npm run build:web"
   
   # The directory where the build output will be
-  publish = "web-build"
+  publish = "dist"
   
   # Environment variables (set these in Netlify dashboard)
   # EXPO_PUBLIC_API_URL - Your backend API URL
