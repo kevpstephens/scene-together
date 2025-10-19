@@ -1,6 +1,9 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, Dimensions } from "react-native";
 import { theme } from "../../theme";
 import { getPlatformGlow, getCardStyle } from "../../theme/styles";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const IS_SMALL_SCREEN = SCREEN_WIDTH < 600; // Mobile/tablet breakpoint
 
 export const styles = StyleSheet.create({
   //! ==============================================
@@ -140,10 +143,10 @@ export const styles = StyleSheet.create({
   //! Action Buttons
   //! ==============================================
   actionButtonsRow: {
-    flexDirection: Platform.OS === "web" ? "row" : "column",
+    flexDirection: IS_SMALL_SCREEN ? "column" : "row",
     gap: theme.spacing.md,
     marginTop: theme.spacing.lg,
-    ...(Platform.OS === "web" && {
+    ...(!IS_SMALL_SCREEN && {
       justifyContent: "space-between",
     }),
   },
@@ -157,7 +160,7 @@ export const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
     borderRadius: theme.borderRadius.lg,
-    flex: Platform.OS === "web" ? 1 : undefined,
+    flex: IS_SMALL_SCREEN ? undefined : 1,
     ...(Platform.OS === "web"
       ? { boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)" }
       : theme.shadows.sm),
@@ -335,10 +338,12 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    flexWrap: "wrap",
     marginBottom: theme.spacing.lg,
-    marginHorizontal: Platform.OS === "web" ? "auto" : 0,
-    maxWidth: Platform.OS === "web" ? 600 : "100%",
-    paddingHorizontal: theme.spacing.md,
+    marginHorizontal: "auto",
+    maxWidth: "100%",
+    paddingHorizontal: IS_SMALL_SCREEN ? theme.spacing.sm : theme.spacing.md,
+    gap: theme.spacing.sm,
   },
   eventClosedContainer: {
     flexDirection: "column",
@@ -359,7 +364,9 @@ export const styles = StyleSheet.create({
     lineHeight: 22,
   },
   rsvpOption: {
-    width: 110,
+    minWidth: IS_SMALL_SCREEN ? 95 : 110,
+    flex: IS_SMALL_SCREEN ? 1 : 0,
+    maxWidth: IS_SMALL_SCREEN ? 120 : 110,
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
@@ -367,8 +374,7 @@ export const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: theme.colors.border,
     paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.sm,
-    marginHorizontal: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.xs,
     borderRadius: theme.borderRadius.lg,
     ...(Platform.OS === "web"
       ? { boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)" }
