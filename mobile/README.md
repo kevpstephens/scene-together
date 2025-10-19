@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./assets/logo/logo-transparent.png" alt="SceneTogether Logo" width="350"/>
+  <img src="./assets/logo/logo-dark-cropped.png" alt="SceneTogether Logo" width="350"/>
   
   # Mobile App
   

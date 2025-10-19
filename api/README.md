@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="../mobile/assets/logo/logo-transparent.png" alt="SceneTogether Logo" width="350"/>
+  <img src="../mobile/assets/logo/logo-dark-cropped.png" alt="SceneTogether Logo" width="350"/>
   
   # Backend API
   
