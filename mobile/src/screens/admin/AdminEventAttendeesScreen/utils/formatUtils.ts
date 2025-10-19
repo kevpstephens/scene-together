@@ -1,5 +1,17 @@
+/*===============================================
+ * Format Utilities - AdminEventAttendeesScreen
+ * ==============================================
+ * Formatting helpers for attendee display.
+ * ==============================================
+ */
+
 import { theme } from "../../../../theme";
 
+/**
+ * Format date string to readable format with time
+ * @param dateString - ISO date string
+ * @returns Formatted date and time
+ */
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-GB", {
@@ -11,6 +23,11 @@ export const formatDate = (dateString: string): string => {
   });
 };
 
+/**
+ * Get color for payment status
+ * @param status - Payment status (CONFIRMED, PENDING, CANCELLED)
+ * @returns Theme color code
+ */
 export const getStatusColor = (status: string): string => {
   switch (status.toUpperCase()) {
     case "CONFIRMED":

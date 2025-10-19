@@ -1,3 +1,8 @@
+/*===============================================
+ * AdminEventEditScreen Utils - Barrel Export
+ * ==============================================
+ */
+
 export { formatDate, formatTime } from "./dateUtils";
 export {
   validateEventForm,

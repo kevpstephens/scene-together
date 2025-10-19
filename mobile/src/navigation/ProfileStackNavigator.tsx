@@ -1,3 +1,11 @@
+/*===============================================
+ * Profile Stack Navigator
+ * ==============================================
+ * Navigation stack for user profile functionality.
+ * Contains profile view, edit, and event detail screens.
+ * ==============================================
+ */
+
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { ProfileStackParamList } from "./types";
@@ -8,6 +16,10 @@ import { theme } from "../theme";
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
+/**
+ * Profile Stack Navigator
+ * Handles user profile and related screens
+ */
 export default function ProfileStackNavigator() {
   return (
     <Stack.Navigator
@@ -25,7 +37,6 @@ export default function ProfileStackNavigator() {
           width: "100%",
           backgroundColor: theme.colors.background,
         },
-        // Premium spring-based animations
         animation: "default",
         animationDuration: 350,
         animationTypeForReplace: "push",
@@ -52,10 +63,8 @@ export default function ProfileStackNavigator() {
           animation: "fade",
           presentation: "card",
           animationDuration: 300,
-          // Use native edge-pan for consistent behavior (works over WebViews)
           gestureEnabled: true,
           fullScreenGestureEnabled: false,
-          // Use fade animation during swipe-back gesture
           animationMatchesGesture: true,
         }}
       />

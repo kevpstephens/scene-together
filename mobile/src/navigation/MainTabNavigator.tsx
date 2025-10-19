@@ -1,3 +1,12 @@
+/*===============================================
+ * Main Tab Navigator
+ * ==============================================
+ * Bottom tab navigation for authenticated users.
+ * Shows Events, Admin (conditional), and Profile tabs.
+ * Features custom tab icons with active indicator line.
+ * ==============================================
+ */
+
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
@@ -19,7 +28,6 @@ import { Platform, View, StyleSheet } from "react-native";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// Custom Tab Icon with Top Indicator
 interface TabIconProps {
   focused: boolean;
   color: string;
@@ -27,6 +35,10 @@ interface TabIconProps {
   IconSolid: React.ComponentType<{ size: number; color: string }>;
 }
 
+/**
+ * Custom Tab Icon with top indicator
+ * Shows solid icon when focused, outline when not
+ */
 const TabIcon: React.FC<TabIconProps> = ({
   focused,
   color,
@@ -62,6 +74,10 @@ const styles = StyleSheet.create({
   },
 });
 
+/**
+ * Main Tab Navigator
+ * Conditionally shows Admin tab based on user role
+ */
 export default function MainTabNavigator() {
   const { isAdmin } = useAuth();
 
@@ -91,7 +107,7 @@ export default function MainTabNavigator() {
       }}
       screenListeners={{
         tabPress: () => {
-          // Premium haptic feedback on tab switch (native only)
+          // Haptic feedback on tab switch (native only)
           if (Platform.OS !== "web") {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           }

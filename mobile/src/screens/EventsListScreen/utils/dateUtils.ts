@@ -1,9 +1,16 @@
-/**
- * Date and time formatting utilities for event list
+/*===============================================
+ * Date Utilities - EventsListScreen
+ * ==============================================
+ * Date and time formatting for event list display.
+ * Includes smart date labels (TODAY, TOMORROW).
+ * ==============================================
  */
 
 /**
- * Format event date for display (TODAY, TOMORROW, or formatted date)
+ * Format event date with smart labels
+ * Shows "TODAY", "TOMORROW", or formatted date
+ * @param dateString - ISO date string
+ * @returns Formatted date string
  */
 export const formatDate = (dateString: string): string => {
   const eventDate = new Date(dateString);
@@ -25,7 +32,7 @@ export const formatDate = (dateString: string): string => {
   const diffTime = eventDateOnly.getTime() - todayDateOnly.getTime();
   const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-  // Only show special labels for TODAY and TOMORROW
+  // Show special labels for TODAY and TOMORROW
   if (diffDays === 0) return "TODAY";
   if (diffDays === 1) return "TOMORROW";
 
@@ -40,7 +47,9 @@ export const formatDate = (dateString: string): string => {
 };
 
 /**
- * Format event time for display (12-hour format)
+ * Format event time (12-hour format)
+ * @param dateString - ISO date string
+ * @returns Formatted time (e.g., "7:30 PM")
  */
 export const formatTime = (dateString: string): string => {
   return new Date(dateString).toLocaleTimeString("en-US", {

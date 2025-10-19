@@ -1,3 +1,11 @@
+/*===============================================
+ * Auth Navigator
+ * ==============================================
+ * Navigation stack for unauthenticated users.
+ * Contains Login and SignUp screens.
+ * ==============================================
+ */
+
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "./types";
@@ -7,6 +15,10 @@ import { theme } from "../theme";
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
+/**
+ * Auth Stack Navigator
+ * Handles login and signup flow
+ */
 export default function AuthNavigator() {
   return (
     <Stack.Navigator

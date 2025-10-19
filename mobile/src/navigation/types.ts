@@ -1,3 +1,11 @@
+/*===============================================
+ * Navigation Types
+ * ==============================================
+ * TypeScript definitions for all navigation stacks.
+ * Defines screen parameters and navigation structure.
+ * ==============================================
+ */
+
 import type { Event } from "../types";
 import type { NavigatorScreenParams } from "@react-navigation/native";
 

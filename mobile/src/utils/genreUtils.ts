@@ -1,8 +1,15 @@
+/*===============================================
+ * Genre Utilities
+ * ==============================================
+ * Shared utility for mapping genre names to color codes.
+ * Used by EventsListScreen and EventDetailScreen for genre badges.
+ * ==============================================
+ */
+
 /**
- * Maps genre names to their corresponding color codes
- * Used for genre chips/badges throughout the app
- *
- * SHARED UTILITY - used by both EventsListScreen and EventDetailScreen
+ * Map a genre name to its corresponding color code
+ * @param genre - Genre name (case-insensitive)
+ * @returns Hex color code for the genre
  */
 export const getGenreColor = (genre: string): string => {
   const genreLower = genre.toLowerCase();

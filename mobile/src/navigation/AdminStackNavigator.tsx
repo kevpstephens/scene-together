@@ -1,9 +1,16 @@
+/*===============================================
+ * Admin Stack Navigator
+ * ==============================================
+ * Navigation stack for admin functionality.
+ * Contains dashboard, event management, and attendee screens.
+ * Only accessible to users with ADMIN or SUPER_ADMIN role.
+ * ==============================================
+ */
+
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { AdminStackParamList } from "./types";
 import { theme } from "../theme";
-
-// Import admin screens (we'll create these next)
 import AdminDashboardScreen from "../screens/admin/AdminDashboardScreen";
 import AdminEventsScreen from "../screens/admin/AdminEventsScreen";
 import AdminEventCreateScreen from "../screens/admin/AdminEventCreateScreen";
@@ -12,6 +19,10 @@ import AdminEventAttendeesScreen from "../screens/admin/AdminEventAttendeesScree
 
 const Stack = createNativeStackNavigator<AdminStackParamList>();
 
+/**
+ * Admin Stack Navigator
+ * Handles all admin-related screens
+ */
 export default function AdminStackNavigator() {
   return (
     <Stack.Navigator

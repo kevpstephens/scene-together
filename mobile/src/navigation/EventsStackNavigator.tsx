@@ -1,3 +1,12 @@
+/*===============================================
+ * Events Stack Navigator
+ * ==============================================
+ * Navigation stack for events flow.
+ * Contains EventsList and EventDetail screens.
+ * Features custom logo header and optimized animations.
+ * ==============================================
+ */
+
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { EventsStackParamList } from "./types";
@@ -8,6 +17,10 @@ import { Platform, Image, View } from "react-native";
 
 const Stack = createNativeStackNavigator<EventsStackParamList>();
 
+/**
+ * Events Stack Navigator
+ * Handles event browsing and detail views
+ */
 export default function EventsStackNavigator() {
   return (
     <Stack.Navigator
@@ -25,11 +38,9 @@ export default function EventsStackNavigator() {
           width: "100%",
           backgroundColor: theme.colors.background,
         },
-        // Premium spring-based animations
         animation: Platform.OS === "ios" ? "default" : "slide_from_right",
         animationDuration: 350,
         animationTypeForReplace: "push",
-        // Gesture configuration for iOS
         gestureEnabled: true,
         fullScreenGestureEnabled: true,
       }}
@@ -70,15 +81,13 @@ export default function EventsStackNavigator() {
         component={EventDetailScreen}
         options={{
           title: "Event Details",
-          // Pure fade animation - lets our custom scale animation shine
+          // Fade animation for smooth transition with custom scale animation
           animation: "fade",
           presentation: "card",
           headerShown: true,
           animationDuration: 300,
-          // Use native edge-pan for consistent behavior (works over WebViews)
           gestureEnabled: true,
           fullScreenGestureEnabled: false,
-          // Use fade animation during swipe-back gesture
           animationMatchesGesture: true,
         }}
       />

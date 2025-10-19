@@ -1,3 +1,7 @@
+/*===============================================
+ * ProfileScreen Utils - Barrel Export
+ * ==============================================
+ */
+
 export { formatDate, formatTime } from "./dateUtils";
-// getGenreColor is imported from shared utils
 export { getGenreColor } from "../../../utils/genreUtils";

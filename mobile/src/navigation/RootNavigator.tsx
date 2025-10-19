@@ -1,3 +1,12 @@
+/*===============================================
+ * Root Navigator
+ * ==============================================
+ * Top-level navigation controller.
+ * Handles authenticated vs unauthenticated app flow.
+ * Shows loading state while checking auth session.
+ * ==============================================
+ */
+
 import React from "react";
 import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
@@ -10,6 +19,10 @@ import { theme } from "../theme";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+/**
+ * Root Navigator Component
+ * Displays MainTabs if authenticated, Auth screens if not
+ */
 export default function RootNavigator() {
   const { session, loading } = useAuth();
 

@@ -1,3 +1,10 @@
+/*===============================================
+ * Validation Utilities - AdminEventEditScreen
+ * ==============================================
+ * Form validation and price conversion helpers.
+ * ==============================================
+ */
+
 import { Alert } from "react-native";
 
 export interface EventFormData {
@@ -9,6 +16,12 @@ export interface EventFormData {
   maxCapacity: string;
 }
 
+/**
+ * Validate event form data
+ * Shows alert for validation errors
+ * @param data - Event form data
+ * @returns True if valid, false otherwise
+ */
 export const validateEventForm = (data: EventFormData): boolean => {
   if (!data.title.trim()) {
     Alert.alert("Validation Error", "Please enter an event title");
@@ -28,10 +41,20 @@ export const validateEventForm = (data: EventFormData): boolean => {
   return true;
 };
 
+/**
+ * Convert price from pounds to cents
+ * @param price - Price in pounds (string)
+ * @returns Price in cents (number)
+ */
 export const convertPriceToCents = (price: string): number => {
   return Math.round(parseFloat(price) * 100);
 };
 
+/**
+ * Convert price from cents to pounds
+ * @param cents - Price in cents
+ * @returns Price in pounds (string)
+ */
 export const convertPriceToPounds = (
   cents: number | null | undefined
 ): string => {
