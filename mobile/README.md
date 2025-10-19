@@ -1,399 +1,432 @@
-# SceneTogether Mobile App
+<div align="center">
+  <img src="./assets/logo/logo-transparent.png" alt="SceneTogether Logo" width="350"/>
+  
+  # Mobile App
+  
+  **Universal React Native app powering SceneTogether on iOS, Android, and Web**
+  
+</div>
 
-A React Native mobile application (with web support) for community movie screening events.
+---
 
-## 🎯 Features
+## What's This?
 
-### For All Users
+This is the frontend for SceneTogether - a single Expo app that runs everywhere. Same codebase, same features, whether you're on an iPhone, Android device, or browsing on desktop.
 
-- **Browse Events**: View upcoming movie screenings with beautiful movie posters
-- **Event Details**: See full event information, movie details from TMDB
-- **RSVP**: Reserve your spot at events
-- **Calendar Integration**: Add events to your device calendar
-- **Responsive Design**: Works on mobile, tablet, and web browsers
-- **Authentication**: Secure login with Supabase Auth
+The app is built around making event discovery and RSVPs as smooth as possible. Dark theme, clean animations, and a focus on the content (those beautiful movie posters!).
 
-### For Admin Users
+---
 
-- **Dashboard**: View event statistics and quick actions
-- **Manage Events**: Create, edit, and delete screening events
-- **TMDB Integration**: Search and add movie data automatically
-- **View Attendees**: See who has RSVP'd to each event
-- **Capacity Tracking**: Monitor event attendance in real-time
+## 🎯 What It Does
 
-## 🛠️ Tech Stack
+### For Everyone
 
-- **Framework**: [Expo](https://expo.dev/) (React Native)
-- **Navigation**: React Navigation
-- **State Management**: React Context API
-- **Authentication**: Supabase Auth
-- **API Client**: Axios
-- **Styling**: StyleSheet (React Native)
-- **Icons**: react-native-heroicons
-- **Design System**: Shared theme from `../shared`
+- **Browse Screenings** - Scroll through upcoming events with movie posters
+- **Rich Details** - Watch trailers, read descriptions, see cast and runtime
+- **Quick Search** - Find events by movie title or organizer
+- **One-Tap RSVP** - Reserve your spot instantly
+- **Calendar Sync** - Add events straight to your device calendar
+- **Payments** - Stripe integration for paid events
 
-## 📱 Supported Platforms
+### For Admins
 
-- ✅ iOS (via Expo Go or standalone build)
-- ✅ Android (via Expo Go or standalone build)
-- ✅ Web (deployed as PWA)
-- ✅ Desktop (via Expo Web)
+- **Dashboard** - See stats and quick actions at a glance
+- **Event Creator** - Search TMDB, add details, set pricing
+- **Attendee Lists** - Check who's coming to your events
+- **Full Management** - Edit or delete events as needed
+
+### The Experience
+
+- Dark theme that's easy on the eyes
+- Blur effects on web (glassmorphism vibes)
+- Smooth animations and haptic feedback (mobile)
+- Responsive design that adapts to any screen size
+- Toast notifications for feedback
+- Loading skeletons for better perceived performance
+
+---
+
+## 🛠️ Tech Choices
+
+| What           | Why                                           |
+| -------------- | --------------------------------------------- |
+| **Expo**       | Write once, deploy everywhere                 |
+| **TypeScript** | Catch bugs before they happen                 |
+| **React Nav**  | Smooth navigation with tab + stack            |
+| **Context**    | Simple state management, no overkill          |
+| **Supabase**   | Auth that just works                          |
+| **Stripe SDK** | Native payment flows                          |
+| **Axios**      | Clean API calls with interceptors             |
+| **StyleSheet** | Platform-optimized styling with design system |
+
+---
+
+## 📁 Project Layout
+
+```
+mobile/
+├── src/
+│   ├── components/              # Reusable bits
+│   │   ├── AnimatedButton       # Spring animations
+│   │   ├── DateTimePicker       # Cross-platform picker
+│   │   ├── GradientBackground   # Animated gradient
+│   │   ├── SkeletonLoader       # Loading states
+│   │   └── Toast                # Notifications
+│   │
+│   ├── contexts/
+│   │   ├── auth/                # Auth state + actions
+│   │   └── toast/               # Toast notifications
+│   │
+│   ├── navigation/              # All the routing
+│   │   ├── RootNavigator        # Main router
+│   │   ├── AuthNavigator        # Login/signup flow
+│   │   ├── MainTabNavigator     # Bottom tabs
+│   │   └── ...Stack navigators
+│   │
+│   ├── screens/                 # All the pages
+│   │   ├── admin/               # Admin-only screens
+│   │   ├── auth/                # Login + signup
+│   │   ├── EventDetailScreen/
+│   │   ├── EventsListScreen/
+│   │   ├── ProfileScreen/
+│   │   └── ...
+│   │
+│   ├── services/
+│   │   ├── api.ts               # Axios + interceptors
+│   │   ├── calendar/            # Calendar integration
+│   │   └── payment.ts           # Stripe handling
+│   │
+│   ├── theme/                   # Design system
+│   │   ├── index.ts             # Colors, spacing, etc.
+│   │   └── styles.ts            # Helper functions
+│   │
+│   └── types/                   # TypeScript defs
+│
+├── assets/                      # Images and logos
+├── app.json                     # Expo config
+└── netlify.toml                 # Web deployment
+```
+
+---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
-- npm or pnpm
+- pnpm (or npm)
 - Expo Go app (for mobile testing)
+- Xcode (Mac only, for iOS dev)
+- Android Studio (for Android dev)
 
-### Installation
+### Setup
 
-1. **Install dependencies**:
-
-   ```bash
-   cd mobile
-   npm install
-   ```
-
-2. **Set up environment variables**:
-   Create a `.env` file:
-
-   ```env
-   EXPO_PUBLIC_API_URL=http://localhost:3000
-   EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-   EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-   ```
-
-3. **Start the development server**:
-   ```bash
-   npm start
-   ```
-
-### Running on Different Platforms
-
-**Web**:
+**1. Install dependencies**
 
 ```bash
-npm run web
-# Opens http://localhost:8081
+cd mobile
+pnpm install
 ```
 
-**iOS** (Mac only):
+**2. Create your `.env`**
 
 ```bash
-npm run ios
-# Opens in iOS Simulator
+cp .env.example .env
 ```
 
-**Android**:
+Fill it in:
+
+```env
+EXPO_PUBLIC_API_URL=http://localhost:3000
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+EXPO_PUBLIC_TMDB_API_KEY=your-tmdb-key
+EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+```
+
+**3. Start developing**
 
 ```bash
-npm run android
-# Opens in Android Emulator
+npm start           # Opens Expo dev server
+npm run web         # Launch in browser
+npm run ios         # iOS simulator (Mac only)
+npm run android     # Android emulator
 ```
 
-**Mobile Device**:
-
-```bash
-npm start
-# Scan QR code with Expo Go app
-```
-
-## 📁 Project Structure
-
-```
-mobile/
-├── src/
-│   ├── components/          # Reusable UI components
-│   │   ├── AnimatedButton.tsx
-│   │   ├── EventCardSkeleton.tsx
-│   │   ├── GradientBackground.tsx
-│   │   └── Toast.tsx
-│   ├── contexts/            # React contexts
-│   │   ├── AuthContext.tsx
-│   │   └── ToastContext.tsx
-│   ├── navigation/          # Navigation configuration
-│   │   ├── AdminStackNavigator.tsx
-│   │   ├── AuthNavigator.tsx
-│   │   ├── EventsStackNavigator.tsx
-│   │   ├── MainTabNavigator.tsx
-│   │   ├── ProfileStackNavigator.tsx
-│   │   └── RootNavigator.tsx
-│   ├── screens/             # App screens
-│   │   ├── admin/           # Admin-only screens
-│   │   │   ├── AdminDashboardScreen.tsx
-│   │   │   ├── AdminEventsScreen.tsx
-│   │   │   ├── AdminEventCreateScreen.tsx
-│   │   │   ├── AdminEventEditScreen.tsx
-│   │   │   └── AdminEventAttendeesScreen.tsx
-│   │   ├── auth/            # Authentication screens
-│   │   │   ├── LoginScreen.tsx
-│   │   │   └── SignUpScreen.tsx
-│   │   ├── EventDetailScreen.tsx
-│   │   ├── EventsListScreen.tsx
-│   │   └── ProfileScreen.tsx
-│   ├── services/            # API and services
-│   │   ├── api.ts
-│   │   └── calendarService.ts
-│   ├── theme/               # Theme configuration
-│   │   └── index.ts
-│   └── types/               # TypeScript types
-│       └── index.ts
-├── assets/                  # Images and static assets
-├── app.json                 # Expo configuration
-├── netlify.toml            # Netlify deployment config
-├── vercel.json             # Vercel deployment config
-└── package.json
-```
-
-## 🎨 Design System
-
-The app uses a centralized design system from `src/theme/index.ts`:
-
-```typescript
-const theme = {
-  colors: {
-    primary: "#46D4AF", // Turquoise
-    accent: "#FF6B9D", // Pink
-    background: "#EFF0EF", // Light grey
-    surface: "#FFFFFF", // White
-    text: {
-      primary: "#000102",
-      secondary: "#4A5568",
-      tertiary: "#A0AEC0",
-    },
-  },
-  spacing: {
-    xs: 4,
-    sm: 8,
-    md: 12,
-    base: 16,
-    lg: 24,
-    xl: 32,
-    xxl: 48,
-    xxxl: 64,
-  },
-  // ... more theme properties
-};
-```
-
-## 🔐 Authentication & Authorization
-
-### User Roles
-
-- **USER**: Can browse events and RSVP
-- **ADMIN**: Can create, edit, delete events and view attendees
-- **SUPER_ADMIN**: Full access (future expansion)
-
-### Role-Based UI
-
-The app conditionally shows admin features:
-
-- Admin tab only visible to ADMIN/SUPER_ADMIN users
-- Role is fetched from `/auth/me` endpoint on login
-- Stored in AuthContext for easy access
-
-### Implementation
-
-```typescript
-// In any component
-const { isAdmin } = useAuth();
-
-{isAdmin && (
-  <AdminButton onPress={handleAdminAction} />
-)}
-```
-
-## 📡 API Integration
-
-The app communicates with the Express backend via REST API:
-
-**Base URL**: Configured via `EXPO_PUBLIC_API_URL`
-
-**Key Endpoints**:
-
-- `GET /events` - List all events
-- `GET /events/:id` - Get event details
-- `POST /events` - Create event (admin only)
-- `PUT /events/:id` - Update event (admin only)
-- `DELETE /events/:id` - Delete event (admin only)
-- `POST /events/:id/rsvp` - RSVP to event
-- `GET /events/:id/attendees` - List attendees (admin only)
-- `GET /auth/me` - Get current user info
-
-**Authentication**: Uses Supabase session tokens automatically via Axios interceptors.
-
-## 🌐 Web Deployment
-
-This Expo app can be deployed as a static website:
-
-### Build for Web
-
-```bash
-npx expo export:web
-```
-
-This creates a `web-build/` directory with static files.
-
-### Deploy Options
-
-**Netlify** (Recommended):
-
-```bash
-netlify deploy --prod --dir=web-build
-```
-
-**Vercel**:
-
-```bash
-vercel --prod
-```
-
-See [DEPLOYMENT.md](../DEPLOYMENT.md) for detailed instructions.
-
-## 🧪 Testing
-
-### Manual Testing Checklist
-
-**User Flow**:
-
-- [ ] Sign up new account
-- [ ] Log in
-- [ ] View events list
-- [ ] View event details
-- [ ] RSVP to event
-- [ ] Add event to calendar
-- [ ] View profile
-- [ ] Log out
-
-**Admin Flow**:
-
-- [ ] Log in as admin
-- [ ] View admin dashboard
-- [ ] Create new event
-- [ ] Search movie on TMDB
-- [ ] Edit existing event
-- [ ] View attendees list
-- [ ] Delete event
-
-**Responsive Design**:
-
-- [ ] Test on iPhone (small screen)
-- [ ] Test on iPad (tablet)
-- [ ] Test on web browser (desktop)
-- [ ] Test landscape orientation
-
-## 🐛 Known Issues & Limitations
-
-### Web Compatibility
-
-- **Haptic Feedback**: Not available on web (gracefully handled)
-- **Calendar Integration**: Limited on web browsers
-- **OAuth**: May require additional configuration for production
-
-### Mobile
-
-- **Calendar Permissions**: Must be granted by user
-- **Push Notifications**: Not yet implemented
-
-## 🔧 Development Tips
-
-### Hot Reload
-
-Changes auto-reload in development. If issues occur:
-
-```bash
-# Clear cache
-rm -rf .expo node_modules
-npm install
-npm start --clear
-```
-
-### Debugging
-
-**React Native Debugger**:
-
-```bash
-npm start
-# Press 'j' to open debugger
-```
-
-**Web Console**:
-
-```bash
-npm run web
-# Open browser DevTools (F12)
-```
-
-**Logs**:
-
-```typescript
-console.log(); // Shows in terminal and browser console
-```
-
-### Common Issues
-
-**"Unable to resolve module"**:
-
-```bash
-npm install
-npx expo start --clear
-```
-
-**"Network request failed"**:
-
-- Check API URL in `.env`
-- Ensure backend is running
-- Check network connectivity
-
-**"Expo Go is not supported"** warnings:
-
-- These are normal for certain packages
-- App still works in Expo Go for most features
-
-## 📦 Building for Production
-
-### Web (Static Site)
-
-```bash
-npx expo export:web
-```
-
-### iOS (requires Mac)
-
-```bash
-eas build --platform ios
-```
-
-### Android
-
-```bash
-eas build --platform android
-```
-
-See [Expo EAS Build documentation](https://docs.expo.dev/build/introduction/) for details.
-
-## 🤝 Contributing
-
-When adding new features:
-
-1. **Follow the design system** - Use theme values from `../shared`
-2. **Type safety** - Add TypeScript types
-3. **Web compatibility** - Wrap native-only features with Platform checks
-4. **Accessibility** - Add accessible labels
-5. **Performance** - Use React.memo for expensive components
-
-## 📄 License
-
-This project is part of a Skills Bootcamp portfolio submission.
-
-## 🆘 Support
-
-- See [DEPLOYMENT.md](../DEPLOYMENT.md) for deployment help
-- Check [Expo documentation](https://docs.expo.dev/)
-- Review application logs for errors
+Scan the QR code with Expo Go to test on your actual phone.
 
 ---
 
-**Built with ❤️ using Expo and React Native**
+## 🎨 The Design System
+
+Everything's centralized in `src/theme/index.ts`. No magic numbers scattered around.
+
+### Colors
+
+```typescript
+primary: "#46D4AF"        // Teal accent
+background: "#0F1419"     // Very dark blue-gray
+surface: "#151C23"        // Card backgrounds
+text.primary: "#E8EAED"   // Light gray
+text.secondary: "#9CA3AF" // Medium gray
+```
+
+### Spacing
+
+```typescript
+xs: 4, sm: 8, md: 12, base: 16, lg: 24, xl: 32, xxl: 48, xxxl: 64
+```
+
+All multiples of 4 for consistency.
+
+### Typography
+
+```typescript
+fontSize: { xs: 12, sm: 14, base: 16, lg: 20, xl: 24, xxl: 30, xxxl: 36 }
+fontWeight: { light: "300", normal: "400", semibold: "600", bold: "700" }
+```
+
+### Using It
+
+```typescript
+import { theme } from "../theme";
+
+const styles = StyleSheet.create({
+  container: {
+    padding: theme.spacing.base,
+    backgroundColor: theme.colors.background,
+  },
+  title: {
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+  },
+});
+```
+
+---
+
+## 🔐 Auth Flow
+
+The `AuthContext` handles everything:
+
+```typescript
+import { useAuth } from "../contexts/auth";
+
+function MyComponent() {
+  const { user, isAdmin, loading, signIn, signOut } = useAuth();
+
+  if (loading) return <ActivityIndicator />;
+
+  return (
+    <View>
+      <Text>Hi, {user?.displayName}!</Text>
+      {isAdmin && <AdminButton />}
+      <Button title="Sign Out" onPress={signOut} />
+    </View>
+  );
+}
+```
+
+**Roles:**
+
+- `USER` - Browse and RSVP
+- `ADMIN` - Full event management
+- `SUPER_ADMIN` - Everything (future use)
+
+---
+
+## 📡 API Integration
+
+All API calls go through `src/services/api.ts`:
+
+```typescript
+import { api } from "../services/api";
+
+// GET
+const events = await api.get("/events");
+
+// POST
+const response = await api.post("/events", eventData);
+
+// With params
+const event = await api.get(`/events/${id}`);
+```
+
+The Axios instance automatically injects auth tokens from Supabase.
+
+---
+
+## 📱 Platform Differences
+
+### Native-Only
+
+- **Haptic feedback** via `expo-haptics`
+- **Full calendar access** (read/write)
+- **Native share** via `expo-sharing`
+- **App icons & splash screens**
+
+### Web-Only
+
+- **Glassmorphism** (backdrop blur)
+- **Browser calendar** (.ics downloads)
+- **URL-based routing**
+
+### Detecting Platform
+
+```typescript
+import { Platform } from "react-native";
+
+if (Platform.OS === "web") {
+  // Web-specific code
+} else {
+  // Native code (iOS/Android)
+}
+```
+
+---
+
+## 🌐 Deploying to Web
+
+Expo can export a static website that works anywhere:
+
+```bash
+npx expo export:web
+```
+
+This creates `web-build/` with optimized static files.
+
+### Deploy to Netlify
+
+**Via CLI:**
+
+```bash
+npm install -g netlify-cli
+netlify deploy --prod --dir=web-build
+```
+
+**Via Git:**
+
+1. Push to GitHub
+2. Connect repo in Netlify
+3. Build command: `cd mobile && npx expo export:web`
+4. Publish directory: `mobile/web-build`
+5. Set environment variables in dashboard
+
+---
+
+## 🧪 Testing Checklist
+
+**User Journey:**
+
+- [ ] Sign up / sign in
+- [ ] Browse events
+- [ ] Search for a movie
+- [ ] View event details
+- [ ] Watch a trailer
+- [ ] RSVP to an event
+- [ ] Add to calendar
+- [ ] Check profile
+- [ ] Sign out
+
+**Admin Journey:**
+
+- [ ] Access dashboard
+- [ ] Create event with TMDB search
+- [ ] Edit event
+- [ ] View attendees
+- [ ] Delete event
+
+**Responsiveness:**
+
+- [ ] iPhone (portrait)
+- [ ] iPad (landscape)
+- [ ] Desktop browser
+- [ ] Large displays
+
+---
+
+## 🐛 Quirks & Limitations
+
+### Web
+
+- Calendar integration is limited to `.ics` file downloads
+- No haptic feedback (obviously)
+- OAuth popups might be blocked by strict browser settings
+
+### Mobile
+
+- Calendar permissions are required
+- iOS 13+ recommended for best experience
+- Push notifications aren't implemented yet
+
+### General
+
+- TMDB has rate limits (40 requests per 10 seconds)
+- Stripe is in test mode during development
+
+---
+
+## 🔧 Troubleshooting
+
+### "Unable to resolve module"
+
+```bash
+rm -rf node_modules .expo
+pnpm install
+npx expo start --clear
+```
+
+### "Network request failed"
+
+- Check `EXPO_PUBLIC_API_URL` in `.env`
+- Make sure backend is running
+- Verify device is on same network as dev machine
+
+### "Calendar permissions denied"
+
+- Go to device Settings → Privacy → Calendar
+- Grant permissions to Expo Go (or your app)
+
+### Build issues
+
+Clear everything and start fresh:
+
+```bash
+npx expo start --clear
+```
+
+---
+
+## 🤝 Contributing
+
+If you're building on this:
+
+1. Use the theme system, don't hardcode colors/spacing
+2. Add proper TypeScript types
+3. Wrap native-only features in `Platform.OS` checks
+4. Add JSDoc comments for complex functions
+5. Use `React.memo` for expensive components
+
+---
+
+## 📄 License
+
+Educational project - Tech Returners Bootcamp
+
+---
+
+## 🆘 Need Help?
+
+- Deployment issues? Check `../DEPLOYMENT.md`
+- Expo docs: https://docs.expo.dev/
+- React Navigation: https://reactnavigation.org/
+- Supabase: https://supabase.com/docs
+
+---
+
+<div align="center">
+
+**Built with Expo + a lot of Stack Overflow**
+
+</div>

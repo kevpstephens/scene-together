@@ -1,178 +1,162 @@
-# SceneTogether 🎬
+<div align="center">
+  <img src="./mobile/assets/logo/logo-transparent.png" alt="SceneTogether Logo" width="400"/>
+  
+  # SceneTogether
+  
+  **A community platform for movie lovers to discover and attend local film screenings**
+  
+  _Tech Returners Software Engineering Bootcamp - Final Project_
+  
+  [![Live Demo](#)](#) • [![GitHub](#)](#)
+  
+</div>
 
-A community movie screening events platform built with React Native (Expo) and Express.js. Users can browse upcoming movie screenings, RSVP to events, and add them to their calendar. Administrators can manage events, view attendees, and integrate movie data from TMDB.
+---
 
-## 📱 Live Demo
+## What is SceneTogether?
 
-- **Web App**: [Your deployment URL]
-- **Repository**: [Your GitHub URL]
+Ever wished there was an easier way to organize movie nights with your community? SceneTogether is a full-stack events platform that lets film enthusiasts discover screenings, RSVP with a tap, and never miss a show. Built from the ground up with React Native (Expo) and Express.js, it works seamlessly on your phone, tablet, or computer.
 
-## ✨ Features
+Whether you're a member looking for your next cinema experience or an organizer managing events, SceneTogether has you covered.
 
-### For Users
+---
 
-- 🎥 Browse upcoming movie screening events
-- 🎬 View detailed event information with movie posters
-- ✅ RSVP to events (Going/Interested)
-- 📅 Add events to device calendar
-- 🔐 Secure authentication via Supabase
-- 📱 Fully responsive (mobile, tablet, desktop)
+## ✨ What You Can Do
 
-### For Admins
+### As a Member
 
-- 📊 Admin dashboard with event statistics
-- ➕ Create and manage screening events
-- 🎞️ Search and integrate TMDB movie data
-- 👥 View event attendees and capacity tracking
-- ✏️ Edit and delete events
-- 🔒 Role-based access control
+- **Browse Screenings** - Find upcoming movie events with beautiful posters and trailers (powered by TMDB)
+- **Get the Details** - View cast, runtime, genres, location, and timing at a glance
+- **RSVP Instantly** - One tap to reserve your spot
+- **Add to Calendar** - Never forget an event with device calendar integration
+- **Search & Filter** - Find specific films or organizers quickly
+- **Responsive Everywhere** - Works perfectly on any device
 
-## 🏗️ Architecture
+### As an Organizer (Admin)
 
-This is a **consolidated single-app architecture** using Expo's universal platform capabilities:
+- **Dashboard Overview** - See your events, attendance stats, and upcoming shows
+- **Create Events** - Build screenings with auto-populated movie data from TMDB
+- **Flexible Pricing** - Free events, fixed price, or pay-what-you-can
+- **Attendee Management** - View who's coming and track capacity
+- **Stripe Payments** - Secure payment processing for ticketed events
+- **Full Control** - Edit or delete events as needed
 
-```
-┌─────────────────────────────────────────────────────┐
-│  Frontend: Expo React Native                        │
-│  - iOS & Android apps (via Expo Go)                │
-│  - Web app (deployed as static site)               │
-│  - Unified codebase with role-based routing        │
-│  - Local theme and types (no external dependencies)│
-└─────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────┐
-│  Backend: Express.js API                            │
-│  - RESTful API                                       │
-│  - Prisma ORM                                        │
-│  - JWT authentication                                │
-│  - Standalone with local types                      │
-└─────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────┐
-│  Database: PostgreSQL (Supabase)                    │
-│  - User management                                   │
-│  - Events & RSVPs                                    │
-│  - Role-based access control                         │
-└─────────────────────────────────────────────────────┘
-```
+---
 
-## 🛠️ Tech Stack
+## 🛠️ Built With
 
-### Frontend (Universal App)
+### Frontend
 
-- **Framework**: Expo / React Native
-- **Language**: TypeScript
-- **Navigation**: React Navigation (Bottom Tabs + Stack)
-- **Authentication**: Supabase Auth
-- **API Client**: Axios
-- **Styling**: StyleSheet with shared design system
-- **Icons**: react-native-heroicons
-- **Calendar**: expo-calendar
+- **Expo / React Native** - Write once, deploy to iOS, Android, and Web
+- **TypeScript** - Type safety throughout
+- **React Navigation** - Smooth navigation with tab and stack navigators
+- **Supabase Auth** - Secure authentication with OAuth support
+- **Stripe SDK** - Native payment processing
+- **Axios** - API communication
 
 ### Backend
 
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Language**: TypeScript
-- **ORM**: Prisma
-- **Database**: PostgreSQL
-- **Authentication**: Supabase Auth + JWT
-- **Validation**: Zod
+- **Express.js** - Fast, minimal API server
+- **Prisma ORM** - Type-safe database queries
+- **PostgreSQL** - Reliable data storage (via Supabase)
+- **Zod** - Runtime validation
+- **JWT** - Secure token-based auth
 
-### External Services
+### Services
 
-- **Database/Auth**: Supabase
-- **Movie Data**: TMDB (The Movie Database) API
-- **Hosting**:
-  - Frontend: Netlify/Vercel (static site)
-  - Backend: Railway/Render
-  - Database: Supabase
+- **Supabase** - Database hosting and authentication
+- **TMDB** - Movie data, posters, and trailers
+- **Stripe** - Payment processing
+- **Netlify** - Frontend hosting
+- **Railway** - Backend hosting
 
-## 📁 Project Structure
+---
+
+## 📁 How It's Organized
 
 ```
 scene-together/
-├── api/                    # Express.js backend
+├── api/                      # Express backend
 │   ├── src/
-│   │   ├── middleware/     # Auth, validation, error handling
-│   │   ├── modules/        # Feature modules (events, auth, etc.)
-│   │   ├── types/          # TypeScript types
-│   │   ├── utils/          # Shared utilities
-│   │   └── server.ts       # Entry point
-│   ├── prisma/
-│   │   ├── schema.prisma   # Database schema
-│   │   └── migrations/     # Database migrations
-│   └── package.json
+│   │   ├── middleware/       # Auth, validation, errors
+│   │   ├── modules/          # Features (events, auth, payments, etc.)
+│   │   ├── types/            # TypeScript types
+│   │   └── server.ts         # App entry point
+│   └── prisma/
+│       ├── schema.prisma     # Database schema
+│       └── migrations/       # Version history
 │
-├── mobile/                 # Expo React Native app (mobile + web)
+├── mobile/                   # Expo app (iOS, Android, Web)
 │   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── contexts/       # React contexts (Auth, Toast)
-│   │   ├── navigation/     # Navigation stacks (Events, Admin, Profile)
-│   │   ├── screens/        # App screens
-│   │   │   ├── admin/      # Admin-only screens
-│   │   │   ├── auth/       # Login & signup
-│   │   │   └── ...         # User screens
-│   │   ├── services/       # API client, calendar service
-│   │   ├── theme/          # Design system (local)
-│   │   └── types/          # TypeScript types (local)
-│   ├── app.json            # Expo configuration
-│   ├── metro.config.js     # Metro bundler config
-│   ├── netlify.toml        # Netlify deployment config
-│   ├── vercel.json         # Vercel deployment config
-│   └── package.json
+│   │   ├── components/       # Reusable UI pieces
+│   │   ├── contexts/         # Auth and toast state
+│   │   ├── navigation/       # App routing
+│   │   ├── screens/          # All app screens
+│   │   ├── services/         # API, calendar, payments
+│   │   ├── theme/            # Design system
+│   │   └── types/            # TypeScript types
+│   └── assets/               # Images and logos
 │
-├── DEPLOYMENT.md           # Comprehensive deployment guide
-├── CONSOLIDATION_SUMMARY.md # Consolidation documentation
-├── package.json            # Workspace root
-├── pnpm-workspace.yaml     # PNPM workspace config
-└── turbo.json              # Turborepo config
+└── DEPLOYMENT.md             # Deployment instructions
 ```
 
-## 🚀 Getting Started
+---
 
-### Prerequisites
+## 🚀 Running Locally
+
+### What You'll Need
 
 - Node.js 18+
 - pnpm (or npm)
-- PostgreSQL database (Supabase account)
-- Expo Go app (for mobile testing)
+- A Supabase account (free tier works great)
+- A TMDB API key (also free)
+- Expo Go app (optional, for mobile testing)
 
-### 1. Clone Repository
+### Quick Setup
+
+**1. Clone and install**
 
 ```bash
 git clone <your-repo-url>
 cd scene-together
+pnpm install
 ```
 
-### 2. Install Dependencies
+**2. Configure the backend**
 
 ```bash
-pnpm install
-# or: npm install
+cd api
+cp .env.example .env
 ```
 
-### 3. Set Up Environment Variables
-
-**Backend (`api/.env`)**:
+Fill in your `.env`:
 
 ```env
 DATABASE_URL="postgresql://user:password@host:5432/dbname"
-JWT_SECRET="your-super-secret-jwt-key"
+JWT_SECRET="your-secret-key-min-32-characters"
 SUPABASE_URL="https://your-project.supabase.co"
-SUPABASE_SERVICE_KEY="your-service-role-key"
+SUPABASE_SERVICE_KEY="your-service-key"
+TMDB_API_KEY="your-tmdb-key"
 PORT=3000
 ```
 
-**Frontend (`mobile/.env`)**:
+**3. Configure the frontend**
+
+```bash
+cd mobile
+cp .env.example .env
+```
+
+Fill in your `.env`:
 
 ```env
 EXPO_PUBLIC_API_URL="http://localhost:3000"
 EXPO_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
 EXPO_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+EXPO_PUBLIC_TMDB_API_KEY="your-tmdb-key"
 ```
 
-### 4. Set Up Database
+**4. Set up the database**
 
 ```bash
 cd api
@@ -180,210 +164,223 @@ npx prisma generate
 npx prisma migrate dev
 ```
 
-### 5. Start Development Servers
+**5. Start everything**
 
-**Terminal 1 - Backend**:
+Terminal 1 (Backend):
 
 ```bash
 cd api
 npm run dev
-# Runs on http://localhost:3000
 ```
 
-**Terminal 2 - Frontend (Web)**:
+Terminal 2 (Frontend):
 
 ```bash
 cd mobile
-npm run web
-# Opens http://localhost:8081
+npm run web        # For browser
+# OR
+npm start          # For Expo Go (mobile)
 ```
 
-**OR - Frontend (Mobile)**:
+**6. Make yourself an admin**
 
-```bash
-cd mobile
-npm start
-# Scan QR code with Expo Go app
-```
-
-### 6. Create Admin User
-
-After signing up, manually set your role to ADMIN in the database:
+After signing up, update your role in the database:
 
 ```sql
-UPDATE users
-SET role = 'ADMIN'
-WHERE email = 'your-email@example.com';
+UPDATE users SET role = 'ADMIN' WHERE email = 'your@email.com';
 ```
 
-Or use Prisma Studio:
-
-```bash
-cd api
-npx prisma studio
-```
-
-## 📱 Platform Support
-
-### Development
-
-- ✅ iOS (Expo Go / Simulator)
-- ✅ Android (Expo Go / Emulator)
-- ✅ Web (Browser)
-
-### Production
-
-- ✅ Web (Deployed as static PWA)
-- ⚠️ iOS/Android (Requires App Store submission - not required for this project)
-
-## 🌐 Deployment
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for comprehensive deployment instructions.
-
-### Quick Deploy
-
-**Frontend (Netlify)**:
-
-```bash
-cd mobile
-npx expo export:web
-netlify deploy --prod --dir=web-build
-```
-
-**Backend (Railway)**:
-
-1. Connect GitHub repo to Railway
-2. Select `api` directory
-3. Add PostgreSQL database
-4. Set environment variables
-5. Deploy automatically
-
-## 🎨 Design System
-
-The app uses a consistent design system with:
-
-- **Colors**: Turquoise primary, pink accent
-- **Typography**: System fonts with defined sizes
-- **Spacing**: 8px base unit
-- **Animations**: Smooth transitions and micro-interactions
-- **Components**: Reusable, accessible UI components
-
-## 🔐 Authentication & Authorization
-
-### User Roles
-
-- **USER**: Browse events, RSVP (default)
-- **ADMIN**: Full event management
-- **SUPER_ADMIN**: Future expansion
-
-### Flow
-
-1. User signs up via Supabase Auth
-2. Backend creates user record with default `USER` role
-3. Auth tokens validated on every API request
-4. Role determines UI visibility and API permissions
-
-## 🧪 Testing
-
-### Manual Testing
-
-```bash
-# Web
-cd mobile && npm run web
-
-# iOS
-cd mobile && npm run ios
-
-# Android
-cd mobile && npm run android
-```
-
-### Features to Test
-
-- ✅ User signup/login
-- ✅ Event browsing
-- ✅ RSVP functionality
-- ✅ Calendar integration
-- ✅ Admin dashboard (as admin user)
-- ✅ Event creation with TMDB search
-- ✅ Responsive design on different screen sizes
-
-## 📊 Database Schema
-
-Key entities:
-
-- **Users**: Authentication and profile data
-- **Events**: Movie screening event details
-- **RSVPs**: User event reservations
-- **MovieData**: Cached TMDB movie information
-
-See `api/prisma/schema.prisma` for full schema.
-
-## 🔄 API Endpoints
-
-### Public
-
-- `POST /auth/signup` - Create account
-- `POST /auth/login` - Login
-- `GET /events` - List events
-- `GET /events/:id` - Event details
-
-### Authenticated
-
-- `GET /auth/me` - Current user
-- `POST /events/:id/rsvp` - RSVP to event
-- `GET /events/:id/rsvp` - Get user's RSVP status
-
-### Admin Only
-
-- `POST /events` - Create event
-- `PUT /events/:id` - Update event
-- `DELETE /events/:id` - Delete event
-- `GET /events/:id/attendees` - List attendees
-
-## 🎯 Project Requirements Met
-
-✅ **Functional Requirements**:
-
-- Events creation by staff (admin)
-- Event signup by non-staff (users)
-- Google Calendar integration for RSVP'd events
-- TMDB API integration for movie data
-
-✅ **Non-Functional Requirements**:
-
-- Built with TypeScript
-- Responsive design (mobile-first)
-- Accessibility considerations
-- Secure authentication (Supabase + JWT)
-- Hosted on free platforms (Netlify/Vercel + Railway)
-- Comprehensive documentation
-
-✅ **Performance**:
-
-- Loading states and skeletons
-- Error handling with user-friendly messages
-- Optimized images and caching
-
-## 🤝 Contributing
-
-This is a portfolio project for Tech Returners Skills Bootcamp submission.
-
-## 📄 License
-
-Educational/Portfolio Project - Tech Returners Skills Bootcamp
-
-## 🙏 Acknowledgments
-
-- **Tech Returners** - Skills Bootcamp Program
-- **TMDB** - Movie data and posters
-- **Supabase** - Backend as a Service
-- **Expo** - Universal React Native platform
-
-## 📞 Contact
-
-Kevin Stephenson - [Your contact info]
+Or use Prisma Studio: `npx prisma studio`
 
 ---
 
-**Built with passion as part of Tech Returners Software Engineering Bootcamp** 🚀
+## 🌐 Platform Support
+
+| Platform    | Development            | Production           |
+| ----------- | ---------------------- | -------------------- |
+| **Web**     | ✅ Browser             | ✅ Static PWA        |
+| **iOS**     | ✅ Expo Go / Simulator | ⚠️ App Store needed  |
+| **Android** | ✅ Expo Go / Emulator  | ⚠️ Play Store needed |
+
+> For this bootcamp project, web deployment is the target. Native builds are optional.
+
+---
+
+## 📚 More Info
+
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Full deployment guide
+- **[mobile/README.md](./mobile/README.md)** - Frontend details
+- **[api/README.md](./api/README.md)** - Backend API reference
+
+---
+
+## 🎨 Design Philosophy
+
+The app features a dark theme with teal accents, inspired by modern cinema apps. I wanted something that felt premium but approachable - like you're browsing a curated film festival rather than a corporate booking system. The glassmorphism effects (on web) add depth without overwhelming the content.
+
+---
+
+## 🔐 Security & Roles
+
+The app has three user levels:
+
+- **USER** - Can browse events and RSVP (everyone starts here)
+- **ADMIN** - Can create and manage events
+- **SUPER_ADMIN** - Reserved for future features
+
+Authentication uses Supabase + JWT, with tokens verified on every API request. Passwords are hashed, sessions are secure, and role checks happen both client and server-side.
+
+---
+
+## 🧪 Manual Testing Checklist
+
+**Basic User Flow:**
+
+- [ ] Sign up with email
+- [ ] Browse events list
+- [ ] Search for a movie
+- [ ] View event details and trailer
+- [ ] RSVP to an event
+- [ ] Add event to calendar
+- [ ] Check profile
+- [ ] Sign out
+
+**Admin Flow:**
+
+- [ ] Access admin dashboard
+- [ ] Create a new event
+- [ ] Search TMDB for a movie
+- [ ] Edit an existing event
+- [ ] View attendee list
+- [ ] Delete an event
+
+**Responsive:**
+
+- [ ] Mobile phone
+- [ ] Tablet
+- [ ] Desktop browser
+
+---
+
+## 📊 Database Structure
+
+Four main tables power the app:
+
+**Users** - Authentication, profile, role  
+**Events** - Screening details, pricing, capacity  
+**RSVPs** - User reservations, payment status  
+**MovieData** - Cached TMDB data (posters, trailers, etc.)
+
+See `api/prisma/schema.prisma` for the full schema.
+
+---
+
+## 🔄 API Overview
+
+### Public Routes
+
+```
+POST   /auth/signup           Create account
+POST   /auth/login            Sign in
+GET    /events                List all events
+GET    /events/:id            Event details
+```
+
+### Authenticated Routes
+
+```
+GET    /auth/me               Current user info
+POST   /events/:id/rsvp       RSVP to event
+DELETE /events/:id/rsvp       Cancel RSVP
+```
+
+### Admin Routes
+
+```
+POST   /events                Create event
+PUT    /events/:id            Update event
+DELETE /events/:id            Delete event
+GET    /events/:id/attendees  View attendees
+```
+
+Full API docs in `api/README.md`.
+
+---
+
+## ✅ Project Goals Met
+
+This project was built to meet the Tech Returners bootcamp requirements:
+
+**Functional:**
+
+- ✅ Admin can create movie screening events
+- ✅ Users can RSVP to events
+- ✅ Calendar integration for confirmed RSVPs
+- ✅ TMDB API integration for movie data
+
+**Technical:**
+
+- ✅ TypeScript throughout
+- ✅ React Native (Expo) for cross-platform deployment
+- ✅ Express.js REST API
+- ✅ PostgreSQL with Prisma
+- ✅ Secure authentication and authorization
+- ✅ Professional documentation
+
+**Non-Functional:**
+
+- ✅ Deployed on free hosting
+- ✅ Responsive design
+- ✅ Error handling and loading states
+- ✅ Clean, maintainable code
+
+---
+
+## 🐛 Known Quirks
+
+**On Web:**
+
+- Calendar integration downloads `.ics` files (browser limitation)
+- No haptic feedback (obviously)
+- OAuth popups might be blocked by some browsers
+
+**On Mobile:**
+
+- Calendar permissions required
+- iOS 13+ recommended
+- Push notifications not implemented yet
+
+---
+
+## 📝 License
+
+This is a portfolio project built for the Tech Returners Software Engineering Bootcamp. Feel free to explore the code!
+
+---
+
+## 🙏 Thanks To
+
+- **Tech Returners** for an amazing bootcamp experience
+- **TMDB** for the fantastic movie database
+- **Supabase** for making backend setup painless
+- **The Expo Team** for universal React Native
+- **Stripe** for payment processing
+
+---
+
+## 📬 Contact
+
+**Kevin Stephenson**  
+Tech Returners Software Engineering Bootcamp 2024/2025
+
+[GitHub](#) • [LinkedIn](#) • [Email](#)
+
+---
+
+<div align="center">
+  
+**Built with ☕ and a lot of debugging**
+
+_Submitted as part of the Tech Returners Software Engineering Bootcamp_
+
+</div>
