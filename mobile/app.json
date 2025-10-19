@@ -29,7 +29,13 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "permissions": ["READ_CALENDAR", "WRITE_CALENDAR"]
+      "permissions": [
+        "READ_CALENDAR",
+        "WRITE_CALENDAR",
+        "READ_CALENDAR",
+        "WRITE_CALENDAR"
+      ],
+      "package": "com.kevpstephenson.scenetogether"
     },
     "web": {
       "favicon": "./assets/favicon.png",

@@ -13,7 +13,11 @@ import {
   Animated,
   Share,
   RefreshControl,
+  TextInput,
+  Modal,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { WebView } from "react-native-webview";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -28,10 +32,15 @@ import {
   HeartIcon,
   XCircleIcon,
   ShareIcon,
+  CreditCardIcon,
 } from "react-native-heroicons/outline";
+import { InformationCircleIcon } from "react-native-heroicons/outline";
+import { STRIPE_PUBLISHABLE_KEY } from "../config/stripe";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { EventsStackParamList } from "../navigation/types";
+import { useStripe } from "../hooks/useStripe";
 import { api } from "../services/api";
+import { createPaymentIntent } from "../services/payment";
 import { theme } from "../theme";
 import { getPlatformGlow, getCardStyle } from "../theme/styles";
 import type { Event, RSVPStatus } from "../types";
@@ -78,6 +87,7 @@ export default function EventDetailScreen() {
   const route = useRoute<RouteProps>();
   const { eventId } = route.params;
   const { showToast } = useToast();
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [rsvpLoading, setRsvpLoading] = useState(false);
@@ -87,6 +97,17 @@ export default function EventDetailScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.92)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  // Payment state
+  const [showPWYCModal, setShowPWYCModal] = useState(false);
+  const [pwycAmount, setPwycAmount] = useState("");
+  const [showTestNotice, setShowTestNotice] = useState(false);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+  const [demoNoticeSeen, setDemoNoticeSeen] = useState(false);
+  const [pendingAmount, setPendingAmount] = useState<number | null>(null);
+  const isTestMode =
+    typeof STRIPE_PUBLISHABLE_KEY === "string" &&
+    STRIPE_PUBLISHABLE_KEY.startsWith("pk_test_");
 
   // Check if event has already started
   const eventHasStarted = event
@@ -111,6 +132,10 @@ export default function EventDetailScreen() {
         useNativeDriver: true,
       }),
     ]).start();
+    // Read whether the demo notice was dismissed
+    AsyncStorage.getItem("demo_payment_notice_dismissed").then((v) => {
+      if (v === "1") setDemoNoticeSeen(true);
+    });
   }, [eventId]);
 
   const loadEvent = async () => {
@@ -153,6 +178,116 @@ export default function EventDetailScreen() {
     setRefreshing(false);
   };
 
+  /**
+   * Handle payment flow for paid events
+   */
+  const handlePayment = async (amount: number) => {
+    try {
+      setRsvpLoading(true);
+
+      // Create payment intent on backend
+      const { clientSecret, amount: chargedAmount } = await createPaymentIntent(
+        eventId,
+        amount
+      );
+
+      // Initialize Stripe payment sheet
+      const { error: initError } = await initPaymentSheet({
+        paymentIntentClientSecret: clientSecret,
+        merchantDisplayName: "Scene Together",
+        style: "automatic",
+        googlePay: {
+          merchantCountryCode: "GB",
+          testEnv: __DEV__,
+        },
+        returnURL: "scenetogether://payment-complete",
+      });
+
+      if (initError) {
+        console.error("Error initializing payment sheet:", initError);
+        showToast("Failed to initialize payment", "error");
+        return;
+      }
+
+      // Present payment sheet
+      const { error: presentError } = await presentPaymentSheet();
+
+      if (presentError) {
+        if (presentError.code === "Canceled") {
+          showToast("Payment cancelled", "info");
+        } else {
+          console.error("Error presenting payment sheet:", presentError);
+          showToast("Payment failed", "error");
+        }
+        return;
+      }
+
+      // Payment successful! Backend webhook will create RSVP
+      // Reload to get updated status
+      await Promise.all([loadEvent(), loadUserRSVP()]);
+
+      // Show success feedback
+      showToast(
+        `Payment successful! £${(chargedAmount / 100).toFixed(2)} paid 🎉`,
+        "success"
+      );
+      setShowConfetti(true);
+
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+
+      // Prompt to add to calendar
+      if (event) {
+        setTimeout(async () => {
+          try {
+            const startDate = new Date(event.date);
+            if (isNaN(startDate.getTime())) {
+              console.error("Invalid event date");
+              return;
+            }
+
+            // Assume 3 hour duration (typical movie + socializing)
+            const endDate = new Date(startDate.getTime() + 3 * 60 * 60 * 1000);
+
+            await promptAddToCalendar({
+              title: event.title,
+              startDate,
+              endDate,
+              location: event.location,
+              notes: event.description
+                ? `${event.description}\n\n${
+                    event.movieData?.title
+                      ? `Movie: ${event.movieData.title}`
+                      : ""
+                  }`
+                : undefined,
+            });
+          } catch (error) {
+            console.error("Calendar add error:", error);
+          }
+        }, 1000);
+      }
+    } catch (error: any) {
+      console.error("Payment error:", error);
+      showToast(error.message || "Payment failed", "error");
+    } finally {
+      setRsvpLoading(false);
+      setShowPWYCModal(false);
+      setPwycAmount("");
+    }
+  };
+
+  // Wrapper that optionally shows a one-time test notice before running payment
+  const requestPayment = async (amountCents: number) => {
+    if (isTestMode && !demoNoticeSeen) {
+      setPendingAmount(amountCents);
+      setShowTestNotice(true);
+      return;
+    }
+    await handlePayment(amountCents);
+  };
+
   const handleRSVP = async (status: RSVPStatus) => {
     try {
       // Check if event has already started
@@ -162,6 +297,26 @@ export default function EventDetailScreen() {
           "This event has already started and is no longer accepting RSVPs."
         );
         return;
+      }
+
+      // If going to a paid event, handle payment flow
+      if (status === "going" && event) {
+        const requiresPayment = event.price && event.price > 0;
+        const isPWYC = event.payWhatYouCan;
+
+        if (requiresPayment || isPWYC) {
+          // If Pay What You Can, show amount input modal
+          if (isPWYC) {
+            setShowPWYCModal(true);
+            return;
+          }
+
+          // Fixed price event - process payment
+          if (event.price) {
+            await requestPayment(event.price);
+            return;
+          }
+        }
       }
 
       setRsvpLoading(true);
@@ -184,7 +339,7 @@ export default function EventDetailScreen() {
         // Show success toast
         showToast("RSVP removed", "success");
       } else {
-        // Create or update RSVP
+        // Create or update RSVP (free events only)
         await api.post(`/events/${eventId}/rsvp`, { status });
 
         // Update local state
@@ -1021,7 +1176,13 @@ export default function EventDetailScreen() {
                         </Text>
                       </>
                     ) : (
-                      <>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
+                      >
                         <TicketIcon
                           size={20}
                           color={theme.colors.text.inverse}
@@ -1033,7 +1194,18 @@ export default function EventDetailScreen() {
                               : `Pay £${(event.price / 100).toFixed(2)} & RSVP`
                             : "RSVP Free"}
                         </Text>
-                      </>
+                        {STRIPE_PUBLISHABLE_KEY?.startsWith("pk_test_") && (
+                          <TouchableOpacity
+                            onPress={() => setShowTestNotice(true)}
+                            style={{ padding: 2 }}
+                          >
+                            <InformationCircleIcon
+                              size={18}
+                              color={theme.colors.text.inverse}
+                            />
+                          </TouchableOpacity>
+                        )}
+                      </View>
                     )}
                   </>
                 )}
@@ -1042,11 +1214,227 @@ export default function EventDetailScreen() {
           </View>
         )}
       </Animated.View>
+
       {/* Success Confetti */}
       <SuccessConfetti
         visible={showConfetti}
         onComplete={() => setShowConfetti(false)}
       />
+
+      {/* Pay What You Can Modal */}
+      <Modal
+        visible={showPWYCModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPWYCModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Pay What You Can</Text>
+            <Text style={styles.modalSubtitle}>
+              Minimum: £{((event?.minPrice || 0) / 100).toFixed(2)}
+            </Text>
+
+            <View style={styles.amountInputContainer}>
+              <Text style={styles.currencySymbol}>£</Text>
+              <TextInput
+                style={styles.amountInput}
+                placeholder="0.00"
+                placeholderTextColor={theme.colors.text.tertiary}
+                keyboardType="decimal-pad"
+                value={pwycAmount}
+                onChangeText={(text) => {
+                  // Only allow numbers and decimal point
+                  const cleaned = text.replace(/[^0-9.]/g, "");
+                  // Only allow one decimal point
+                  const parts = cleaned.split(".");
+                  if (parts.length > 2) return;
+                  setPwycAmount(cleaned);
+                }}
+                autoFocus
+              />
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowPWYCModal(false);
+                  setPwycAmount("");
+                }}
+              >
+                <Text style={styles.modalCancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <AnimatedButton
+                style={styles.modalConfirmButton}
+                onPress={() => {
+                  const amountInPounds = parseFloat(pwycAmount);
+                  if (isNaN(amountInPounds) || amountInPounds <= 0) {
+                    showToast("Please enter a valid amount", "error");
+                    return;
+                  }
+
+                  const amountInCents = Math.round(amountInPounds * 100);
+                  const minPrice = event?.minPrice || 0;
+
+                  if (amountInCents < minPrice) {
+                    showToast(
+                      `Amount must be at least £${(minPrice / 100).toFixed(2)}`,
+                      "error"
+                    );
+                    return;
+                  }
+
+                  requestPayment(amountInCents);
+                }}
+                disabled={rsvpLoading}
+              >
+                {rsvpLoading ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.text.inverse}
+                  />
+                ) : (
+                  <>
+                    <CreditCardIcon
+                      size={20}
+                      color={theme.colors.text.inverse}
+                    />
+                    <Text style={styles.modalConfirmButtonText}>
+                      Continue to Payment
+                    </Text>
+                  </>
+                )}
+              </AnimatedButton>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      {/* Demo/Test Payment Notice */}
+      <Modal
+        visible={showTestNotice}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowTestNotice(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Demo payment</Text>
+            <Text style={styles.modalSubtitle}>
+              This app is in Test Mode. Use Stripe test cards only.
+            </Text>
+
+            <View style={styles.testCardsContainer}>
+              <Text style={styles.sectionTitle}>Common test cards</Text>
+              <View style={{ gap: 12 }}>
+                <View style={styles.testCardRow}>
+                  <Text style={styles.testCardNumber}>4242 4242 4242 4242</Text>
+                  <TouchableOpacity
+                    onPress={async () => {
+                      try {
+                        await Clipboard.setStringAsync("4242424242424242");
+                        showToast("Card copied!", "success");
+                      } catch (_) {
+                        showToast("Copy failed", "error");
+                      }
+                    }}
+                    style={styles.copyChip}
+                  >
+                    <Text style={styles.copyChipText}>Copy</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.testCardHint}>
+                  Expiry: any future, CVC: 123
+                </Text>
+                <View style={styles.testCardRow}>
+                  <Text style={styles.testCardNumber}>4000 0027 6000 3184</Text>
+                  <TouchableOpacity
+                    onPress={async () => {
+                      try {
+                        await Clipboard.setStringAsync("4000002760003184");
+                        showToast("Card copied!", "success");
+                      } catch (_) {
+                        showToast("Copy failed", "error");
+                      }
+                    }}
+                    style={styles.copyChip}
+                  >
+                    <Text style={styles.copyChipText}>Copy</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.testCardHint}>(3D Secure test)</Text>
+              </View>
+            </View>
+
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 12,
+              }}
+            >
+              <TouchableOpacity
+                onPress={() => setDontShowAgain((v) => !v)}
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 4,
+                  borderWidth: 2,
+                  borderColor: theme.colors.primary,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: 8,
+                }}
+              >
+                {dontShowAgain && (
+                  <View
+                    style={{
+                      width: 12,
+                      height: 12,
+                      backgroundColor: theme.colors.primary,
+                    }}
+                  />
+                )}
+              </TouchableOpacity>
+              <Text style={styles.description}>Don’t show again</Text>
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowTestNotice(false);
+                  setPendingAmount(null);
+                }}
+              >
+                <Text style={styles.modalCancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <AnimatedButton
+                style={styles.modalConfirmButton}
+                onPress={async () => {
+                  if (dontShowAgain) {
+                    await AsyncStorage.setItem(
+                      "demo_payment_notice_dismissed",
+                      "1"
+                    );
+                    setDemoNoticeSeen(true);
+                  }
+                  const amount = pendingAmount;
+                  setShowTestNotice(false);
+                  setPendingAmount(null);
+                  if (typeof amount === "number") {
+                    await handlePayment(amount);
+                  }
+                }}
+              >
+                <Text style={styles.modalConfirmButtonText}>Continue</Text>
+              </AnimatedButton>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -1472,5 +1860,149 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.bold,
+  },
+  // PWYC Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: theme.spacing.xl,
+  },
+  modalContent: {
+    backgroundColor: theme.components.surfaces.card,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.xl,
+    width: "100%",
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    ...getPlatformGlow("strong"),
+  },
+  modalTitle: {
+    fontSize: theme.typography.fontSize.xxl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.sm,
+    textAlign: "center",
+  },
+  modalSubtitle: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.xl,
+    textAlign: "center",
+  },
+  amountInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.components.surfaces.section,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    marginBottom: theme.spacing.xl,
+  },
+  currencySymbol: {
+    fontSize: theme.typography.fontSize.xxl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.primary,
+    marginRight: theme.spacing.sm,
+  },
+  amountInput: {
+    flex: 1,
+    fontSize: theme.typography.fontSize.xxl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    padding: 0,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: theme.spacing.md,
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.components.surfaces.section,
+    borderWidth: 1,
+    borderColor: theme.components.borders.default,
+    alignItems: "center",
+  },
+  modalCancelButtonText: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.secondary,
+  },
+  modalConfirmButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.spacing.sm,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.primary,
+    ...getPlatformGlow("strong"),
+  },
+  modalConfirmButtonText: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.inverse,
+  },
+  copyChip: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+  },
+  copyChipText: {
+    color: theme.colors.primary,
+    fontWeight: "700",
+    fontSize: 12,
+  },
+  testCardsContainer: {
+    ...getCardStyle(),
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+    overflow: "hidden",
+  },
+  testCardRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  testCardNumber: {
+    fontSize: 13,
+    color: theme.colors.text.secondary,
+    flex: 1,
+    marginRight: theme.spacing.sm,
+  },
+  testCardHint: {
+    fontSize: 12,
+    color: theme.colors.text.secondary,
+    opacity: 0.7,
+  },
+  testModeBanner: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 54 : 24,
+    left: 0,
+    right: 0,
+    zIndex: 200,
+    alignItems: "center",
+    paddingVertical: 6,
+    backgroundColor: "rgba(234,179,8,0.95)",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.15)",
+  },
+  testModeText: {
+    color: "#1b1b1b",
+    fontWeight: "700",
+    fontSize: 12,
+    letterSpacing: 0.3,
   },
 });

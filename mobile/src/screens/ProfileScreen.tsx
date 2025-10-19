@@ -25,6 +25,7 @@ import {
   TrophyIcon,
   FireIcon,
   SparklesIcon,
+  CreditCardIcon,
 } from "react-native-heroicons/solid";
 import { useAuth } from "../contexts/AuthContext";
 import { theme } from "../theme";
@@ -42,6 +43,18 @@ type RSVP = {
   event: Event;
 };
 
+type Payment = {
+  id: string;
+  amount: number;
+  status: string;
+  createdAt: string;
+  event: {
+    id: string;
+    title: string;
+    date: string;
+  };
+};
+
 type ProfileScreenNavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<ProfileStackParamList, "Profile">,
   BottomTabNavigationProp<MainTabParamList>
@@ -56,6 +69,8 @@ export default function ProfileScreen() {
   const [rsvpsLoading, setRsvpsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [eventFilter, setEventFilter] = useState<EventFilter>("upcoming");
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(true);
 
   // Fetch user's RSVPs
   const fetchRSVPs = useCallback(async () => {
@@ -70,13 +85,27 @@ export default function ProfileScreen() {
     }
   }, []);
 
-  // Refetch RSVPs when screen comes into focus
+  // Fetch user's payment history
+  const fetchPaymentHistory = useCallback(async () => {
+    try {
+      setPaymentsLoading(true);
+      const response = await api.get("/payments/history");
+      setPayments(response.data);
+    } catch (error) {
+      console.error("Failed to fetch payment history:", error);
+    } finally {
+      setPaymentsLoading(false);
+    }
+  }, []);
+
+  // Refetch data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       if (user) {
         fetchRSVPs();
+        fetchPaymentHistory();
       }
-    }, [user, fetchRSVPs])
+    }, [user, fetchRSVPs, fetchPaymentHistory])
   );
 
   // Pull to refresh handler
@@ -85,12 +114,12 @@ export default function ProfileScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setRefreshing(true);
-    await fetchRSVPs();
+    await Promise.all([fetchRSVPs(), fetchPaymentHistory()]);
     if (Platform.OS !== "web") {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
     setRefreshing(false);
-  }, [fetchRSVPs]);
+  }, [fetchRSVPs, fetchPaymentHistory]);
 
   // Filter RSVPs based on selected filter
   const filteredRsvps = useMemo(() => {
@@ -385,6 +414,84 @@ export default function ProfileScreen() {
                     ))}
                   </View>
                 </View>
+              )}
+            </View>
+          )}
+
+          {/* Payment History Section */}
+          {!paymentsLoading && payments.length > 0 && (
+            <View style={styles.paymentHistoryCard}>
+              <Text style={styles.sectionTitle}>Payment History</Text>
+              <Text style={styles.sectionSubtitle}>
+                Your recent transactions
+              </Text>
+
+              {payments.slice(0, 5).map((payment) => (
+                <View key={payment.id} style={styles.paymentItem}>
+                  <View style={styles.paymentIconContainer}>
+                    <CreditCardIcon
+                      size={20}
+                      color={theme.colors.primaryLight}
+                    />
+                  </View>
+
+                  <View style={styles.paymentDetails}>
+                    <Text style={styles.paymentEventTitle} numberOfLines={1}>
+                      {payment.event.title}
+                    </Text>
+                    <Text style={styles.paymentDate}>
+                      {new Date(payment.createdAt).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </Text>
+                  </View>
+
+                  <View style={styles.paymentAmountContainer}>
+                    <Text style={styles.paymentAmount}>
+                      £{(payment.amount / 100).toFixed(2)}
+                    </Text>
+                    <View
+                      style={[
+                        styles.paymentStatusBadge,
+                        {
+                          backgroundColor:
+                            payment.status === "succeeded"
+                              ? theme.colors.success + "20"
+                              : theme.colors.warning + "20",
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.paymentStatusText,
+                          {
+                            color:
+                              payment.status === "succeeded"
+                                ? theme.colors.success
+                                : theme.colors.warning,
+                          },
+                        ]}
+                      >
+                        {payment.status === "succeeded"
+                          ? "Paid"
+                          : payment.status === "refunded"
+                            ? "Refunded"
+                            : payment.status}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+
+              {payments.length > 5 && (
+                <Text style={styles.paymentHistoryFooter}>
+                  Showing {Math.min(5, payments.length)} of {payments.length}{" "}
+                  transactions
+                </Text>
               )}
             </View>
           )}
@@ -993,5 +1100,72 @@ const styles = StyleSheet.create({
   filterButtonTextActive: {
     color: theme.colors.text.inverse,
     fontWeight: theme.typography.fontWeight.bold,
+  },
+  // Payment History Styles
+  paymentHistoryCard: {
+    ...getCardStyle(),
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+  },
+  sectionSubtitle: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+    marginTop: theme.spacing.xxs,
+    marginBottom: theme.spacing.base,
+  },
+  paymentItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: theme.spacing.base,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderLight,
+  },
+  paymentIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.components.surfaces.section,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: theme.spacing.md,
+  },
+  paymentDetails: {
+    flex: 1,
+    marginRight: theme.spacing.sm,
+  },
+  paymentEventTitle: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xxs,
+  },
+  paymentDate: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.text.tertiary,
+  },
+  paymentAmountContainer: {
+    alignItems: "flex-end",
+  },
+  paymentAmount: {
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xxs,
+  },
+  paymentStatusBadge: {
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 2,
+    borderRadius: theme.borderRadius.sm,
+  },
+  paymentStatusText: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  paymentHistoryFooter: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.text.tertiary,
+    textAlign: "center",
+    marginTop: theme.spacing.base,
+    fontStyle: "italic",
   },
 });

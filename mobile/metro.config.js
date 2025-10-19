@@ -7,11 +7,24 @@ const projectRoot = __dirname;
 // Get the default config
 const config = getDefaultConfig(projectRoot);
 
-// For monorepo support, watch the workspace root
+// Workspace root (monorepo)
 const workspaceRoot = path.resolve(projectRoot, "..");
-config.watchFolders = [workspaceRoot];
 
-// Tell Metro where to resolve packages
-config.resolver.nodeModulesPaths = [path.resolve(projectRoot, "node_modules")];
+// Ensure Metro can find deps in both app and workspace node_modules
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, "node_modules"),
+  path.resolve(workspaceRoot, "node_modules"),
+];
+config.resolver.extraNodeModules = {
+  react: path.resolve(projectRoot, "node_modules/react"),
+  "react-native": path.resolve(projectRoot, "node_modules/react-native"),
+  "react-native-web": path.resolve(
+    projectRoot,
+    "node_modules/react-native-web"
+  ),
+};
+
+// Watch both app and workspace so symlinked deps resolve, but force React from app
+config.watchFolders = [projectRoot, workspaceRoot];
 
 module.exports = config;
