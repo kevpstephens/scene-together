@@ -7,16 +7,14 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import * as WebBrowser from "expo-web-browser";
 import { supabase } from "../../lib/supabase";
+import { UserRole, UserProfile, AuthContextType } from "./types";
+import { fetchUserRole } from "./sessionManager";
 import {
-  UserRole,
-  UserProfile,
-  AuthContextType,
-  fetchUserRole,
   signUpUser,
   signInUser,
   signInWithGoogleOAuth,
   signOutUser,
-} from "./";
+} from "./authActions";
 
 // Required for OAuth to work properly
 WebBrowser.maybeCompleteAuthSession();
