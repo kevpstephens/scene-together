@@ -123,10 +123,11 @@ app.use(errorHandler);
 
 // ==================== Server Startup ====================
 
-const port = process.env.PORT || 4000;
+const port = parseInt(process.env.PORT || "4000", 10);
+const host = process.env.NODE_ENV === "production" ? "0.0.0.0" : "localhost";
 
-app.listen(port, () => {
+app.listen(port, host, () => {
   console.log(`🚀 SceneTogether API`);
-  console.log(`📍 http://localhost:${port}`);
+  console.log(`📍 http://${host}:${port}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
 });
